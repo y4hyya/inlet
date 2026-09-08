@@ -59,6 +59,17 @@ export const testnetChains = {
     "gatewayWallet": "0x0077777d7EBA4688BDeF3E311b846F25870A19B9",
     "gatewayMinter": "0x0022222ABE238Cc2C7Bb1f21003F0a260052475B"
   },
+  "monadTestnet": {
+    "chainId": 10143,
+    "cctpDomain": 15,
+    "rpc": "https://testnet-rpc.monad.xyz",
+    "explorer": "https://testnet.monadexplorer.com",
+    "usdc": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+    "tokenMessengerV2": "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+    "messageTransmitterV2": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    "gatewayWallet": "0x0000000000000000000000000000000000000000",
+    "gatewayMinter": "0x0000000000000000000000000000000000000000"
+  },
   "stellarTestnet": {
     "cctpDomain": 27,
     "network": "Test SDF Network ; September 2015",
