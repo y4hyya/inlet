@@ -31,7 +31,7 @@ export function Nav() {
   }, [landing]);
 
   return (
-    <header className={styles.header} data-landing={landing ? "" : undefined} data-scrolled={landing && !scrolled ? undefined : ""}>
+    <header className={styles.header} data-landing={landing ? "" : undefined} data-scrolled={landing && scrolled ? "" : undefined}>
       <span className={styles.veil} aria-hidden="true" />
       <div className={styles.capsule}>
         <Link href="/" className={styles.brand} aria-label="Inlet home">
