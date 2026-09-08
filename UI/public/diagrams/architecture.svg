@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="architecture-dark-title architecture-dark-desc">
+      <title id="architecture-dark-title">How a deposit moves through Inlet</title>
+      <desc id="architecture-dark-desc">Architecture diagram showing USDC leaving a user's wallet or Gateway balance on the source chain, landing at a per intent deposit address on Arc, being swept by the Inlet hub through CCTP to the receiver and adapter on the destination chain, where the protocol position is delivered, with the relayer and Circle attestation in the middle and the refund path back to the wallet.</desc>
+      <defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');</style>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f08a59"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6a95d8"/></marker>
+        <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#bfc0c0" stroke-width="1.2"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#2d3142"/>
+<rect x="40" y="136" width="272" height="288" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<rect x="56" y="140" width="68" height="12" rx="2" fill="#2d3142"/>
+<text x="90" y="149" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">SOURCE CHAIN</text>
+<rect x="352" y="136" width="416" height="288" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<rect x="368" y="140" width="104" height="12" rx="2" fill="#2d3142"/>
+<text x="420" y="149" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">ARC · SETTLEMENT HUB</text>
+<rect x="800" y="136" width="440" height="288" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<rect x="816" y="140" width="92" height="12" rx="2" fill="#2d3142"/>
+<text x="862" y="149" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">DESTINATION CHAIN</text>
+<line x1="144" y1="240" x2="144" y2="320" stroke="#6a95d8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-link)"/>
+<line x1="216" y1="196" x2="384" y2="196" stroke="#6a95d8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<path d="M 216,352 H 272 Q 280,352 280,344 V 228 Q 280,220 288,220 H 384" fill="none" stroke="#6a95d8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<line x1="528" y1="208" x2="592" y2="208" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="736" y1="208" x2="816" y2="208" stroke="#f08a59" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+<path d="M 456,384 V 504 Q 456,512 464,512 H 592" fill="none" stroke="#6a95d8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<path d="M 736,512 H 880 Q 888,512 888,504 V 240" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="664" y1="480" x2="664" y2="240" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="960" y1="208" x2="1040" y2="208" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="1112" y1="240" x2="1112" y2="320" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 704,176 V 112 Q 704,104 696,104 H 152 Q 144,104 144,112 V 176" fill="none" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+<rect x="152" y="274" width="68" height="12" rx="2" fill="#2d3142"/>
+<text x="186" y="283" fill="#6a95d8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DEPOSIT ONCE</text>
+<rect x="272" y="176" width="56" height="12" rx="2" fill="#2d3142"/>
+<text x="300" y="185" fill="#6a95d8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CCTP BURN</text>
+<rect x="288" y="280" width="68" height="12" rx="2" fill="#2d3142"/>
+<text x="322" y="289" fill="#6a95d8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATEWAY MINT</text>
+<rect x="540" y="188" width="36" height="12" rx="2" fill="#2d3142"/>
+<text x="558" y="197" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SWEEP</text>
+<rect x="744" y="188" width="64" height="12" rx="2" fill="#2d3142"/>
+<text x="776" y="197" fill="#f08a59" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CCTP + HOOK</text>
+<rect x="464" y="428" width="64" height="12" rx="2" fill="#2d3142"/>
+<text x="496" y="437" fill="#6a95d8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ATTESTATION</text>
+<rect x="896" y="440" width="44" height="12" rx="2" fill="#2d3142"/>
+<text x="918" y="449" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXECUTE</text>
+<rect x="672" y="436" width="68" height="12" rx="2" fill="#2d3142"/>
+<text x="706" y="445" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MINT · SWEEP</text>
+<rect x="976" y="188" width="48" height="12" rx="2" fill="#2d3142"/>
+<text x="1000" y="197" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DEPOSIT</text>
+<rect x="1120" y="274" width="80" height="12" rx="2" fill="#2d3142"/>
+<text x="1160" y="283" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TO BENEFICIARY</text>
+<rect x="404" y="84" width="40" height="12" rx="2" fill="#2d3142"/>
+<text x="424" y="93" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">REFUND</text>
+<rect x="72" y="176" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="72" y="176" width="144" height="64" rx="6" fill="rgba(201,160,220,0.14)" stroke="#C9A0DC" stroke-width="1"/>
+<rect x="80" y="184" width="32" height="12" rx="2" fill="transparent" stroke="rgba(201,160,220,0.55)" stroke-width="0.8"/>
+<text x="96" y="193" fill="#C9A0DC" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">USER</text>
+<text x="144" y="216" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">User wallet</text>
+<text x="144" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Privy or any wallet</text>
+<rect x="72" y="320" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="72" y="320" width="144" height="64" rx="6" fill="rgba(1,115,195,0.22)" stroke="#0173C3" stroke-width="1"/>
+<rect x="80" y="328" width="40" height="12" rx="2" fill="transparent" stroke="rgba(1,115,195,0.70)" stroke-width="0.8"/>
+<text x="100" y="337" fill="#5EB0EE" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CIRCLE</text>
+<text x="144" y="360" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Gateway balance</text>
+<text x="144" y="376" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">unified USDC balance</text>
+<rect x="384" y="176" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="384" y="176" width="144" height="64" rx="6" fill="rgba(240,182,213,0.14)" stroke="#F0B6D5" stroke-width="1"/>
+<rect x="392" y="184" width="40" height="12" rx="2" fill="transparent" stroke="rgba(240,182,213,0.55)" stroke-width="0.8"/>
+<text x="412" y="193" fill="#F0B6D5" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ESCROW</text>
+<text x="456" y="216" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Deposit address</text>
+<text x="456" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">per intent · CREATE2</text>
+<rect x="592" y="176" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="592" y="176" width="144" height="64" rx="6" fill="rgba(240,138,89,0.10)" stroke="#f08a59" stroke-width="1"/>
+<rect x="600" y="184" width="28" height="12" rx="2" fill="transparent" stroke="rgba(240,138,89,0.50)" stroke-width="0.8"/>
+<text x="614" y="193" fill="#f08a59" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HUB</text>
+<text x="664" y="216" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Inlet hub</text>
+<text x="664" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">sweep · refund</text>
+<rect x="384" y="320" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="384" y="320" width="144" height="64" rx="6" fill="rgba(1,115,195,0.22)" stroke="#0173C3" stroke-width="1"/>
+<rect x="392" y="328" width="40" height="12" rx="2" fill="transparent" stroke="rgba(1,115,195,0.70)" stroke-width="0.8"/>
+<text x="412" y="337" fill="#5EB0EE" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CIRCLE</text>
+<text x="456" y="360" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Attestation</text>
+<text x="456" y="376" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Iris API · signs burns</text>
+<rect x="592" y="480" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="592" y="480" width="144" height="64" rx="6" fill="rgba(166,236,168,0.08)" stroke="#A6ECA8" stroke-width="1" stroke-dasharray="4,3"/>
+<rect x="600" y="488" width="44" height="12" rx="2" fill="transparent" stroke="rgba(166,236,168,0.55)" stroke-width="0.8"/>
+<text x="622" y="497" fill="#A6ECA8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SERVICE</text>
+<text x="664" y="520" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Relayer</text>
+<text x="664" y="536" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">anyone can run one</text>
+<rect x="816" y="176" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="816" y="176" width="144" height="64" rx="6" fill="rgba(255,238,140,0.12)" stroke="#FFEE8C" stroke-width="1"/>
+<rect x="824" y="184" width="48" height="12" rx="2" fill="transparent" stroke="rgba(255,238,140,0.50)" stroke-width="0.8"/>
+<text x="848" y="193" fill="#FFEE8C" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CONTRACT</text>
+<text x="888" y="216" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Inlet receiver</text>
+<text x="888" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">verifies the CCTP mint</text>
+<rect x="1040" y="176" width="144" height="64" rx="6" fill="#2d3142"/>
+<rect x="1040" y="176" width="144" height="64" rx="6" fill="rgba(255,238,140,0.12)" stroke="#FFEE8C" stroke-width="1"/>
+<rect x="1048" y="184" width="48" height="12" rx="2" fill="transparent" stroke="rgba(255,238,140,0.50)" stroke-width="0.8"/>
+<text x="1072" y="193" fill="#FFEE8C" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CONTRACT</text>
+<text x="1112" y="216" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Adapter</text>
+<text x="1112" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">one per protocol</text>
+<rect x="1016" y="320" width="192" height="80" rx="6" fill="#2d3142"/>
+<rect x="1016" y="320" width="192" height="80" rx="6" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+<rect x="1024" y="328" width="48" height="12" rx="2" fill="transparent" stroke="rgba(245,245,245,0.40)" stroke-width="0.8"/>
+<text x="1048" y="337" fill="#f5f5f5" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">POSITION</text>
+<text x="1112" y="360" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Protocol position</text>
+<text x="1112" y="376" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Aave · Compound · Morpho</text>
+<text x="1112" y="390" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Uniswap v4 · ERC 4626 vaults</text>
+<line x1="40" y1="644" x2="1240" y2="644" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="40" y="660" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+<rect x="40" y="676" width="14" height="10" rx="2" fill="rgba(240,138,89,0.10)" stroke="#f08a59" stroke-width="1"/>
+<text x="60" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Settlement hub on Arc</text>
+<rect x="184" y="676" width="14" height="10" rx="2" fill="rgba(255,238,140,0.12)" stroke="#FFEE8C" stroke-width="1"/>
+<text x="204" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Inlet contract</text>
+<rect x="296" y="676" width="14" height="10" rx="2" fill="rgba(1,115,195,0.22)" stroke="#0173C3" stroke-width="1"/>
+<text x="316" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Circle</text>
+<rect x="368" y="676" width="14" height="10" rx="2" fill="rgba(240,182,213,0.14)" stroke="#F0B6D5" stroke-width="1"/>
+<text x="388" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Escrow</text>
+<rect x="440" y="676" width="14" height="10" rx="2" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+<text x="460" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Protocol position</text>
+<rect x="564" y="676" width="14" height="10" rx="2" fill="rgba(166,236,168,0.08)" stroke="#A6ECA8" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="584" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Relayer, permissionless</text>
+<line x1="716" y1="681" x2="744" y2="681" stroke="#6a95d8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="752" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Circle rail</text>
+<line x1="828" y1="681" x2="856" y2="681" stroke="#f08a59" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+<text x="864" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Settlement leg</text>
+<line x1="956" y1="681" x2="984" y2="681" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="992" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Refund or one time</text>
+    </svg>

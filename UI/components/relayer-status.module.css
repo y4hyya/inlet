@@ -1,0 +1,54 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--soft);
+  transition: background-color var(--dur-ui) var(--ease-out);
+}
+
+.online .dot {
+  background: var(--relayer);
+}
+
+.offline .dot {
+  background: var(--bad);
+}
+
+.checking .dot {
+  animation: blink 1.2s var(--ease-in-out) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (max-width: 640px) {
+  .hideSmall {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checking .dot {
+    animation: none;
+  }
+}

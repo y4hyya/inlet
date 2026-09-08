@@ -1,0 +1,34 @@
+.frame {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.label {
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.code {
+  overflow-x: auto;
+}
+
+.code :global(pre) {
+  margin: 0;
+  padding: var(--space-4) var(--space-4);
+  background: transparent !important;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.code :global(code) {
+  font-family: inherit;
+}

@@ -1,0 +1,332 @@
+:root {
+  --ground: #2d3142;
+  --surface: #393e53;
+  --surface-2: #454b63;
+  --ink: #f5f5f5;
+  --muted: #bfc0c0;
+  --soft: #8e98ac;
+  --line: rgba(245, 245, 245, 0.1);
+  --line-strong: rgba(245, 245, 245, 0.18);
+  --accent: #f08a59;
+  --accent-hover: #f49b72;
+  --link: #6a95d8;
+  --circle: #0173c3;
+  --circle-text: #7cc0f0;
+  --contract: #ffee8c;
+  --escrow: #f0b6d5;
+  --user: #c9a0dc;
+  --relayer: #a6eca8;
+  --bad: #e9857f;
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --text-caption: 0.8125rem;
+  --text-small: 0.9375rem;
+  --text-body: 1.0625rem;
+  --text-2: 1.375rem;
+  --text-3: 1.75rem;
+  --text-4: 2.25rem;
+  --text-5: clamp(2.25rem, 5vw, 3.75rem);
+  --text-6: clamp(2.75rem, 7vw, 5.25rem);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  --rail: 1180px;
+  --gutter: clamp(20px, 4vw, 32px);
+  --section: clamp(64px, 9vw, 128px);
+
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-fast: 150ms;
+  --dur-ui: 220ms;
+  --dur-enter: 500ms;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-padding-top: 88px;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+  text-decoration-thickness: from-font;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--ground);
+}
+
+.rail {
+  max-width: var(--rail);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: var(--section);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.soft {
+  color: var(--soft);
+}
+
+.lead {
+  font-size: var(--text-2);
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+.skip {
+  position: absolute;
+  top: -100px;
+  left: var(--gutter);
+  z-index: 100;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: var(--ground);
+  border-radius: var(--radius-s);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.skip:focus-visible {
+  top: 12px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--radius-s);
+  border: 1px solid transparent;
+  font-size: var(--text-small);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--ground);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.btn-secondary:hover {
+  background: var(--surface);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chip-color, var(--soft));
+}
+
+.chip-circle {
+  --chip-color: var(--circle-text);
+}
+
+.chip-contract {
+  --chip-color: var(--contract);
+}
+
+.chip-escrow {
+  --chip-color: var(--escrow);
+}
+
+.chip-user {
+  --chip-color: var(--user);
+}
+
+.chip-relayer {
+  --chip-color: var(--relayer);
+}
+
+.chip-accent {
+  --chip-color: var(--accent);
+}
+
+.hash {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-strong);
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.hash:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--dur-enter) var(--ease-out),
+    transform var(--dur-enter) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+[data-reveal][data-in] {
+  opacity: 1;
+  transform: none;
+}
+
+.inlet {
+  --inlet-bg: var(--surface);
+  --inlet-fg: var(--ink);
+  --inlet-muted: var(--soft);
+  --inlet-line: var(--line-strong);
+  --inlet-accent: var(--accent);
+  --inlet-accent-fg: var(--ground);
+  --inlet-warn: var(--contract);
+  --inlet-warn-bg: rgba(255, 238, 140, 0.08);
+  --inlet-done: var(--relayer);
+  font-family: var(--font-sans);
+  box-shadow: none;
+  border-color: var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    transform: none;
+    transition-property: opacity;
+    transition-duration: 200ms;
+    transition-delay: 0ms;
+  }
+
+  .btn:active {
+    transform: none;
+  }
+}

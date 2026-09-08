@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deployment-dark-title deployment-dark-desc">
+      <title id="deployment-dark-title">Where Inlet runs on testnet</title>
+      <desc id="deployment-dark-desc">Deployment diagram placing the Inlet widget in the user's browser, the playground and the relayer on Azure in West Europe, Circle's attestation and Gateway APIs, the Inlet hub on Arc testnet, and the receivers and adapters on Arbitrum, Base and Unichain Sepolia, with the network paths between them.</desc>
+      <defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');</style>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f08a59"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6a95d8"/></marker>
+        <marker id="arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0, 8 3, 0 6" fill="none" stroke="#bfc0c0" stroke-width="1.2"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#2d3142"/>
+<rect x="232" y="96" width="288" height="504" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8" stroke-dasharray="4,4"/>
+<rect x="248" y="100" width="100" height="12" rx="2" fill="#2d3142"/>
+<text x="298" y="109" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">AZURE · WEST EUROPE</text>
+<rect x="552" y="96" width="240" height="208" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8" stroke-dasharray="4,4"/>
+<rect x="568" y="100" width="88" height="12" rx="2" fill="#2d3142"/>
+<text x="612" y="109" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">CIRCLE · TESTNET</text>
+<rect x="824" y="96" width="416" height="504" rx="8" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8" stroke-dasharray="4,4"/>
+<rect x="840" y="100" width="52" height="12" rx="2" fill="#2d3142"/>
+<text x="866" y="109" fill="rgba(245,245,245,0.35)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">TESTNETS</text>
+<path d="M 200,376 H 216 Q 224,376 224,368 V 208 Q 224,200 232,200 H 256" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="200" y1="408" x2="256" y2="408" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 120,344 V 88 Q 120,80 128,80 H 712 Q 720,80 720,88 V 152" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 120,440 V 512 Q 120,520 128,520 H 1024 Q 1032,520 1032,512 V 472" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 400,344 V 324 Q 400,316 408,316 H 712 Q 720,316 720,308 V 280" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M 496,384 H 808 Q 816,384 816,376 V 208 Q 816,200 824,200 H 856" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="496" y1="428" x2="856" y2="428" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="1032" y1="248" x2="1032" y2="344" stroke="#f08a59" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+<rect x="232" y="280" width="36" height="12" rx="2" fill="#2d3142"/>
+<text x="250" y="289" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HTTPS</text>
+<rect x="210" y="388" width="36" height="12" rx="2" fill="#2d3142"/>
+<text x="228" y="397" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HTTPS</text>
+<rect x="360" y="60" width="64" height="12" rx="2" fill="#2d3142"/>
+<text x="392" y="69" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATEWAY API</text>
+<rect x="560" y="500" width="60" height="12" rx="2" fill="#2d3142"/>
+<text x="590" y="509" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">WALLET RPC</text>
+<rect x="528" y="296" width="64" height="12" rx="2" fill="#2d3142"/>
+<text x="560" y="305" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CIRCLE APIS</text>
+<rect x="824" y="280" width="44" height="12" rx="2" fill="#2d3142"/>
+<text x="846" y="289" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ARC RPC</text>
+<rect x="636" y="408" width="76" height="12" rx="2" fill="#2d3142"/>
+<text x="674" y="417" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RPC · EXECUTE</text>
+<rect x="1040" y="288" width="44" height="12" rx="2" fill="#2d3142"/>
+<text x="1062" y="297" fill="#f08a59" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CCTP V2</text>
+<rect x="40" y="344" width="160" height="96" rx="6" fill="#2d3142"/>
+<rect x="40" y="344" width="160" height="96" rx="6" fill="rgba(201,160,220,0.14)" stroke="#C9A0DC" stroke-width="1"/>
+<rect x="48" y="352" width="40" height="12" rx="2" fill="transparent" stroke="rgba(201,160,220,0.55)" stroke-width="0.8"/>
+<text x="68" y="361" fill="#C9A0DC" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLIENT</text>
+<text x="120" y="384" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">User's browser</text>
+<text x="120" y="400" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Privy or any wallet</text>
+<rect x="48" y="408" width="144" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="56" y="424" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">Inlet widget</text>
+<text x="184" y="424" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">Privy</text>
+<rect x="256" y="152" width="240" height="96" rx="6" fill="#2d3142"/>
+<rect x="256" y="152" width="240" height="96" rx="6" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+<rect x="264" y="160" width="44" height="12" rx="2" fill="transparent" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="286" y="169" fill="#8e98ac" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MANAGED</text>
+<text x="376" y="192" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">inlet-playground</text>
+<text x="376" y="208" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Static Web App · Free tier</text>
+<rect x="264" y="216" width="224" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="272" y="232" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">Next.js static export</text>
+<text x="480" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">16.3</text>
+<rect x="256" y="344" width="240" height="128" rx="6" fill="#2d3142"/>
+<rect x="256" y="344" width="240" height="128" rx="6" fill="rgba(166,236,168,0.12)" stroke="#A6ECA8" stroke-width="1"/>
+<rect x="264" y="352" width="44" height="12" rx="2" fill="transparent" stroke="rgba(166,236,168,0.55)" stroke-width="0.8"/>
+<text x="286" y="361" fill="#A6ECA8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MANAGED</text>
+<rect x="460" y="352" width="28" height="12" rx="2" fill="transparent" stroke="rgba(166,236,168,0.55)" stroke-width="0.8"/>
+<text x="474" y="361" fill="#A6ECA8" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">x1</text>
+<text x="376" y="384" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">inlet-relayer</text>
+<text x="376" y="400" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Container App · 0.5 vCPU · 1 GiB</text>
+<rect x="264" y="408" width="224" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="272" y="424" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">Fastify + node:sqlite</text>
+<text x="480" y="424" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">node 24</text>
+<rect x="264" y="440" width="224" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="272" y="456" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">Azure Files share</text>
+<text x="480" y="456" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">inlet.db</text>
+<rect x="576" y="152" width="192" height="128" rx="6" fill="#2d3142"/>
+<rect x="576" y="152" width="192" height="128" rx="6" fill="rgba(1,115,195,0.22)" stroke="#0173C3" stroke-width="1"/>
+<rect x="584" y="160" width="44" height="12" rx="2" fill="transparent" stroke="rgba(1,115,195,0.70)" stroke-width="0.8"/>
+<text x="606" y="169" fill="#5EB0EE" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MANAGED</text>
+<text x="672" y="192" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Circle testnet APIs</text>
+<text x="672" y="208" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">sandbox endpoints</text>
+<rect x="584" y="216" width="176" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="592" y="232" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">Iris attestations</text>
+<text x="752" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">v2</text>
+<rect x="584" y="248" width="176" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="592" y="264" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">Gateway API</text>
+<text x="752" y="264" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">v1</text>
+<rect x="856" y="152" width="352" height="96" rx="6" fill="#2d3142"/>
+<rect x="856" y="152" width="352" height="96" rx="6" fill="rgba(240,138,89,0.10)" stroke="#f08a59" stroke-width="1"/>
+<rect x="864" y="160" width="28" height="12" rx="2" fill="transparent" stroke="rgba(240,138,89,0.50)" stroke-width="0.8"/>
+<text x="878" y="169" fill="#f08a59" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">L1</text>
+<text x="1032" y="192" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Arc testnet</text>
+<text x="1032" y="208" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">chain 5042002 · CCTP domain 26</text>
+<rect x="864" y="216" width="336" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="872" y="232" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">InletHub</text>
+<text x="1192" y="232" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">0x84f3…408B</text>
+<rect x="856" y="344" width="352" height="128" rx="6" fill="#2d3142"/>
+<rect x="856" y="344" width="352" height="128" rx="6" fill="rgba(255,238,140,0.12)" stroke="#FFEE8C" stroke-width="1"/>
+<rect x="864" y="352" width="28" height="12" rx="2" fill="transparent" stroke="rgba(255,238,140,0.50)" stroke-width="0.8"/>
+<text x="878" y="361" fill="#FFEE8C" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EVM</text>
+<text x="1032" y="384" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Sepolia testnets</text>
+<text x="1032" y="400" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Arbitrum 3 · Base 6 · Unichain 10</text>
+<rect x="864" y="408" width="336" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="872" y="424" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">receivers</text>
+<text x="1192" y="424" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">Arbitrum, Base, Unichain Sepolia</text>
+<rect x="864" y="440" width="336" height="24" rx="4" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="0.8"/>
+<text x="872" y="456" fill="#f5f5f5" font-size="12" font-family="'Geist', sans-serif">adapters</text>
+<text x="1192" y="456" fill="#bfc0c0" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">Aave, Compound, Morpho, Uniswap, ERC 4626</text>
+<line x1="40" y1="644" x2="1240" y2="644" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="40" y="660" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+<rect x="40" y="676" width="14" height="10" rx="2" fill="rgba(240,138,89,0.10)" stroke="#f08a59" stroke-width="1"/>
+<text x="60" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">New on Arc</text>
+<rect x="132" y="676" width="14" height="10" rx="2" fill="rgba(255,238,140,0.12)" stroke="#FFEE8C" stroke-width="1"/>
+<text x="152" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Inlet contracts</text>
+<rect x="248" y="676" width="14" height="10" rx="2" fill="rgba(166,236,168,0.12)" stroke="#A6ECA8" stroke-width="1"/>
+<text x="268" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Runs Inlet code</text>
+<rect x="364" y="676" width="14" height="10" rx="2" fill="rgba(1,115,195,0.22)" stroke="#0173C3" stroke-width="1"/>
+<text x="384" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Circle</text>
+<rect x="436" y="676" width="14" height="10" rx="2" fill="rgba(245,245,245,0.03)" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+<text x="456" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Managed service</text>
+<rect x="552" y="676" width="14" height="10" rx="2" fill="rgba(201,160,220,0.14)" stroke="#C9A0DC" stroke-width="1"/>
+<text x="572" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Client</text>
+<line x1="624" y1="681" x2="652" y2="681" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="660" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">Network path</text>
+<line x1="740" y1="681" x2="768" y2="681" stroke="#f08a59" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+<text x="776" y="684" fill="#bfc0c0" font-size="8" font-family="'Geist', sans-serif">CCTP burn and mint</text>
+    </svg>
