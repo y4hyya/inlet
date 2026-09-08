@@ -2,7 +2,7 @@
 
 From any chain into any position.
 
-[![contracts](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml/badge.svg)](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml) [![playground](https://github.com/y4hyya/inlet/actions/workflows/playground.yml/badge.svg)](https://github.com/y4hyya/inlet/actions/workflows/playground.yml)
+[![contracts](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml/badge.svg)](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml)
 
 Inlet is a deposit rail for DeFi. A user holding USDC on any supported chain signs once and, about half a minute later, holds the position they asked for on the chain the protocol lives on: an Aave supply, a Compound balance, a vault share, a Uniswap v4 liquidity position. Not USDC sitting in a wallet on the other side. The position itself.
 
@@ -12,7 +12,9 @@ Circle Gateway or CCTP V2 brings native USDC to Arc, the Inlet hub on Arc escrow
 
 | | |
 | --- | --- |
-| Playground | https://red-cliff-00b9f0703.6.azurestaticapps.net |
+| Site | https://inletkit.vercel.app |
+| Live app | https://inletkit.vercel.app/app |
+| Docs | https://inletkit.vercel.app/docs |
 | Relayer API | https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io |
 | Hub on Arc testnet | [0x84f3433550d1B6FB7f0BE197eA9faA256962408B](https://testnet.arcscan.app/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
 
@@ -134,7 +136,7 @@ Recorded deposit: [burn on Base Sepolia](https://sepolia.basescan.org/tx/0x08244
 - Circle: Gateway for unified balances and one signature deposits, CCTP V2 with hook data for every hop between chains, Arc testnet as the settlement hub, Iris for attestations.
 - Privy for email login and embedded wallets, wagmi and viem for everything the browser does on chain.
 - Uniswap v4 on Unichain Sepolia, Aave V3 on Arbitrum Sepolia, Compound III and the Morpho Oneshot vault on Base Sepolia.
-- Foundry and OpenZeppelin for the contracts, Fastify and SQLite for the relayer, Next.js for the playground, the Model Context Protocol SDK for the agent server, Azure Container Apps and Static Web Apps for hosting.
+- Foundry and OpenZeppelin for the contracts, Fastify and SQLite for the relayer, Next.js for the site, the Model Context Protocol SDK for the agent server, Azure Container Apps for the relayer and Vercel for the site.
 
 ## Repository layout
 
@@ -142,7 +144,7 @@ Recorded deposit: [burn on Base Sepolia](https://sepolia.basescan.org/tx/0x08244
 - `packages/sdk` intents, adapter data encoders, the destination catalog, Gateway and CCTP helpers, the relayer client
 - `packages/widget` the React deposit widget with optional Privy login
 - `services/relayer` deposit tracking, Arc mints, sweeps, attestations, destination execution, refunds, and the Uniswap quote proxy
-- `apps/playground` docs and live demo
+- `UI` the site: landing page, live app with replay of recorded runs, and docs
 - `apps/mcp` the MCP server for agents
 - `skills/inlet` the agent skill for integrating the kit
 - `config/` chain, deployment and protocol addresses, generated into the SDK
@@ -159,7 +161,7 @@ cd contracts && forge test                    # 43 tests; the fork tests run whe
 pnpm --filter @inletkit/sdk test              # hashing parity with the deployed hub
 pnpm --filter @inletkit/widget test           # route planning across chains
 pnpm --filter @inletkit/relayer dev           # local relayer on port 8787
-pnpm --filter @inletkit/playground dev        # http://localhost:3000
+pnpm --filter @inletkit/ui dev                # http://localhost:3000
 DESTINATION=aave pnpm --filter @inletkit/relayer e2e   # one real deposit; also compound, morpho, uniswap
 ```
 

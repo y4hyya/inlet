@@ -69,7 +69,7 @@ function summarize(record: IntentRecord) {
     refundTx: link(hubDomain, record.refundTx),
     result: record.result,
     error: record.error,
-    statusPage: `https://red-cliff-00b9f0703.6.azurestaticapps.net/status/?hash=${record.hash}`,
+    statusPage: `https://inletkit.vercel.app/app?hash=${record.hash}`,
   };
 }
 

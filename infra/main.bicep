@@ -51,5 +51,4 @@ module resources './resources.bicep' = {
 
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.registryLoginServer
 output RELAYER_URL string = resources.outputs.relayerUrl
-output PLAYGROUND_HOSTNAME string = resources.outputs.playgroundHostname
 output AZURE_RESOURCE_GROUP string = group.name

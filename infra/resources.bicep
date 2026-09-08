@@ -145,14 +145,5 @@ resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-resource playground 'Microsoft.Web/staticSites@2023-12-01' = {
-  name: 'inlet-playground'
-  location: 'westeurope'
-  tags: union(tags, { 'azd-service-name': 'playground' })
-  sku: { name: 'Free', tier: 'Free' }
-  properties: {}
-}
-
 output registryLoginServer string = registry.properties.loginServer
 output relayerUrl string = 'https://${relayer.properties.configuration.ingress.fqdn}'
-output playgroundHostname string = playground.properties.defaultHostname

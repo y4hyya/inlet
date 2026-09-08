@@ -7,7 +7,7 @@ description: Add cross chain USDC deposits to a DeFi protocol with Inlet. Use wh
 
 Inlet delivers native USDC from any chain a user holds it on into a position on the chain a protocol runs on. The user signs once on the source chain; Circle Gateway or CCTP V2 brings the USDC to a per deposit address on Arc, the Inlet hub sweeps it through CCTP to the destination, and the Inlet receiver calls an adapter that makes the protocol deposit for the user. If the adapter call fails the USDC stays claimable by the user. Zero fees, no wrapped tokens, testnet only for now.
 
-Repository: https://github.com/y4hyya/inlet. Live playground: https://red-cliff-00b9f0703.6.azurestaticapps.net. Relayer API: https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io.
+Repository: https://github.com/y4hyya/inlet. Live site: https://inletkit.vercel.app, with the app at /app and the docs at /docs. Relayer API: https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io.
 
 ## Decide what the protocol needs
 
