@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { AppView } from "@/components/app/app-view";
 
-export const metadata: Metadata = { title: "Live app" };
+export const metadata: Metadata = {
+  title: "Try a deposit",
+  description: "Make a real testnet deposit through Arc into Aave, Compound, Morpho or Uniswap, follow one by hash, or replay a recorded run.",
+};
 
 export default function AppPage() {
   return (
-    <section className="rail section">
-      <p className="eyebrow">Live on testnet</p>
-      <h1>Try a deposit</h1>
-      <p className="muted">The live app is being built.</p>
-    </section>
+    <Suspense fallback={<section className="rail section" />}>
+      <AppView />
+    </Suspense>
   );
 }

@@ -1,0 +1,254 @@
+.flow {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 24px;
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+
+.summaryText {
+  color: var(--ink);
+}
+
+.seconds {
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--soft);
+}
+
+.track {
+  position: relative;
+  padding-top: 10px;
+}
+
+.rail,
+.fill {
+  position: absolute;
+  top: 17px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.rail {
+  background: var(--line-strong);
+}
+
+.fill {
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform 600ms var(--ease-in-out);
+}
+
+.dot {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--surface);
+  transition: transform 600ms var(--ease-in-out), opacity var(--dur-ui) var(--ease-out);
+  z-index: 2;
+}
+
+.dot[data-idle] {
+  opacity: 0.35;
+}
+
+.dot[data-active]::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: ping 1.4s var(--ease-out) infinite;
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.stations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3);
+}
+
+.station {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: var(--surface);
+  transition:
+    border-color var(--dur-ui) var(--ease-out),
+    background-color var(--dur-ui) var(--ease-out);
+  z-index: 1;
+}
+
+.station[data-done] .marker {
+  border-color: var(--actor-color);
+  background: var(--actor-color);
+}
+
+.station[data-actor="user"] {
+  --actor-color: var(--user);
+}
+
+.station[data-actor="circle"] {
+  --actor-color: var(--circle-text);
+}
+
+.station[data-actor="contract"] {
+  --actor-color: var(--contract);
+}
+
+.station[data-actor="escrow"] {
+  --actor-color: var(--escrow);
+}
+
+.station[data-actor="relayer"] {
+  --actor-color: var(--relayer);
+}
+
+.label {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--soft);
+  transition: color var(--dur-ui) var(--ease-out);
+}
+
+.station[data-done] .label {
+  color: var(--ink);
+}
+
+.title {
+  font-size: var(--text-caption);
+  color: var(--soft);
+  max-width: 18ch;
+  transition: color var(--dur-ui) var(--ease-out);
+}
+
+.station[data-done] .title {
+  color: var(--muted);
+}
+
+.link {
+  font-size: 0.75rem;
+}
+
+.linkGap {
+  height: 18px;
+}
+
+.operator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-caption);
+  color: var(--soft);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.note {
+  font-size: var(--text-small);
+  color: var(--contract);
+}
+
+@media (max-width: 720px) {
+  .rail,
+  .fill,
+  .dot {
+    display: none;
+  }
+
+  .stations {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .station {
+    grid-template-columns: 16px 1fr;
+    grid-template-areas:
+      "marker label"
+      "marker title"
+      "marker link";
+    justify-items: start;
+    text-align: start;
+    column-gap: var(--space-3);
+    row-gap: 2px;
+  }
+
+  .marker {
+    grid-area: marker;
+    margin-top: 2px;
+  }
+
+  .label {
+    grid-area: label;
+    margin-top: 0;
+  }
+
+  .title {
+    grid-area: title;
+    max-width: none;
+  }
+
+  .link,
+  .linkGap {
+    grid-area: link;
+  }
+
+  .linkGap {
+    height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill,
+  .dot {
+    transition: none;
+  }
+
+  .dot[data-active]::after {
+    animation: none;
+  }
+}
