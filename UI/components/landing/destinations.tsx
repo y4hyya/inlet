@@ -12,7 +12,7 @@ export function Destinations() {
         <div className={styles.head} data-reveal>
           <p className="eyebrow">Destinations live on testnet</p>
           <h2 id="destinations-title" className={styles.title}>
-            Four protocols on three chains, plus a vault to try.
+            Seven destinations across five chains.
           </h2>
           <p className={styles.sub}>
             Every destination is an adapter behind a receiver. Pick one in the widget, or add your own.

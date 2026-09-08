@@ -20,7 +20,7 @@ The receiver approves the adapter for `amount`, calls `deposit`, and clears the 
 
 ## Decide what the protocol needs
 
-- An ERC 4626 vault over USDC on Arbitrum Sepolia, Base Sepolia or Unichain Sepolia: no contract work. Use `erc4626Destination` with the vault and the receiver for that chain.
+- An ERC 4626 vault over USDC on any chain with a receiver, which today means Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet: no contract work. Use `erc4626Destination` with the vault and the receiver for that chain.
 - Aave V3, Compound III, or a Uniswap v4 pool with USDC on one side: presets exist in the widget.
 - Anything else on those chains: write an adapter.
 - A chain without a receiver: deploy `InletReceiver` and the generic adapter there with `contracts/script/DeployReceiver.s.sol`, then ask the hub owner to register the CCTP domain and the receiver with `contracts/script/ConfigureHub.s.sol`.
@@ -70,5 +70,7 @@ The SDK has an encoder for each, and the widget a destination builder for each. 
 | Arbitrum Sepolia | 3 | `0x84f3433550d1B6FB7f0BE197eA9faA256962408B` | ERC 4626 `0x912c690f95a381e72F63a378fd906C6294412Fc9`, Aave V3 `0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736` |
 | Base Sepolia | 6 | `0x643AD7be131Aa7eE9fADB1596A66E69715F5a594` | ERC 4626 `0x6253A9a287803111eD736c0C234de17bBE7672ED`, Compound III `0x77D23de84220E4Dc86b6B8c181Be1E49D6a23f7c` |
 | Unichain Sepolia | 10 | `0x84f3433550d1B6FB7f0BE197eA9faA256962408B` | ERC 4626 `0x912c690f95a381e72F63a378fd906C6294412Fc9`, Uniswap v4 `0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED` |
+| Ethereum Sepolia | 0 | `0x84f3433550d1B6FB7f0BE197eA9faA256962408B` | ERC 4626 `0x912c690f95a381e72F63a378fd906C6294412Fc9` |
+| Monad Testnet | 15 | `0x84f3433550d1B6FB7f0BE197eA9faA256962408B` | ERC 4626 `0x912c690f95a381e72F63a378fd906C6294412Fc9` |
 
-Euler's `EVK Vault eUSDC-4` on Ethereum Sepolia is an ERC 4626 vault over Circle USDC and works with the generic adapter once a receiver is deployed there. The protocol addresses behind every preset are on the [addresses page](/docs/addresses).
+Euler's `EVK Vault eUSDC-4` on Ethereum Sepolia is an ERC 4626 vault over Circle USDC reached through the generic adapter. Monad Testnet has no Gateway, so it is a CCTP only destination, with an Inlet demo vault to deposit into. The protocol addresses behind every preset are on the [addresses page](/docs/addresses).

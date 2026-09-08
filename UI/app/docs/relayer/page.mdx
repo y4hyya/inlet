@@ -22,11 +22,11 @@ pnpm dev
 | --- | --- |
 | `RELAYER_PRIVATE_KEY` | Pays gas on Arc, in USDC, and on the destination chains |
 | `DB_PATH` | The SQLite file that holds intent state |
-| `ARC_RPC`, `BASE_SEPOLIA_RPC`, `ARBITRUM_SEPOLIA_RPC`, `UNICHAIN_SEPOLIA_RPC`, `ETHEREUM_SEPOLIA_RPC` | RPC endpoints, with public defaults |
+| `ARC_RPC`, `BASE_SEPOLIA_RPC`, `ARBITRUM_SEPOLIA_RPC`, `UNICHAIN_SEPOLIA_RPC`, `ETHEREUM_SEPOLIA_RPC`, `MONAD_TESTNET_RPC` | RPC endpoints, with public defaults |
 | `CORS_ORIGIN` | Comma separated origins allowed to call the API, or `*` |
 | `UNISWAP_API_KEY` | Turns on the Uniswap Trading API quotes behind `/quotes/uniswap` |
 
-Destination chains and receivers come from `config/deployments.testnet.json`. The relayer serves every chain that has a receiver there: Arbitrum Sepolia, Base Sepolia and Unichain Sepolia today. It manages its nonces locally and retries nonce errors after five seconds, which matters on public RPCs that lag.
+Destination chains and receivers come from `config/deployments.testnet.json`. The relayer serves every chain that has a receiver there: Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet today. It manages its nonces locally and retries nonce errors after five seconds, which matters on public RPCs that lag.
 
 ## Pipeline
 

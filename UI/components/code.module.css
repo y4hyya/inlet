@@ -20,10 +20,18 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
   position: relative;
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -65,6 +73,7 @@
 
 .copy {
   position: relative;
+  flex: none;
   margin-inline-start: auto;
   display: inline-flex;
   align-items: center;
