@@ -11,17 +11,54 @@
 .head {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 7px 8px 7px var(--space-4);
+  gap: var(--space-2);
+  padding: 7px 8px;
   border-bottom: 1px solid var(--line);
 }
 
-.label {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding-inline: 12px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  font-size: var(--text-caption);
+  font-weight: 500;
   color: var(--soft);
+  cursor: pointer;
+  transition:
+    color 150ms var(--ease-out),
+    background-color 150ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.tab::before {
+  content: "";
+  position: absolute;
+  inset: -7px 0;
+}
+
+.tab:hover {
+  color: var(--ink);
+  background: rgba(245, 245, 245, 0.06);
+}
+
+.tab:active {
+  transform: scale(0.96);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  background: rgba(245, 245, 245, 0.12);
 }
 
 .copy {
@@ -105,11 +142,11 @@
   white-space: nowrap;
 }
 
-.code {
+.panel {
   overflow-x: auto;
 }
 
-.code :global(pre) {
+.panel :global(pre) {
   margin: 0;
   padding: var(--space-4);
   background: transparent !important;
@@ -119,11 +156,22 @@
   tab-size: 2;
 }
 
-.code :global(code) {
+.panel :global(code) {
   font-family: inherit;
 }
 
+@media (max-width: 520px) {
+  .tab {
+    padding-inline: 9px;
+  }
+
+  .copy {
+    padding-inline: 8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .tab:active,
   .copy:active {
     transform: none;
   }

@@ -1,17 +1,18 @@
 import { codeToHtml } from "shiki";
-import { CopyButton } from "./copy-button";
-import styles from "./code.module.css";
+import { CodeTabs, type RenderedSample } from "./code-tabs";
 
-export async function Code({ code, lang = "tsx", label }: { code: string; lang?: string; label?: string }) {
-  const source = code.trim();
-  const html = await codeToHtml(source, { lang, theme: "vesper" });
-  return (
-    <div className={styles.frame} data-code-frame="">
-      <div className={styles.head}>
-        {label ? <p className={styles.label}>{label}</p> : null}
-        <CopyButton code={source} />
-      </div>
-      <div className={styles.code} data-code-body="" dangerouslySetInnerHTML={{ __html: html }} />
-    </div>
+export interface CodeSample {
+  id: string;
+  label: string;
+  code: string;
+}
+
+export async function Code({ samples, lang = "tsx" }: { samples: CodeSample[]; lang?: string }) {
+  const rendered: RenderedSample[] = await Promise.all(
+    samples.map(async (sample) => {
+      const code = sample.code.trim();
+      return { id: sample.id, label: sample.label, code, html: await codeToHtml(code, { lang, theme: "vesper" }) };
+    }),
   );
+  return <CodeTabs samples={rendered} />;
 }
