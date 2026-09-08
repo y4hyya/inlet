@@ -1,7 +1,7 @@
 import { testnetChains, testnetDeployments } from "@inletkit/sdk";
 import { createPublicClient, createWalletClient, http, nonceManager, type Address, type Chain, type PublicClient, type WalletClient } from "viem";
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
-import { arbitrumSepolia, arcTestnet, baseSepolia, sepolia, unichainSepolia } from "viem/chains";
+import { arbitrumSepolia, arcTestnet, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 import type { RelayerConfig } from "./config.js";
 
 export interface ChainContext {
@@ -34,6 +34,7 @@ const viemChains: Record<number, Chain> = {
   [arbitrumSepolia.id]: arbitrumSepolia,
   [unichainSepolia.id]: unichainSepolia,
   [sepolia.id]: sepolia,
+  [monadTestnet.id]: monadTestnet,
 };
 
 export const evmChains = Object.entries(testnetChains).flatMap(([key, entry]) =>

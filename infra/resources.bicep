@@ -7,6 +7,7 @@ param baseSepoliaRpc string
 param arbitrumSepoliaRpc string
 param unichainSepoliaRpc string
 param ethereumSepoliaRpc string
+param monadTestnetRpc string
 param corsOrigin string
 @secure()
 param uniswapApiKey string = ''
@@ -129,6 +130,7 @@ resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'ARBITRUM_SEPOLIA_RPC', value: arbitrumSepoliaRpc }
             { name: 'UNICHAIN_SEPOLIA_RPC', value: unichainSepoliaRpc }
             { name: 'ETHEREUM_SEPOLIA_RPC', value: ethereumSepoliaRpc }
+            { name: 'MONAD_TESTNET_RPC', value: monadTestnetRpc }
             { name: 'CORS_ORIGIN', value: corsOrigin }
             { name: 'UNISWAP_API_KEY', secretRef: 'uniswap-api-key' }
           ]

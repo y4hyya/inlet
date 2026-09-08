@@ -18,6 +18,9 @@ param baseSepoliaRpc string = 'https://sepolia.base.org'
 param arbitrumSepoliaRpc string = 'https://sepolia-rollup.arbitrum.io/rpc'
 param unichainSepoliaRpc string = 'https://sepolia.unichain.org'
 param ethereumSepoliaRpc string = 'https://ethereum-sepolia-rpc.publicnode.com'
+
+@description('RPC endpoint for Monad Testnet.')
+param monadTestnetRpc string = 'https://testnet-rpc.monad.xyz'
 param corsOrigin string = '*'
 
 @secure()
@@ -43,6 +46,7 @@ module resources './resources.bicep' = {
     arbitrumSepoliaRpc: arbitrumSepoliaRpc
     unichainSepoliaRpc: unichainSepoliaRpc
     ethereumSepoliaRpc: ethereumSepoliaRpc
+    monadTestnetRpc: monadTestnetRpc
     corsOrigin: corsOrigin
     uniswapApiKey: uniswapApiKey
     relayerImage: relayerImage

@@ -33,6 +33,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig 
       3: env.ARBITRUM_SEPOLIA_RPC ?? testnetChains.arbitrumSepolia.rpc,
       10: env.UNICHAIN_SEPOLIA_RPC ?? testnetChains.unichainSepolia.rpc,
       0: env.ETHEREUM_SEPOLIA_RPC ?? testnetChains.ethereumSepolia.rpc,
+      15: env.MONAD_TESTNET_RPC ?? testnetChains.monadTestnet.rpc,
     },
     hub: testnetDeployments.arcTestnet.inletHub as Address,
     hubDomain: 26,

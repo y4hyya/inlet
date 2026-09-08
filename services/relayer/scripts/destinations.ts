@@ -1,6 +1,6 @@
 import { demoVaultAbi, testnetChains, testnetDeployments, testnetDestinations as catalog, testnetProtocols, toBytes32 } from "@inletkit/sdk";
 import { createPublicClient, erc20Abi, http, type Address, type Chain, type Hex, type PublicClient } from "viem";
-import { arbitrumSepolia, baseSepolia, sepolia, unichainSepolia } from "viem/chains";
+import { arbitrumSepolia, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 
 export interface E2eDestination {
   name: string;
@@ -18,6 +18,8 @@ const rpc = (key: keyof typeof testnetChains) => (testnetChains[key] as { rpc: s
 const arbitrum = createPublicClient({ chain: arbitrumSepolia, transport: http(rpc("arbitrumSepolia")) }) as PublicClient;
 const base = createPublicClient({ chain: baseSepolia, transport: http(rpc("baseSepolia")) }) as PublicClient;
 const unichain = createPublicClient({ chain: unichainSepolia, transport: http(rpc("unichainSepolia")) }) as PublicClient;
+const ethereum = createPublicClient({ chain: sepolia, transport: http(rpc("ethereumSepolia")) }) as PublicClient;
+const monad = createPublicClient({ chain: monadTestnet, transport: http(rpc("monadTestnet")) }) as PublicClient;
 
 function balanceReader(client: PublicClient, token: Address) {
   return (user: Address) => client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [user] });
@@ -29,11 +31,20 @@ const readers: Record<string, (user: Address) => Promise<bigint>> = {
   "compound-v3-base-sepolia": balanceReader(base, testnetProtocols.baseSepolia.compoundV3Comet as Address),
   "morpho-oneshot-base-sepolia": balanceReader(base, testnetProtocols.baseSepolia.morphoOneshotVault as Address),
   "uniswap-v4-eth-usdc-unichain-sepolia": balanceReader(unichain, testnetProtocols.unichainSepolia.uniswapV4PositionManager as Address),
+  "euler-ethereum-sepolia": balanceReader(ethereum, testnetProtocols.ethereumSepolia.eulerEUsdc4 as Address),
+  "demo-vault-monad-testnet": (user) => monad.readContract({ address: testnetDeployments.monadTestnet.demoVault as Address, abi: demoVaultAbi, functionName: "balanceOf", args: [user] }),
 };
 
-const aliases: Record<string, string> = { aave: "aave-v3-arbitrum-sepolia", compound: "compound-v3-base-sepolia", morpho: "morpho-oneshot-base-sepolia", uniswap: "uniswap-v4-eth-usdc-unichain-sepolia" };
+const aliases: Record<string, string> = {
+  aave: "aave-v3-arbitrum-sepolia",
+  compound: "compound-v3-base-sepolia",
+  morpho: "morpho-oneshot-base-sepolia",
+  uniswap: "uniswap-v4-eth-usdc-unichain-sepolia",
+  euler: "euler-ethereum-sepolia",
+  monad: "demo-vault-monad-testnet",
+};
 
-const chains: Record<number, Chain> = { 3: arbitrumSepolia, 6: baseSepolia, 10: unichainSepolia, 0: sepolia };
+const chains: Record<number, Chain> = { 0: sepolia, 3: arbitrumSepolia, 6: baseSepolia, 10: unichainSepolia, 15: monadTestnet };
 
 export const destinations: Record<string, E2eDestination> = Object.fromEntries(
   catalog.map((spec) => [
