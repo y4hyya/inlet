@@ -49,8 +49,8 @@
   --radius-m: 12px;
   --radius-l: 16px;
 
-  --glass-bg: rgba(45, 49, 66, 0.55);
-  --glass-bg-strong: rgba(45, 49, 66, 0.72);
+  --glass-bg: rgba(45, 49, 66, 0.45);
+  --glass-bg-strong: rgba(45, 49, 66, 0.62);
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-edge: rgba(255, 255, 255, 0.16);
   --glass-filter: blur(24px) saturate(160%);
@@ -324,7 +324,7 @@ body:has([data-wallpaper]) {
   --muted: #cfd2d8;
   --line: rgba(245, 245, 245, 0.12);
   --line-strong: rgba(245, 245, 245, 0.22);
-  --nav-bg: rgba(45, 49, 66, 0.72);
+  --nav-bg: rgba(45, 49, 66, 0.62);
   --nav-border: var(--glass-border);
   --nav-blur: blur(20px) saturate(120%);
 }

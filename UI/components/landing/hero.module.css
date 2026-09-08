@@ -57,7 +57,7 @@
 
 .widget :global(.inlet select),
 .widget :global(.inlet input) {
-  background: rgba(45, 49, 66, 0.35);
+  background: rgba(45, 49, 66, 0.25);
 }
 
 .caption {
