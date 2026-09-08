@@ -76,7 +76,7 @@
 .prose code {
   font-size: 0.875em;
   color: var(--ink);
-  background: var(--surface);
+  background: rgba(245, 245, 245, 0.08);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -86,9 +86,12 @@
 }
 
 .prose figure[data-rehype-pretty-code-figure] {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-m);
-  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
 }
 
@@ -121,9 +124,12 @@
 .prose pre:not(figure pre) {
   margin: var(--space-6) 0;
   padding: var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-m);
-  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow);
   overflow-x: auto;
   font-size: 0.8125rem;
   line-height: 1.6;
@@ -169,8 +175,9 @@
 .prose img {
   width: 100%;
   height: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-m);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
   margin: var(--space-6) 0;
 }
 

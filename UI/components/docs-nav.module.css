@@ -38,12 +38,12 @@
 
 .link:hover {
   color: var(--ink);
-  background: var(--surface);
+  background: rgba(245, 245, 245, 0.06);
 }
 
 .link[aria-current="page"] {
   color: var(--ink);
-  background: var(--surface);
+  background: rgba(245, 245, 245, 0.12);
 }
 
 @media (max-width: 900px) {
