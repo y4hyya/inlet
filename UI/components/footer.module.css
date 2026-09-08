@@ -4,6 +4,13 @@
   padding-block: var(--space-16) var(--space-8);
 }
 
+:global(body:has([data-wallpaper])) .footer {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border-top-color: var(--glass-border);
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1.6fr 1fr 1fr;

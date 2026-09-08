@@ -4,29 +4,13 @@
 
 .band {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
   padding: clamp(40px, 6vw, 80px);
-}
-
-.band::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--surface) url("/stage.jpg") center 45% / cover no-repeat;
-  pointer-events: none;
-}
-
-.band::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, rgba(57, 62, 83, 0.92) 0%, rgba(57, 62, 83, 0.72) 45%, rgba(57, 62, 83, 0.25) 100%);
-  pointer-events: none;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius);
 }
 
 .built {

@@ -27,8 +27,9 @@
 .figure img {
   width: 100%;
   height: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-m);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
 }
 
 .figure figcaption {
@@ -44,15 +45,21 @@
   position: relative;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: var(--space-12) var(--space-8);
   display: grid;
   gap: var(--space-12);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius);
 }
 
 .line,
 .fill {
   position: absolute;
-  left: 7px;
+  left: calc(var(--space-8) + 7px);
   width: 2px;
   border-radius: 1px;
 }
@@ -167,6 +174,15 @@
 
   .step {
     gap: var(--space-4);
+  }
+
+  .timeline {
+    padding: var(--space-8) var(--space-4);
+  }
+
+  .line,
+  .fill {
+    left: calc(var(--space-4) + 7px);
   }
 }
 

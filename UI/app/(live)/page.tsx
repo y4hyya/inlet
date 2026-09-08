@@ -7,10 +7,12 @@ import { How } from "@/components/landing/how";
 import { Integrate } from "@/components/landing/integrate";
 import { Proof } from "@/components/landing/proof";
 import { Tagline } from "@/components/landing/tagline";
+import { Wallpaper } from "@/components/landing/wallpaper";
 
 export default function Home() {
   return (
     <>
+      <Wallpaper />
       <Hero />
       <Proof />
       <Contrast />

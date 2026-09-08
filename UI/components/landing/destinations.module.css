@@ -18,10 +18,23 @@
   max-width: 52ch;
 }
 
+.panel {
+  padding: var(--space-2) var(--space-6);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius);
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
-  border-top: 1px solid var(--line);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .table th {
