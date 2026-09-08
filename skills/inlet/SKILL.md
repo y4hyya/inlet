@@ -11,7 +11,7 @@ Repository: https://github.com/y4hyya/inlet. Live site: https://inletkit.vercel.
 
 ## Decide what the protocol needs
 
-- An ERC 4626 vault over USDC on Arbitrum Sepolia, Base Sepolia or Unichain Sepolia: no contract work. Use `erc4626Destination` with the vault address and the receiver for that chain.
+- An ERC 4626 vault over USDC on Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia or Monad Testnet: no contract work. Use `erc4626Destination` with the vault address and the receiver for that chain.
 - Aave V3, Compound III or a Uniswap v4 pool with USDC on one side: presets exist, see `packages/widget/src/config.ts`.
 - Anything else on those chains: write an adapter, see below.
 - A chain without a receiver: deploy `InletReceiver` and the generic adapter there with `contracts/script/DeployReceiver.s.sol`, then ask the hub owner to register the CCTP domain and the receiver with `contracts/script/ConfigureHub.s.sol`.
@@ -91,6 +91,8 @@ Everything the relayer does is permissionless: `sweep` and `refund` on the hub, 
 | Receiver on Arbitrum Sepolia, domain 3 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
 | Receiver on Base Sepolia, domain 6 | 0x643AD7be131Aa7eE9fADB1596A66E69715F5a594 |
 | Receiver on Unichain Sepolia, domain 10 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
+| Receiver on Ethereum Sepolia, domain 0 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
+| Receiver on Monad Testnet, domain 15 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
 | Adapter ids | `erc4626:v1`, `aave-v3:v1`, `compound-v3:v1`, `uniswap-v4-lp:v1` |
 | Circle | TokenMessengerV2 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA, MessageTransmitterV2 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275, GatewayWallet 0x0077777d7EBA4688BDeF3E311b846F25870A19B9, GatewayMinter 0x0022222ABE238Cc2C7Bb1f21003F0a260052475B on every EVM testnet |
 
