@@ -1,0 +1,107 @@
+export const metadata = { title: "Mount the widget", description: "Install the Inlet widget, declare a destination, theme it, and read the deposit record back." };
+
+<p className="eyebrow">Build</p>
+
+# Mount the widget
+
+The widget is a React component that quotes, routes, signs and follows a deposit. It runs on wagmi, so it drops into the stack a protocol already has.
+
+## Install
+
+```bash
+pnpm add @inletkit/widget @inletkit/sdk
+```
+
+## Three lines
+
+```tsx title="app.tsx"
+import {
+  InletProvider,
+  DepositWidget,
+  erc4626Destination,
+} from "@inletkit/widget";
+import "@inletkit/widget/styles.css";
+
+const vault = erc4626Destination({
+  id: "my-vault",
+  name: "My USDC Vault",
+  destinationDomain: 6,
+  receiver: "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+  vault: "0xYourVaultOnBaseSepolia",
+});
+
+<InletProvider privyAppId={PRIVY_APP_ID} relayerUrl={RELAYER_URL}>
+  <DepositWidget destinations={[vault]} />
+</InletProvider>
+```
+
+Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. For Aave V3, Compound III and Uniswap v4 pools with USDC on one side, the presets in `@inletkit/widget` already point at the deployed adapters. Anything else needs [one adapter with one function](/docs/adapters).
+
+## Inside an app that already runs wagmi
+
+`InletProvider` brings Privy login and wagmi for apps that have neither. An app that already runs wagmi renders `DepositWidget` inside its own provider and skips `InletProvider`. The widget only uses wagmi hooks and the `relayerUrl` prop, and it falls back to the first wagmi connector for the connect button.
+
+## Props
+
+`DepositWidget`
+
+| Prop | Type | Meaning |
+| --- | --- | --- |
+| `destinations` | `Destination[]` | The positions a user can deposit into. The first one is selected unless `defaultDestinationId` says otherwise |
+| `relayerUrl` | `string` | Overrides the relayer from `InletProvider` |
+| `sources` | `SourceChain[]` | Chains a deposit can start from. Defaults to Base Sepolia and Arbitrum Sepolia |
+| `defaultAmount` | `string` | Initial amount in USDC. Defaults to `"1"` |
+| `defaultDestinationId` | `string` | Which destination starts selected |
+| `title` | `string` | The widget heading |
+| `onRecord` | `(record: IntentRecord) => void` | Called with every update of the intent record, from creation to the final state. Use it to show the deposit elsewhere in your app or to route to a status page |
+
+`InletProvider`
+
+| Prop | Type | Meaning |
+| --- | --- | --- |
+| `privyAppId` | `string` | Your Privy app. Email and wallet login, an embedded wallet for users without one |
+| `relayerUrl` | `string` | The relayer the widget talks to. Point it at your own or at the hosted one |
+| `rpc` | `Record<number, string>` | RPC overrides by chain id |
+| `appearance` | `{ theme, accentColor, logo }` | Passed to Privy's login modal so it matches your app |
+
+## Destination builders
+
+| Builder | Adapter | Arguments |
+| --- | --- | --- |
+| `erc4626Destination` | `erc4626:v1` | `vault`, and optionally `minShares` |
+| `aaveV3Destination` | `aave-v3:v1` | `pool`, and optionally `minATokens` |
+| `compoundV3Destination` | `compound-v3:v1` | `comet`, and optionally `minSupplied` |
+| `uniswapV4LpDestination` | `uniswap-v4-lp:v1` | `poolKey`, `rangeTicks`, `minLiquidity`, and a `price` hint for the live quote |
+
+Every builder also takes `id`, `name`, `destinationDomain`, `receiver` and an `explorer` base URL. The ready made presets for the testnet destinations are exported as `testnetDestinations`, with `findDestination(record)` to look one up from an intent record.
+
+## What the user sees
+
+Before login the form is visible: destination, source chain, amount, and the route. After login the widget quotes the deposit every time the amount changes: the route it picked, what the user sends, what the position receives, Circle's fee at most, the wallet balance and the Gateway balances on every source chain. When a Gateway balance on another chain can pay, the widget moves the source there and says so, without touching the wallet's network. Deposit stays disabled until the route can succeed.
+
+After the signature the widget shows the status timeline: intent registered, USDC on Arc, swept, attested, position delivered, each with its explorer link. A user who wants gasless deposits later can fund a Gateway balance from the same widget.
+
+## Theming
+
+The widget is styled through CSS custom properties on `.inlet`, so a host app restyles it without touching its markup:
+
+```css title="theme.css"
+.inlet {
+  --inlet-bg: #393e53;
+  --inlet-fg: #f5f5f5;
+  --inlet-muted: #8e98ac;
+  --inlet-line: rgba(245, 245, 245, 0.18);
+  --inlet-accent: #f08a59;
+  --inlet-accent-fg: #2d3142;
+  --inlet-warn: #ffee8c;
+  --inlet-warn-bg: rgba(255, 238, 140, 0.08);
+  --inlet-done: #a6eca8;
+  font-family: inherit;
+}
+```
+
+The defaults are a light theme with a dark variant behind `prefers-color-scheme`.
+
+## Following a deposit outside the widget
+
+`onRecord` hands you the `IntentRecord` on every change. Its `hash` identifies the deposit on the relayer, so `GET /intents/:hash` returns the same record from any client, and the [live app](/app) accepts `?hash=` to show it.

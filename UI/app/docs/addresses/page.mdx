@@ -1,0 +1,67 @@
+export const metadata = { title: "Addresses", description: "Every contract Inlet touches on testnet: the hub, the receivers, the adapters, Circle's contracts, and the protocols behind the presets." };
+
+<p className="eyebrow">Reference</p>
+
+# Addresses on testnet
+
+Every address here is exported by the SDK as `testnetChains`, `testnetDeployments` and `testnetProtocols`, generated from the config files in the repository.
+
+## Inlet
+
+| Item | Address |
+| --- | --- |
+| Hub on Arc testnet, chain 5042002, CCTP and Gateway domain 26 | [`0x84f3433550d1B6FB7f0BE197eA9faA256962408B`](https://testnet.arcscan.app/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+| Receiver on Arbitrum Sepolia, domain 3 | [`0x84f3433550d1B6FB7f0BE197eA9faA256962408B`](https://sepolia.arbiscan.io/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+| Receiver on Base Sepolia, domain 6 | [`0x643AD7be131Aa7eE9fADB1596A66E69715F5a594`](https://sepolia.basescan.org/address/0x643AD7be131Aa7eE9fADB1596A66E69715F5a594) |
+| Receiver on Unichain Sepolia, domain 10 | [`0x84f3433550d1B6FB7f0BE197eA9faA256962408B`](https://sepolia.uniscan.xyz/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+
+## Adapters
+
+| Chain | Adapter | Address |
+| --- | --- | --- |
+| Arbitrum Sepolia | ERC 4626 `erc4626:v1` | `0x912c690f95a381e72F63a378fd906C6294412Fc9` |
+| Arbitrum Sepolia | Aave V3 `aave-v3:v1` | `0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736` |
+| Arbitrum Sepolia | Inlet demo vault, an ERC 4626 vault over USDC | `0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED` |
+| Base Sepolia | ERC 4626 `erc4626:v1` | `0x6253A9a287803111eD736c0C234de17bBE7672ED` |
+| Base Sepolia | Compound III `compound-v3:v1` | `0x77D23de84220E4Dc86b6B8c181Be1E49D6a23f7c` |
+| Unichain Sepolia | ERC 4626 `erc4626:v1` | `0x912c690f95a381e72F63a378fd906C6294412Fc9` |
+| Unichain Sepolia | Uniswap v4 `uniswap-v4-lp:v1` | `0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED` |
+
+Adapter ids are `keccak256` of the name: `erc4626:v1`, `aave-v3:v1`, `compound-v3:v1`, `uniswap-v4-lp:v1`.
+
+## Protocols behind the presets
+
+| Protocol | Chain | Address |
+| --- | --- | --- |
+| Aave V3 pool | Arbitrum Sepolia | `0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff` |
+| Aave aArbSepUSDC | Arbitrum Sepolia | `0x460b97BD498E1157530AEb3086301d5225b91216` |
+| Compound III USDC Comet | Base Sepolia | `0x571621Ce60Cebb0c1D442B5afb38B1663C6Bf017` |
+| Morpho Oneshot vault | Base Sepolia | `0x405baEeC864F9FA12AB031e69f2a1Aa2e4Add240` |
+| Uniswap v4 PoolManager | Unichain Sepolia | `0x00B036B58a818B1BC34d502D3fE730Db729e62AC` |
+| Uniswap v4 PositionManager | Unichain Sepolia | `0xf969Aee60879C54bAAed9F3eD26147Db216Fd664` |
+| Uniswap v4 StateView | Unichain Sepolia | `0xc199F1072a74D4e905ABa1A84d9a45E2546B6222` |
+| Uniswap v4 Quoter | Unichain Sepolia | `0x56DCD40A3F2d466F48e7F48bDBE5Cc9B92Ae4472` |
+| Permit2 | Unichain Sepolia | `0x000000000022D473030F116dDEE9F6B43aC78BA3` |
+| Euler EVK Vault eUSDC-4 | Ethereum Sepolia | `0xF4FDA4026E5C012c96557E4f2412C566a8fcbd76` |
+
+The ETH/USDC pool on Unichain Sepolia has a fee of 3000 and a tick spacing of 60.
+
+## Circle
+
+The same addresses on every EVM testnet.
+
+| Contract | Address |
+| --- | --- |
+| TokenMessengerV2 | `0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA` |
+| MessageTransmitterV2 | `0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275` |
+| GatewayWallet | `0x0077777d7EBA4688BDeF3E311b846F25870A19B9` |
+| GatewayMinter | `0x0022222ABE238Cc2C7Bb1f21003F0a260052475B` |
+
+CCTP domains: Ethereum Sepolia 0, Arbitrum Sepolia 3, Base Sepolia 6, Unichain Sepolia 10, Arc 26.
+
+## Services
+
+| Service | URL |
+| --- | --- |
+| Hosted relayer | `https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io` |
+| Repository | [github.com/y4hyya/inlet](https://github.com/y4hyya/inlet) |

@@ -1,0 +1,48 @@
+export const metadata = { title: "Run a relayer", description: "What the relayer does, how to run one, and why a protocol can run its own against the same hub." };
+
+<p className="eyebrow">Build</p>
+
+# Run a relayer
+
+The relayer completes deposits. It watches deposit addresses on Arc, mints incoming CCTP transfers, sweeps the hub, waits for Circle's attestation, and executes the adapter on the destination chain. Every step checks the chain before acting, so the process can restart at any point.
+
+## Everything it does is permissionless
+
+`sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter, `execute` and `claim` on the receiver. A relayer makes deposits fast. It cannot redirect one, and it is not needed to finish one. A protocol can run its own relayer, or point the widget at the hosted one at `https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io`.
+
+## Run it
+
+```bash
+cd services/relayer
+cp .env.example .env
+pnpm dev
+```
+
+| Variable | Meaning |
+| --- | --- |
+| `RELAYER_PRIVATE_KEY` | Pays gas on Arc, in USDC, and on the destination chains |
+| `DB_PATH` | The SQLite file that holds intent state |
+| `ARC_RPC`, `BASE_SEPOLIA_RPC`, `ARBITRUM_SEPOLIA_RPC`, `UNICHAIN_SEPOLIA_RPC`, `ETHEREUM_SEPOLIA_RPC` | RPC endpoints, with public defaults |
+| `CORS_ORIGIN` | Comma separated origins allowed to call the API, or `*` |
+| `UNISWAP_API_KEY` | Turns on the Uniswap Trading API quotes behind `/quotes/uniswap` |
+
+Destination chains and receivers come from `config/deployments.testnet.json`. The relayer serves every chain that has a receiver there: Arbitrum Sepolia, Base Sepolia and Unichain Sepolia today. It manages its nonces locally and retries nonce errors after five seconds, which matters on public RPCs that lag.
+
+## Pipeline
+
+| From | To | What happens |
+| --- | --- | --- |
+| created | funded | A CCTP mint or a Gateway mint landed at the deposit address on Arc |
+| funded | swept | The relayer called `sweep` on the hub |
+| swept | attested | Circle's Iris API returned the attestation for the hub's burn |
+| attested | executed | The relayer called `receiveMessage` and then `execute` on the receiver |
+| attested | claimable | The adapter reverted inside `execute` and the receiver kept the USDC for the beneficiary |
+| funded or created | refunding, refunded, expired | The deadline passed; `refund` burned the balance back, or nothing was there |
+
+## End to end scripts
+
+`pnpm e2e` burns one USDC on the source chain, routes it through Arc and deposits it into the chosen destination, printing every transaction hash. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without the source chain wait. Both read `DESTINATION`, `SOURCE`, `E2E_AMOUNT`, `USER_PRIVATE_KEY` and `RELAYER_URL`.
+
+## Hosting
+
+The hosted relayer runs as an Azure Container App from the `infra` folder in the repository, provisioned with the Azure Developer CLI. Any container host with a persistent volume for the SQLite file works.

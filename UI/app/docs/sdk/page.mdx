@@ -1,0 +1,74 @@
+export const metadata = { title: "Deposit without a browser", description: "The SDK and the relayer API: build an intent, fund the deposit address over Gateway or CCTP, and poll to the position." };
+
+<p className="eyebrow">Build</p>
+
+# Deposit without a browser
+
+`@inletkit/sdk` and the relayer API run the same flow the widget runs. A script, a backend or an agent can make a deposit with nothing but a key.
+
+## The flow
+
+1. **Build a `DepositIntent`.** Owner, source domain, destination domain, adapter id, receiver as bytes32, beneficiary as bytes32, adapter data, amount as a floor in USDC units, nonce, deadline, refund recipient, and `feeBps` zero.
+2. **Register it.** `POST /intents` with the intent and the route, `cctp` or `gateway`. The reply carries the intent hash and the deposit address on Arc.
+3. **CCTP route.** Approve Circle's TokenMessengerV2 on the source chain and call `depositForBurn(amount, 26, depositAddress, usdc, 0x0, maxFee, 1000)`, then `POST /intents/:hash/source-tx` with the transaction hash. The intent amount must be the burned amount minus the fast transfer fee from `IrisClient.fastTransferMaxFee`.
+4. **Gateway route.** Sign a Gateway burn intent with `createBurnIntent` and `burnIntentTypedData` whose recipient is the deposit address, then `POST /intents/:hash/gateway`. No gas needed.
+5. **Poll.** `GET /intents/:hash` until the state is `executed`, or `claimable`, `refunded` or `expired`.
+
+## With the SDK
+
+```ts title="deposit.ts"
+import {
+  InletRelayerClient,
+  adapterId,
+  erc4626AdapterData,
+  testnetDeployments,
+} from "@inletkit/sdk";
+import { pad } from "viem";
+
+const relayer = new InletRelayerClient(RELAYER_URL);
+
+const intent = {
+  owner: account.address,
+  sourceDomain: 6,
+  destinationDomain: 3,
+  adapterId: adapterId("erc4626:v1"),
+  receiver: pad(testnetDeployments.arbitrumSepolia.inletReceiver),
+  beneficiary: pad(account.address),
+  adapterData: erc4626AdapterData(testnetDeployments.arbitrumSepolia.demoVault, 0n),
+  amount: 999_870n,
+  nonce: BigInt(Date.now()),
+  deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
+  refundRecipient: pad(account.address),
+  feeBps: 0,
+};
+
+const record = await relayer.createIntent(intent, "cctp");
+// burn 1 USDC on Base Sepolia with record.depositAddress as the mint recipient
+await relayer.reportSourceTransaction(record.hash, burnTx);
+
+let state = record;
+while (!["executed", "claimable", "refunded", "expired"].includes(state.state)) {
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  state = await relayer.getIntent(record.hash);
+}
+```
+
+The relayer's `scripts/e2e.ts` and `scripts/e2e-gateway.ts` are complete, runnable versions of both routes, and every recorded run on the [start page](/#destinations) came out of them.
+
+## Relayer API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` | hub and relayer addresses, the destination domains it serves, whether Uniswap quotes are on |
+| POST | `/intents` | register an intent, returns its hash and deposit address |
+| POST | `/intents/:hash/source-tx` | report the CCTP burn on the source chain |
+| POST | `/intents/:hash/gateway` | submit the signed Gateway burn intent |
+| GET | `/intents/:hash` | current state and transaction hashes |
+| GET | `/quotes/uniswap` | live quote from the Uniswap Trading API; query `chainId`, `tokenIn`, `tokenOut`, `amount` |
+
+## What the SDK exports
+
+- `InletRelayerClient` for the API above.
+- `adapterId` and the encoders `erc4626AdapterData`, `aaveV3AdapterData`, `compoundV3AdapterData`, `uniswapV4LpAdapterData`.
+- `createBurnIntent` and `burnIntentTypedData` for the Gateway route, `IrisClient` for CCTP fees and attestations.
+- `testnetChains`, `testnetDeployments`, `testnetProtocols`, `testnetDestinations`, `testnetSources` and `explorers`, generated from the config files in the repository.

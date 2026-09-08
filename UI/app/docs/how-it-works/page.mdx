@@ -1,0 +1,97 @@
+export const metadata = { title: "How it works", description: "The actors, the trust model, the deposit intent, the hub on Arc, the two source routes, and destination execution." };
+
+<p className="eyebrow">Start</p>
+
+# How it works
+
+A deposit is an intent, an address derived from that intent, one transfer into that address, and a fixed path out of it.
+
+![Architecture of Inlet: wallet or Gateway balance on the source chain, deposit address and hub on Arc, receiver and adapter on the destination chain, the relayer and Circle attestation, the refund path](/diagrams/architecture.svg)
+
+## Actors
+
+- **User.** Holds USDC on a source chain, signs a deposit intent, receives a position on a destination chain.
+- **Protocol.** The destination application: a vault, a lending market, a pool. Integrates Inlet by publishing an adapter and mounting the widget.
+- **Hub.** The Inlet contract on Arc. Receives USDC per intent, routes it through CCTP, refunds when routing is impossible.
+- **Receiver.** The Inlet contract on a destination chain. Receives the minted USDC, executes the adapter, keeps funds claimable if execution fails.
+- **Relayer.** An off chain service that watches Circle attestations, submits mints, sweeps the hub, and executes receivers. Anyone can run one. The reference relayer is open source.
+
+## Trust model
+
+- The deposit address is the commitment. It is derived from the hash of every parameter of the deposit: amount, destination, receiver, adapter, beneficiary, deadline, refund address. Funds only arrive there because the user named that address in the Gateway or CCTP transfer they signed, so Inlet never needs a signature of its own.
+- The hub only moves funds along the path the intent names, or back to the intent's refund address after the deadline.
+- The receiver only executes the adapter the intent names, for the beneficiary the intent names, with the amount Circle minted, and only for messages burned by the hub.
+- A relayer can delay a deposit. It cannot redirect one. If every relayer disappears, the user can sweep, refund or claim by calling the contracts directly.
+
+## The deposit intent
+
+An intent is an EIP 712 typed structure. Its hash under the hub's domain identifies the deposit everywhere: on the hub, in the hook data, in the receiver, and in the relayer. The user never signs it directly, because the deposit address derived from it is what the user's transfer names.
+
+```solidity title="DepositIntent"
+struct DepositIntent {
+    address owner;            // signer on the source chain
+    uint32  sourceDomain;     // CCTP domain of the source chain
+    uint32  destinationDomain;
+    bytes32 adapterId;        // keccak256 of the adapter name, for example "erc4626:v1"
+    bytes32 receiver;         // the Inlet receiver on the destination chain
+    bytes32 beneficiary;      // destination account, left padded EVM address or 32 byte key
+    bytes   adapterData;      // adapter specific parameters
+    uint256 amount;           // minimum USDC that must arrive at the deposit address, 6 decimals
+    uint256 nonce;
+    uint64  deadline;         // unix seconds; after this the intent is refundable
+    bytes32 refundRecipient;  // account on the source chain
+    uint16  feeBps;           // must be 0 in version 1
+}
+```
+
+The amount is a floor, not the exact transfer size. Fast CCTP transfers deduct a fee at mint, so the SDK sets the intent amount to the burned amount minus the maximum fee, and the hub routes whatever balance arrives as long as it covers the floor.
+
+## The hub on Arc
+
+**Deposit addresses.** Every intent has its own address on Arc, derived with CREATE2 from the hub address and the intent hash. It is computable before any transaction exists, so the SDK names it as the mint recipient. The contract at that address is a minimal forwarder whose constructor transfers its whole USDC balance to the hub, deployed lazily at sweep time. The user never needs Arc gas, funds map to intents without ambiguity, and sweeping is permissionless.
+
+**Sweep.** Anyone calls `sweep(intent)`. The hub rejects intents that were already swept or refunded, a nonzero fee, a passed deadline, or an unregistered destination. It deploys the forwarder if needed, requires the received balance to cover the intent amount, and burns the full balance through CCTP V2 `depositForBurnWithHook` toward the destination, with the intent in the hook data.
+
+**Refund.** After the deadline anyone calls `refund(intent)`. The hub takes whatever the forwarder holds and burns it back to the source domain with the refund recipient as mint recipient. Refund can be called again for funds that arrive late, including after a sweep.
+
+**Hook data.** For EVM destinations the mint recipient is the receiver on that chain and the hook data is an Inlet frame: the tag `inlet/v1`, the intent hash, the adapter id, the beneficiary, and the adapter data.
+
+**Fees.** Version one charges nothing. The intent carries a `feeBps` field, the hub rejects any value other than zero, and no fee logic exists in the contracts.
+
+## The two source routes
+
+![Sequence of one deposit with the Gateway route and the CCTP route as the two branches](/diagrams/deposit-sequence.svg)
+
+**Gateway.** The user holds a unified balance on the source chain, created by one deposit into Circle's GatewayWallet that becomes spendable once the chain reaches finality. The SDK builds a burn intent whose destination is Arc's GatewayMinter and whose recipient is the deposit address, and the user signs it. No gas, no network switch. The relayer checks that the burn intent matches the Inlet intent, submits it to the Gateway API, and calls `gatewayMint` on Arc. USDC lands at the deposit address in well under a second, and the recipient receives the full value.
+
+**CCTP.** The user sends `depositForBurn` on the source chain with Arc as the destination domain and the deposit address as the mint recipient. The relayer submits the mint on Arc. One transaction, no Gateway balance needed.
+
+Both routes end the same way: USDC at the deposit address, then sweep.
+
+## Destination execution
+
+After the relayer submits `receiveMessage` on the destination's MessageTransmitter, it calls `execute(message)` on the receiver with the same CCTP message. The receiver:
+
+1. Confirms the message nonce was consumed on the MessageTransmitter, so only real mints drive execution.
+2. Checks the burn message: the source domain is Arc, the sender is the hub, the mint recipient is this receiver. The amount received is the burned amount minus the fee Circle executed.
+3. Parses the Inlet frame from the hook data and rejects intents that already executed.
+4. Approves the adapter and calls it with the amount, the beneficiary, and the adapter data.
+5. If the adapter call fails, credits the amount to the beneficiary's claimable balance. The beneficiary calls `claim()` whenever they like.
+
+## Lifecycle
+
+![State diagram of an intent: created, funded, swept, attested, executed, with claimable, refunding, refunded and expired as the other exits](/diagrams/intent-lifecycle.svg)
+
+| State | Meaning |
+| --- | --- |
+| created | The intent is registered with a relayer and its deposit address is known |
+| funded | USDC arrived at the deposit address on Arc |
+| swept | The hub burned it toward the destination |
+| attested | Circle signed the message |
+| executed | The receiver ran the adapter and the position exists |
+| claimable | The adapter reverted; the USDC waits in the receiver for the beneficiary |
+| refunding | The deadline passed and the hub burned the balance back toward the source |
+| refunded | The refund was minted on the source chain |
+| expired | The deadline passed with nothing at the deposit address |
+
+A source and a destination on the same chain still route through Arc. That is by design: the hub is the single settlement point, the deposit address is the commitment, and every destination gets the same refund and claim guarantees.

@@ -1,0 +1,50 @@
+export const metadata = { title: "MCP server and skill", description: "The Inlet MCP server for agents, its ten tools, the recorded agent run, and the skill file for coding agents." };
+
+<p className="eyebrow">Agents</p>
+
+# MCP server and skill
+
+`apps/mcp` is a stdio Model Context Protocol server over the same SDK and relayer API the widget uses. An agent lists destinations, quotes, creates the intent, signs with its own wallet, and follows the deposit to the position.
+
+## Configure
+
+```json title="mcp.json"
+{
+  "mcpServers": {
+    "inlet": {
+      "command": "node",
+      "args": ["/path/to/inlet/apps/mcp/dist/index.js"],
+      "env": {
+        "INLET_RELAYER_URL": "https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io"
+      }
+    }
+  }
+}
+```
+
+Set `INLET_PRIVATE_KEY` as well and two more tools appear that run the whole flow with that wallet.
+
+## Tools
+
+| Tool | What it does |
+| --- | --- |
+| `list_destinations` | Every live destination and the adapter behind it |
+| `list_sources` | Chains a deposit can start from |
+| `quote_deposit` | Route, timing and the position the user ends up with |
+| `create_intent` | Deposit address plus the exact transaction or EIP 712 payload to sign |
+| `report_source_transaction` | Hand the burn hash back to the relayer |
+| `submit_gateway_intent` | Submit the signed Gateway intent |
+| `deposit_status` | Follow a deposit all the way to the position |
+| `uniswap_quote` | Live pool price from the Uniswap Trading API |
+| `deposit` | Run the whole flow with the configured key |
+| `fund_gateway_balance` | Top up the unified balance before depositing |
+
+Signing stays with the agent. Without a key the server never touches funds, it only prepares the payloads and reports state.
+
+## Recorded agent run
+
+One `deposit` tool call moved 1 USDC from a Base Sepolia Gateway balance into Compound III in sixteen seconds against the hosted relayer: [mint on Arc](https://testnet.arcscan.app/tx/0x2180a82f73e121449b52f616883ffa71a26c44b66eaee012edad9887f37e1a31), [sweep](https://testnet.arcscan.app/tx/0x113d8d04186c5082eb9c54dbbd87b92a733d8db03d13ecbaa0c9b6f864fe80c1), [execute on Base Sepolia](https://sepolia.basescan.org/tx/0xdcf11694a8160eec3413e20302a36cbb50a40ff93b7bbcc8508fcf44106e7cad). The [live app](/app) replays it.
+
+## The skill file
+
+[`skills/inlet/SKILL.md`](https://github.com/y4hyya/inlet/blob/main/skills/inlet/SKILL.md) teaches a coding agent how to decide what a protocol needs, mount the widget, deposit without a browser, write an adapter, and run a relayer, with the testnet addresses at the end. Drop it into any agent that reads skills.

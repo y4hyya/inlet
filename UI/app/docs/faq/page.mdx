@@ -1,0 +1,45 @@
+export const metadata = { title: "Questions", description: "Short answers on fees, wrapped tokens, what happens when a relayer dies, timing, failures, chains and mainnet." };
+
+<p className="eyebrow">Reference</p>
+
+# Questions
+
+## Does Inlet charge a fee?
+
+No. Version one charges nothing, and the hub rejects any intent with a fee other than zero. The only cost is Circle's own transfer fee, which the widget shows before the signature.
+
+## Is anything wrapped?
+
+No. USDC leaves the source chain as native USDC through Gateway or CCTP, lands on Arc as native USDC, and arrives on the destination chain as native USDC. The adapter turns it into the position.
+
+## What if the relayer goes down?
+
+The deposit slows down, it does not get lost. Every step the relayer takes is a public function: `sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter, `execute` and `claim` on the receiver. Anyone can call them, including the user.
+
+## What if the protocol call fails?
+
+The receiver catches the revert and credits the USDC to the beneficiary's claimable balance. The user calls `claim()` on the receiver whenever they like. A broken adapter can never lose funds.
+
+## What if the USDC never arrives, or arrives short?
+
+After the deadline anyone calls `refund`. Whatever sits at the deposit address goes back to the refund recipient on the source chain, and refund can be called again for anything that arrives late.
+
+## How long does a deposit take?
+
+The recorded runs took between 16 and 42 seconds from the signature to the position. Gateway deposits are the fastest, since the mint on Arc lands in under a second. CCTP fast transfers wait for the source chain's fast finality first.
+
+## Why does a same chain deposit still go through Arc?
+
+Because the hub is the single settlement point. The deposit address is the commitment, and every destination gets the same refund and claim guarantees. Routing around Arc for one case would mean a second set of rules.
+
+## Which chains work today?
+
+Sources: any chain with Gateway or CCTP V2 and USDC, with Base Sepolia and Arbitrum Sepolia configured in the widget. Destinations: Arbitrum Sepolia, Base Sepolia and Unichain Sepolia, where receivers are deployed. Adding a destination chain means deploying a receiver and registering its domain on the hub.
+
+## Does it need Privy?
+
+No. The widget runs on wagmi and works inside any wagmi app. `InletProvider` adds Privy for apps that want email login and embedded wallets without wiring their own.
+
+## Is it on mainnet?
+
+Not yet. Everything on this site is testnet. The contracts and the relayer are written so that the same code deploys to Arc mainnet and the mainnet chains with new config files.

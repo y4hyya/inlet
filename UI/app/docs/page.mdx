@@ -1,9 +1,38 @@
-export const metadata = { title: "Docs" };
+export const metadata = { title: "Docs", description: "What Inlet is, how a deposit moves, and the three ways to use it: the widget, the SDK, and the MCP server." };
 
-# Inlet docs
+<p className="eyebrow">Start</p>
 
-The docs are being built. Until then, the [specification](https://github.com/y4hyya/inlet/blob/main/docs/spec.md) and the [adapter guide](https://github.com/y4hyya/inlet/blob/main/docs/adapters.md) live in the repository.
+# Inlet
 
-```tsx
-import { InletProvider, DepositWidget, erc4626Destination } from "@inletkit/widget";
-```
+Inlet delivers native USDC from any chain a user holds it on into a position on the chain a protocol runs on. The user signs once on the source chain. Circle Gateway or CCTP V2 brings the USDC to a per deposit address on Arc, the Inlet hub sweeps it through CCTP to the destination, and the Inlet receiver calls an adapter that makes the protocol deposit for the user.
+
+## What you get
+
+- **One signature on the source chain.** A Gateway burn intent from a unified balance, with no gas and no network switch, or a CCTP burn from the wallet.
+- **Native USDC the whole way.** Nothing wrapped, nothing swapped. Arc is the settlement hub in the middle.
+- **A position, not a balance.** The adapter makes the protocol deposit in the user's name: aTokens, a Compound supply, vault shares, a Uniswap v4 position.
+- **Nothing gets stuck.** The deposit address is derived from the intent, so USDC can only move along the path the intent names or back to the sender after the deadline. If the adapter fails, the USDC waits in the receiver and the user claims it.
+- **No fee in version one.** The hub rejects any fee other than zero. Circle's own transfer fee is the only cost.
+
+## The pieces
+
+| Piece | Where | What it does |
+| --- | --- | --- |
+| Hub | Arc testnet | Derives one deposit address per intent, sweeps what arrives through CCTP toward the destination, refunds after the deadline |
+| Receiver | Each destination chain | Verifies the Circle mint, calls the adapter, keeps the USDC claimable if the adapter reverts |
+| Adapter | Each destination chain | One stateless contract with one function that turns USDC into a position for a beneficiary |
+| Relayer | Off chain, anyone can run one | Submits mints, sweeps, waits for attestations, executes receivers. It makes deposits fast, not possible |
+| SDK and widget | Your app | Build intents, route through Gateway or CCTP, follow a deposit to the position |
+| MCP server | An agent's toolbox | The same flow as tools for a coding or trading agent |
+
+## Three ways in
+
+1. [Mount the widget](/docs/widget). Three lines for a protocol with an ERC 4626 vault, one adapter for anything else.
+2. [Deposit without a browser](/docs/sdk). The SDK and the relayer API, the flow the widget runs.
+3. [Give it to an agent](/docs/agents). A stdio MCP server with ten tools and a skill file.
+
+## Status
+
+Testnet only. Live on Arc testnet with receivers on Arbitrum Sepolia, Base Sepolia and Unichain Sepolia, and destinations on Aave V3, Compound III, a Morpho vault and a Uniswap v4 pool. Every recorded run with its transactions is on the [start page](/#destinations), and the [live app](/app) makes a real deposit or replays one.
+
+The full architecture specification lives in the repository at [docs/spec.md](https://github.com/y4hyya/inlet/blob/main/docs/spec.md).
