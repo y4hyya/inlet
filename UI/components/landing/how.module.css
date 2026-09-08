@@ -1,0 +1,181 @@
+.how {
+  border-top: 1px solid var(--line);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-12);
+}
+
+.title {
+  font-size: var(--text-4);
+}
+
+.sub {
+  color: var(--muted);
+  max-width: 56ch;
+  font-size: var(--text-body);
+}
+
+.figure {
+  margin: 0 0 var(--space-16);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.figure img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+}
+
+.figure figcaption {
+  font-size: var(--text-caption);
+  color: var(--soft);
+}
+
+.figure figcaption a {
+  color: var(--muted);
+}
+
+.timeline {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-12);
+}
+
+.line,
+.fill {
+  position: absolute;
+  left: 7px;
+  width: 2px;
+  border-radius: 1px;
+}
+
+.line {
+  background: var(--line-strong);
+}
+
+.fill {
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.mark {
+  position: relative;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  margin-top: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: var(--ground);
+  transition:
+    border-color var(--dur-ui) var(--ease-out),
+    background-color var(--dur-ui) var(--ease-out);
+}
+
+.step[data-reached] .mark {
+  border-color: var(--actor-color);
+  background: var(--actor-color);
+}
+
+.step[data-actor="user"] {
+  --actor-color: var(--user);
+}
+
+.step[data-actor="circle"] {
+  --actor-color: var(--circle-text);
+}
+
+.step[data-actor="contract"] {
+  --actor-color: var(--contract);
+}
+
+.step[data-actor="escrow"] {
+  --actor-color: var(--escrow);
+}
+
+.step[data-actor="relayer"] {
+  --actor-color: var(--relayer);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  grid-template-areas:
+    "number title chip"
+    "number text text";
+  column-gap: var(--space-4);
+  row-gap: var(--space-2);
+  align-items: baseline;
+  max-width: 72ch;
+  transition: opacity var(--dur-ui) var(--ease-out);
+  opacity: 0.55;
+}
+
+.step[data-reached] .body {
+  opacity: 1;
+}
+
+.number {
+  grid-area: number;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--soft);
+}
+
+.stepTitle {
+  grid-area: title;
+  font-size: var(--text-3);
+}
+
+.chip {
+  grid-area: chip;
+  justify-self: start;
+}
+
+.text {
+  grid-area: text;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+@media (max-width: 720px) {
+  .body {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "number"
+      "title"
+      "chip"
+      "text";
+  }
+
+  .step {
+    gap: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transform: scaleY(1);
+  }
+
+  .body {
+    opacity: 1;
+  }
+}

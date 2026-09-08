@@ -1,0 +1,21 @@
+.section {
+  padding-block: var(--section);
+}
+
+.tagline {
+  font-size: var(--text-5);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.word {
+  color: rgba(245, 245, 245, 0.28);
+  transition: color var(--dur-ui) var(--ease-out);
+}
+
+.word[data-on] {
+  color: var(--ink);
+}
