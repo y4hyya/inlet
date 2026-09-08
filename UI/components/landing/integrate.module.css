@@ -40,14 +40,29 @@
   margin-top: var(--space-2);
 }
 
+.sample {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.caption {
+  font-size: var(--text-caption);
+  color: var(--soft);
+  max-width: 60ch;
+}
+
 .agents {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: var(--space-12);
-  align-items: start;
+  gap: var(--space-8);
   margin-top: var(--space-24);
   padding-top: var(--space-16);
   border-top: 1px solid var(--line);
+}
+
+.agentsHead {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .tools {
@@ -55,7 +70,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
@@ -68,16 +83,13 @@
 .tool {
   display: grid;
   gap: 6px;
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--line);
+  align-content: start;
+  padding: var(--space-6);
+  border-inline-start: 1px solid var(--line);
 }
 
-.tool:nth-child(odd) {
-  border-inline-end: 1px solid var(--line);
-}
-
-.tool:nth-last-child(-n + 2) {
-  border-bottom: 0;
+.tool:first-child {
+  border-inline-start: 0;
 }
 
 .toolName {
@@ -90,26 +102,50 @@
   color: var(--muted);
 }
 
+.more {
+  font-size: var(--text-small);
+  color: var(--soft);
+  max-width: 64ch;
+}
+
+.more a {
+  color: var(--muted);
+}
+
 @media (max-width: 900px) {
-  .grid,
-  .agents {
+  .grid {
     grid-template-columns: 1fr;
     gap: var(--space-8);
   }
 
   .tools {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tool {
+    padding: var(--space-4);
   }
 
   .tool:nth-child(odd) {
-    border-inline-end: 0;
+    border-inline-start: 0;
   }
 
-  .tool:nth-last-child(-n + 2) {
-    border-bottom: 1px solid var(--line);
+  .tool:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 560px) {
+  .tools {
+    grid-template-columns: 1fr;
   }
 
-  .tool:last-child {
-    border-bottom: 0;
+  .tool {
+    border-inline-start: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .tool:first-child {
+    border-top: 0;
   }
 }

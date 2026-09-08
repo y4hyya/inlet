@@ -77,14 +77,14 @@ export const guarantees = [
 
 export const tools = [
   { name: "list_destinations", what: "every live destination and the adapter behind it" },
-  { name: "list_sources", what: "chains a deposit can start from" },
   { name: "quote_deposit", what: "route, timing and the position the user ends up with" },
-  { name: "create_intent", what: "deposit address plus the exact transaction or EIP 712 payload to sign" },
+  { name: "create_intent", what: "deposit address plus the exact payload to sign" },
+  { name: "deposit", what: "run the whole flow with a funded key" },
+  { name: "list_sources", what: "chains a deposit can start from" },
   { name: "report_source_transaction", what: "hand the burn hash back to the relayer" },
   { name: "submit_gateway_intent", what: "submit the signed Gateway intent" },
   { name: "deposit_status", what: "follow a deposit all the way to the position" },
   { name: "uniswap_quote", what: "live pool price from the Uniswap Trading API" },
-  { name: "deposit", what: "run the whole flow with a funded key" },
   { name: "fund_gateway_balance", what: "top up the unified balance before depositing" },
 ];
 
