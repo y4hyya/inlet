@@ -1,0 +1,38 @@
+name: site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "UI/**"
+      - "packages/**"
+      - "config/**"
+      - "pnpm-lock.yaml"
+      - ".vercelignore"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install the Vercel CLI
+        if: env.VERCEL_TOKEN != ''
+        run: npm install --global vercel@54
+      - name: Pull the project settings
+        if: env.VERCEL_TOKEN != ''
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - name: Deploy to production
+        if: env.VERCEL_TOKEN != ''
+        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+      - name: Explain a skipped deploy
+        if: env.VERCEL_TOKEN == ''
+        run: echo "VERCEL_TOKEN is not set, so this push was not deployed."
