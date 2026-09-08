@@ -8,14 +8,21 @@ import { InletContext } from "../context.js";
 
 const chains = [baseSepolia, arbitrumSepolia, arcTestnet] as const;
 
+export interface InletAppearance {
+  theme?: "light" | "dark" | `#${string}`;
+  accentColor?: `#${string}`;
+  logo?: string;
+}
+
 export interface InletProviderProps {
   privyAppId: string;
   relayerUrl: string;
   rpc?: Partial<Record<number, string>>;
+  appearance?: InletAppearance;
   children: ReactNode;
 }
 
-export function InletProvider({ privyAppId, relayerUrl, rpc = {}, children }: InletProviderProps) {
+export function InletProvider({ privyAppId, relayerUrl, rpc = {}, appearance = {}, children }: InletProviderProps) {
   const queryClient = useMemo(() => new QueryClient(), []);
   const wagmiConfig = useMemo(
     () =>
@@ -39,8 +46,9 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = {}, children }: In
         defaultChain: baseSepolia,
         supportedChains: [...chains],
         appearance: {
-          theme: "light",
-          accentColor: "#0f6fff",
+          theme: appearance.theme ?? "light",
+          accentColor: appearance.accentColor ?? "#0f6fff",
+          logo: appearance.logo,
           walletChainType: "ethereum-only",
           walletList: ["metamask", "detected_ethereum_wallets", "wallet_connect_qr"],
         },

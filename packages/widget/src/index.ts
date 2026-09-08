@@ -1,6 +1,6 @@
 export { DepositWidget, type DepositWidgetProps } from "./components/DepositWidget.js";
 export { StatusTimeline } from "./components/StatusTimeline.js";
-export { InletProvider, type InletProviderProps } from "./components/InletProvider.js";
+export { InletProvider, type InletAppearance, type InletProviderProps } from "./components/InletProvider.js";
 export { InletContext, useInlet } from "./context.js";
 export { useDeposit } from "./useDeposit.js";
 export {

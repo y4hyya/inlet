@@ -1,4 +1,4 @@
-import { InletRelayerClient, type UniswapQuote } from "@inletkit/sdk";
+import { InletRelayerClient, type IntentRecord, type UniswapQuote } from "@inletkit/sdk";
 import { useEffect, useRef, useState } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
@@ -14,17 +14,27 @@ export interface DepositWidgetProps {
   relayerUrl?: string;
   sources?: SourceChain[];
   defaultAmount?: string;
+  defaultDestinationId?: string;
   title?: string;
+  onRecord?: (record: IntentRecord) => void;
 }
 
-export function DepositWidget({ destinations, relayerUrl, sources = defaultSources, defaultAmount = "1", title = "Deposit from any chain" }: DepositWidgetProps) {
+export function DepositWidget({
+  destinations,
+  relayerUrl,
+  sources = defaultSources,
+  defaultAmount = "1",
+  defaultDestinationId,
+  title = "Deposit from any chain",
+  onRecord,
+}: DepositWidgetProps) {
   const inlet = useInlet();
   const url = relayerUrl ?? inlet.relayerUrl;
   const { address, chainId, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const [destinationId, setDestinationId] = useState(destinations[0]?.id);
+  const [destinationId, setDestinationId] = useState(destinations.find((entry) => entry.id === defaultDestinationId)?.id ?? destinations[0]?.id);
   const [sourceDomain, setSourceDomain] = useState(sources[0]?.domain);
   const [amount, setAmount] = useState(defaultAmount);
   const [preference, setPreference] = useState<RoutePreference>("auto");
@@ -60,6 +70,10 @@ export function DepositWidget({ destinations, relayerUrl, sources = defaultSourc
 
   const phase = useRef(state.phase);
   phase.current = state.phase;
+
+  useEffect(() => {
+    if (state.record) onRecord?.(state.record);
+  }, [state.record, onRecord]);
 
   useEffect(() => {
     if (!isConnected || !address) return;
@@ -122,16 +136,7 @@ export function DepositWidget({ destinations, relayerUrl, sources = defaultSourc
         ) : null}
       </header>
 
-      {!isConnected ? (
-        <button
-          className="inlet-primary"
-          type="button"
-          disabled={!inlet.ready}
-          onClick={() => (inlet.login ? inlet.login() : connectors[0] ? connect({ connector: connectors[0] }) : undefined)}
-        >
-          {inlet.login ? "Log in" : "Connect wallet"}
-        </button>
-      ) : tracking && state.record ? (
+      {tracking && state.record ? (
         <div className="inlet-body">
           <StatusTimeline record={state.record} destination={destination} sourceExplorer={source.explorer} />
           {state.phase === "done" ? (
@@ -233,22 +238,35 @@ export function DepositWidget({ destinations, relayerUrl, sources = defaultSourc
           ) : null}
           {state.error ? <p className="inlet-warn">{state.error}</p> : null}
 
-          <button
-            className="inlet-primary"
-            type="button"
-            disabled={!state.quote || !state.quote.ready || busy || quoting || relayerStatus !== "online"}
-            onClick={() => state.quote && void deposit(state.quote)}
-          >
-            {state.phase === "creating" ? "Registering intent" : state.phase === "signing" ? "Waiting for your wallet" : state.phase === "sending" ? "Sending" : quoting ? "Quoting" : "Deposit"}
-          </button>
-          <button
-            className="inlet-secondary"
-            type="button"
-            disabled={busy || state.phase === "quoting"}
-            onClick={() => void fundGateway(amount).then((tx) => tx && setGatewayTx(tx))}
-          >
-            Add {amount || "0"} USDC to my Gateway balance on {source.name}
-          </button>
+          {!isConnected ? (
+            <button
+              className="inlet-primary"
+              type="button"
+              disabled={!inlet.ready}
+              onClick={() => (inlet.login ? inlet.login() : connectors[0] ? connect({ connector: connectors[0] }) : undefined)}
+            >
+              {inlet.login ? "Log in to deposit" : "Connect a wallet to deposit"}
+            </button>
+          ) : (
+            <>
+              <button
+                className="inlet-primary"
+                type="button"
+                disabled={!state.quote || !state.quote.ready || busy || quoting || relayerStatus !== "online"}
+                onClick={() => state.quote && void deposit(state.quote)}
+              >
+                {state.phase === "creating" ? "Registering intent" : state.phase === "signing" ? "Waiting for your wallet" : state.phase === "sending" ? "Sending" : quoting ? "Quoting" : "Deposit"}
+              </button>
+              <button
+                className="inlet-secondary"
+                type="button"
+                disabled={busy || state.phase === "quoting"}
+                onClick={() => void fundGateway(amount).then((tx) => tx && setGatewayTx(tx))}
+              >
+                Add {amount || "0"} USDC to my Gateway balance on {source.name}
+              </button>
+            </>
+          )}
         </div>
       )}
     </section>
