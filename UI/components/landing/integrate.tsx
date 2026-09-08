@@ -25,6 +25,7 @@ const vault = erc4626Destination({
 const samples = [
   { id: "arbitrum", label: "Arbitrum", code: snippet(3, testnetDeployments.arbitrumSepolia.inletReceiver, "ArbitrumSepolia") },
   { id: "base", label: "Base", code: snippet(6, testnetDeployments.baseSepolia.inletReceiver, "BaseSepolia") },
+  { id: "unichain", label: "Unichain", code: snippet(10, testnetDeployments.unichainSepolia.inletReceiver, "UnichainSepolia") },
 ];
 
 export function Integrate() {
