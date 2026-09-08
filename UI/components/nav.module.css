@@ -1,3 +1,9 @@
+.header[data-landing] {
+  --nav-bg: rgba(45, 49, 66, 0.62);
+  --nav-border: var(--glass-border);
+  --nav-blur: blur(20px) saturate(120%);
+}
+
 .header {
   position: sticky;
   top: 0;
