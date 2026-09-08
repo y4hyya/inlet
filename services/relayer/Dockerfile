@@ -5,7 +5,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY config ./config
 COPY packages/sdk/package.json ./packages/sdk/package.json
 COPY packages/widget/package.json ./packages/widget/package.json
-COPY apps/playground/package.json ./apps/playground/package.json
+COPY apps/mcp/package.json ./apps/mcp/package.json
+COPY UI/package.json ./UI/package.json
 COPY services/relayer/package.json ./services/relayer/package.json
 RUN pnpm install --frozen-lockfile --filter @inletkit/relayer...
 COPY packages/sdk ./packages/sdk
