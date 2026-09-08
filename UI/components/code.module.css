@@ -8,14 +8,101 @@
   overflow: hidden;
 }
 
-.label {
-  padding: 10px var(--space-4);
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 7px 8px 7px var(--space-4);
   border-bottom: 1px solid var(--line);
+}
+
+.label {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--soft);
+}
+
+.copy {
+  position: relative;
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding-inline: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 150ms var(--ease-out),
+    background-color 150ms var(--ease-out),
+    border-color 150ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.copy::before {
+  content: "";
+  position: absolute;
+  inset: -7px -4px;
+}
+
+.copy:hover {
+  color: var(--ink);
+  background: rgba(245, 245, 245, 0.06);
+}
+
+.copy:active {
+  transform: scale(0.96);
+}
+
+.copy[data-copied] {
+  color: var(--ink);
+  border-color: rgba(245, 245, 245, 0.32);
+}
+
+.icons {
+  position: relative;
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+}
+
+.icon {
+  position: absolute;
+  inset: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transform: scale(0.25);
+  filter: blur(4px);
+  transition:
+    opacity 150ms cubic-bezier(0.2, 0, 0, 1),
+    transform 150ms cubic-bezier(0.2, 0, 0, 1),
+    filter 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.icon[data-on] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .code {
@@ -24,7 +111,7 @@
 
 .code :global(pre) {
   margin: 0;
-  padding: var(--space-4) var(--space-4);
+  padding: var(--space-4);
   background: transparent !important;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -34,4 +121,16 @@
 
 .code :global(code) {
   font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy:active {
+    transform: none;
+  }
+
+  .icon {
+    transition-property: opacity;
+    transform: none;
+    filter: none;
+  }
 }
