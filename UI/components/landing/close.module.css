@@ -2,6 +2,33 @@
   border-top: 1px solid var(--line);
 }
 
+.band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: clamp(40px, 6vw, 80px);
+}
+
+.band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--surface) url("/stage.jpg") center 45% / cover no-repeat;
+  pointer-events: none;
+}
+
+.band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(57, 62, 83, 0.92) 0%, rgba(57, 62, 83, 0.72) 45%, rgba(57, 62, 83, 0.25) 100%);
+  pointer-events: none;
+}
+
 .built {
   list-style: none;
   margin: 0 0 var(--space-24);
@@ -34,6 +61,7 @@
   display: grid;
   gap: var(--space-8);
   justify-items: start;
+  position: relative;
 }
 
 .title {

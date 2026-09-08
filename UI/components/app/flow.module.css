@@ -1,10 +1,24 @@
 .flow {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
   gap: var(--space-6);
   padding: var(--space-6);
   border: 1px solid var(--line);
   border-radius: var(--radius-l);
   background: var(--surface);
+}
+
+.flow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("/stage.jpg") center 40% / cover no-repeat;
+  mix-blend-mode: lighten;
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .summary {

@@ -19,8 +19,9 @@ export const metadata: Metadata = {
     description: site.description,
     siteName: site.name,
     type: "website",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Inlet, from any chain into any position" }],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", images: ["/og.jpg"] },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

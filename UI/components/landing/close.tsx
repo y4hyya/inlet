@@ -13,17 +13,19 @@ export function Close() {
             <li key={name}>{name}</li>
           ))}
         </ul>
-        <div className={styles.close}>
-          <h2 id="close-title" className={styles.title} data-reveal style={delay(1)}>
-            Put a position one signature away from any chain.
-          </h2>
-          <div className={styles.actions} data-reveal style={delay(2)}>
-            <Link className="btn btn-primary" href="/app">
-              Try a live deposit
-            </Link>
-            <Link className="btn btn-secondary" href="/docs">
-              Read the docs
-            </Link>
+        <div className={styles.band} data-reveal style={delay(1)}>
+          <div className={styles.close}>
+            <h2 id="close-title" className={styles.title}>
+              Put a position one signature away from any chain.
+            </h2>
+            <div className={styles.actions}>
+              <Link className="btn btn-primary" href="/app">
+                Try a live deposit
+              </Link>
+              <Link className="btn btn-secondary" href="/docs">
+                Read the docs
+              </Link>
+            </div>
           </div>
         </div>
       </section>
