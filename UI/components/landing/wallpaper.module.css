@@ -23,6 +23,16 @@
     linear-gradient(180deg, rgba(45, 49, 66, 0.3) 0%, rgba(45, 49, 66, 0.5) 55%, rgba(45, 49, 66, 0.78) 100%);
 }
 
+.wallpaper[data-variant="quiet"] .media {
+  filter: saturate(0.6) contrast(1.02);
+}
+
+.wallpaper[data-variant="quiet"] .scrim {
+  background:
+    linear-gradient(90deg, rgba(45, 49, 66, 0.9) 0%, rgba(45, 49, 66, 0.84) 45%, rgba(45, 49, 66, 0.78) 100%),
+    linear-gradient(180deg, rgba(45, 49, 66, 0.45) 0%, rgba(45, 49, 66, 0.58) 55%, rgba(45, 49, 66, 0.72) 100%);
+}
+
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .media {
     display: none;

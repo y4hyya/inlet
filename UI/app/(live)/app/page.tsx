@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AppView } from "@/components/app/app-view";
+import { Wallpaper } from "@/components/landing/wallpaper";
 
 export const metadata: Metadata = {
   title: "Try a deposit",
@@ -9,8 +10,11 @@ export const metadata: Metadata = {
 
 export default function AppPage() {
   return (
-    <Suspense fallback={<section className="rail section" />}>
-      <AppView />
-    </Suspense>
+    <>
+      <Wallpaper />
+      <Suspense fallback={<section className="rail section" />}>
+        <AppView />
+      </Suspense>
+    </>
   );
 }

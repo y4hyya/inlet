@@ -5,7 +5,7 @@ import styles from "./wallpaper.module.css";
 
 const query = "(min-width: 900px) and (prefers-reduced-motion: no-preference)";
 
-export function Wallpaper() {
+export function Wallpaper({ variant = "default" }: { variant?: "default" | "quiet" }) {
   const [video, setVideo] = useState(false);
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -30,7 +30,7 @@ export function Wallpaper() {
   }, [video]);
 
   return (
-    <div className={styles.wallpaper} data-wallpaper="" aria-hidden="true">
+    <div className={styles.wallpaper} data-wallpaper="" data-variant={variant} aria-hidden="true">
       {video ? (
         <video ref={ref} className={styles.media} autoPlay muted loop playsInline preload="auto" poster="/wallpaper.jpg">
           <source src="/wallpaper.mp4" type="video/mp4" />
