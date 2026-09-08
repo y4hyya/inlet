@@ -57,6 +57,10 @@
   --glass-shadow: inset 0 1px 0 var(--glass-edge), 0 24px 60px rgba(0, 0, 0, 0.35);
   --glass-radius: 20px;
 
+  --nav-bg: var(--surface);
+  --nav-border: var(--line-strong);
+  --nav-blur: none;
+
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --dur-fast: 150ms;
@@ -75,12 +79,13 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-padding-top: 88px;
+  scroll-padding-top: 96px;
+  background: var(--ground);
+  overscroll-behavior-y: none;
 }
 
 body {
   margin: 0;
-  background: var(--ground);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--text-body);
@@ -319,6 +324,9 @@ body:has([data-wallpaper]) {
   --muted: #cfd2d8;
   --line: rgba(245, 245, 245, 0.12);
   --line-strong: rgba(245, 245, 245, 0.22);
+  --nav-bg: rgba(45, 49, 66, 0.72);
+  --nav-border: var(--glass-border);
+  --nav-blur: blur(20px) saturate(120%);
 }
 
 .glass {
@@ -337,6 +345,12 @@ body:has([data-wallpaper]) {
     --glass-filter: none;
     --glass-border: rgba(245, 245, 245, 0.24);
     --glass-shadow: none;
+  }
+
+  body:has([data-wallpaper]) {
+    --nav-bg: var(--surface);
+    --nav-border: rgba(245, 245, 245, 0.24);
+    --nav-blur: none;
   }
 }
 
