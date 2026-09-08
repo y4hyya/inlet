@@ -165,7 +165,7 @@ pnpm --filter @inletkit/ui dev                # http://localhost:3000
 DESTINATION=aave pnpm --filter @inletkit/relayer e2e   # one real deposit; also compound, morpho, uniswap
 ```
 
-Three env files, each with an `.env.example` next to it: `contracts/.env` holds the deployer key, `services/relayer/.env` the relayer key, the RPC URLs and an optional Uniswap API key, `apps/playground/.env.local` the Privy app id and the relayer URL. Hosting is described in [`infra/README.md`](infra/README.md).
+Three env files, each with an `.env.example` next to it: `contracts/.env` holds the deployer key, `services/relayer/.env` the relayer key, the RPC URLs and an optional Uniswap API key, `UI/.env.local` the Privy app id and the relayer URL. Hosting is described in [`infra/README.md`](infra/README.md).
 
 ## Status
 
