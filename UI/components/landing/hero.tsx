@@ -9,25 +9,23 @@ export function Hero() {
     <RevealGroup>
       <section className={`rail ${styles.hero}`}>
         <div className={styles.copy}>
-          <p className="eyebrow" data-reveal>
-            Deposit rail for DeFi. Live on Arc testnet
-          </p>
-          <h1 className={styles.title} data-reveal style={delay(1)}>
+          <h1 className={styles.title} data-reveal>
             From any chain into any position.
           </h1>
-          <p className={styles.lead} data-reveal style={delay(2)}>
-            One signature on the chain where the USDC sits. The position itself on the chain where your protocol lives. Circle Gateway and CCTP V2 carry it, Arc settles it, and nothing gets stuck on the way.
+          <p className={styles.lead} data-reveal style={delay(1)}>
+            One signature, and your USDC arrives as a position, not a balance.
           </p>
-          <div className={styles.actions} data-reveal style={delay(3)}>
-            <Link className="btn btn-primary" href="/app">
-              Try a live deposit
-            </Link>
+          <div className={styles.actions} data-reveal style={delay(2)}>
             <Link className="btn btn-secondary" href="/docs">
               Read the docs
             </Link>
+            <Link className={styles.quiet} href="/app">
+              Watch a deposit
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>
-        <div className={styles.stage} data-reveal style={delay(2)}>
+        <div className={styles.stage} data-reveal style={delay(1)}>
           <HeroWidget />
         </div>
       </section>
