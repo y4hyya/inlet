@@ -33,38 +33,6 @@
   margin-top: var(--space-2);
 }
 
-.proof {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--soft);
-}
-
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--soft);
-}
-
-.online {
-  background: var(--relayer);
-}
-
-.offline {
-  background: var(--bad);
-}
-
-.sep {
-  width: 1px;
-  height: 12px;
-  background: var(--line-strong);
-}
-
 .stage {
   display: grid;
   justify-items: center;

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { RevealGroup } from "@/components/reveal";
 import { delay } from "@/lib/format";
-import { HeroProof } from "./hero-proof";
 import { HeroWidget } from "./hero-widget";
 import styles from "./hero.module.css";
 
@@ -26,9 +25,6 @@ export function Hero() {
             <Link className="btn btn-secondary" href="/docs">
               Read the docs
             </Link>
-          </div>
-          <div data-reveal style={delay(4)}>
-            <HeroProof />
           </div>
         </div>
         <div className={styles.stage} data-reveal style={delay(2)}>

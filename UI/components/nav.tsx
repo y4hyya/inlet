@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Mark } from "./mark";
 import { NavLinks } from "./nav-links";
-import { RelayerStatus } from "./relayer-status";
 import styles from "./nav.module.css";
 
 export function Nav() {
@@ -36,7 +35,6 @@ export function Nav() {
           <span>Inlet</span>
         </Link>
         <NavLinks />
-        <RelayerStatus compact />
       </div>
     </header>
   );

@@ -30,7 +30,7 @@
   gap: var(--space-3);
   width: min(var(--rail), calc(100% - 40px));
   height: 56px;
-  padding-inline: 20px;
+  padding-inline: 20px 8px;
   border-radius: 16px;
 }
 
@@ -125,7 +125,7 @@
 
   .capsule {
     width: calc(100% - 24px);
-    padding-inline: 12px;
+    padding-inline: 12px 2px;
     gap: var(--space-2);
   }
 
