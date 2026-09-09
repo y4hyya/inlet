@@ -265,10 +265,10 @@ export function DepositWidget({
             <button
               className="inlet-primary"
               type="button"
-              disabled={!inlet.ready}
+              disabled={!inlet.ready || inlet.connecting}
               onClick={() => (inlet.login ? inlet.login() : connectors[0] ? connect({ connector: connectors[0] }) : undefined)}
             >
-              {inlet.login ? "Log in to deposit" : "Connect a wallet to deposit"}
+              {inlet.connecting ? "Waiting for your wallet" : inlet.login ? "Log in to deposit" : "Connect a wallet to deposit"}
             </button>
           ) : (
             <>

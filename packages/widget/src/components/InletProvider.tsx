@@ -1,4 +1,4 @@
-import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
+import { PrivyProvider, useModalStatus, usePrivy, type ConnectedWallet } from "@privy-io/react-auth";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo, type ComponentProps, type ReactNode } from "react";
@@ -17,6 +17,12 @@ export interface InletAppearance {
 // One identity across renders. A fresh object rebuilds the wagmi config every render.
 const noRpc: Partial<Record<number, string>> = {};
 const noAppearance: InletAppearance = {};
+
+// Wagmi keeps whichever wallet it connected to first, so a second wallet never takes over
+// on its own. Prefer the one the user connected themselves over the embedded fallback.
+function preferConnectedWallet({ wallets }: { wallets: ConnectedWallet[] }): ConnectedWallet | undefined {
+  return wallets.find((wallet) => wallet.walletClientType !== "privy") ?? wallets[0];
+}
 
 export interface InletProviderProps {
   privyAppId: string;
@@ -53,7 +59,7 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
           accentColor: appearance.accentColor ?? "#0f6fff",
           logo: appearance.logo,
           walletChainType: "ethereum-only",
-          walletList: ["metamask", "detected_ethereum_wallets", "rainbow", "coinbase_wallet", "phantom", "uniswap", "wallet_connect_qr"],
+          walletList: ["metamask", "detected_ethereum_wallets", "rainbow", "phantom", "uniswap", "wallet_connect_qr"],
         },
       }) satisfies ComponentProps<typeof PrivyProvider>["config"],
     [appearance.theme, appearance.accentColor, appearance.logo],
@@ -62,7 +68,7 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
   return (
     <PrivyProvider appId={privyAppId} config={privyConfig}>
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig}>
+        <WagmiProvider config={wagmiConfig} setActiveWalletForWagmi={preferConnectedWallet}>
           <Bridge relayerUrl={relayerUrl}>{children}</Bridge>
         </WagmiProvider>
       </QueryClientProvider>
@@ -72,6 +78,10 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
 
 function Bridge({ relayerUrl, children }: { relayerUrl: string; children: ReactNode }) {
   const { login, logout, ready, authenticated } = usePrivy();
-  const value = useMemo(() => ({ relayerUrl, login, logout, ready, authenticated }), [relayerUrl, login, logout, ready, authenticated]);
+  const { isOpen } = useModalStatus();
+  const value = useMemo(
+    () => ({ relayerUrl, login, logout, ready, authenticated, connecting: isOpen }),
+    [relayerUrl, login, logout, ready, authenticated, isOpen],
+  );
   return <InletContext.Provider value={value}>{children}</InletContext.Provider>;
 }
