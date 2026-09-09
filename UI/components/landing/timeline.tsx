@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import type { Step } from "@/lib/content";
 import styles from "./how.module.css";
 
+// The rail fills while the section is held in place. It completes before the runway ends,
+// so all six stations are lit for a beat before the page moves on.
+const finish = 0.85;
+
 export function Timeline({ steps }: { steps: Step[] }) {
   const listRef = useRef<HTMLOListElement>(null);
   const lineRef = useRef<HTMLSpanElement>(null);
@@ -18,42 +22,50 @@ export function Timeline({ steps }: { steps: Step[] }) {
     const marks = Array.from(list.querySelectorAll<HTMLElement>("[data-mark]"));
     if (marks.length === 0) return;
 
+    // Run the track between the first and last dot rather than the full width.
     const place = () => {
       const listRect = list.getBoundingClientRect();
       const first = marks[0].getBoundingClientRect();
       const last = marks[marks.length - 1].getBoundingClientRect();
-      const top = first.top - listRect.top + first.height / 2;
-      const height = last.top - first.top;
-      line.style.top = `${top}px`;
-      line.style.height = `${height}px`;
-      fill.style.top = `${top}px`;
-      fill.style.height = `${height}px`;
+      const single = Math.abs(last.top - first.top) < 2;
+      const left = first.left - listRect.left + first.width / 2;
+      const width = last.left - first.left;
+      for (const element of [line, fill]) {
+        element.style.top = `${first.top - listRect.top + first.height / 2}px`;
+        element.style.left = `${left}px`;
+        element.style.width = `${width}px`;
+        element.style.opacity = single && width > 0 ? "1" : "0";
+      }
     };
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const settle = () => {
       place();
-      fill.style.transform = "scaleY(1)";
+      fill.style.transform = "scaleX(1)";
       setReached(marks.length - 1);
-      window.addEventListener("resize", place);
-      return () => window.removeEventListener("resize", place);
+    };
+
+    if (reduced.matches) {
+      settle();
+      window.addEventListener("resize", settle);
+      return () => window.removeEventListener("resize", settle);
     }
 
+    const section = list.closest("section");
     let frame = 0;
     const update = () => {
       frame = 0;
-      const anchor = window.innerHeight * 0.6;
-      const first = marks[0].getBoundingClientRect();
-      const last = marks[marks.length - 1].getBoundingClientRect();
-      const start = first.top + first.height / 2;
-      const end = last.top + last.height / 2;
-      const progress = Math.min(1, Math.max(0, (anchor - start) / (end - start)));
-      fill.style.transform = `scaleY(${progress})`;
-      let index = -1;
-      marks.forEach((mark, position) => {
-        const rect = mark.getBoundingClientRect();
-        if (rect.top + rect.height / 2 <= anchor) index = position;
-      });
-      setReached(index);
+      if (!section) return;
+      const runway = section.offsetHeight - window.innerHeight;
+      if (runway <= 0) {
+        settle();
+        return;
+      }
+      const travelled = -section.getBoundingClientRect().top;
+      const progress = Math.min(1, Math.max(0, travelled / runway / finish));
+      fill.style.transform = `scaleX(${progress})`;
+      setReached(Math.ceil(progress * marks.length) - 1);
     };
     const schedule = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -78,14 +90,12 @@ export function Timeline({ steps }: { steps: Step[] }) {
       <span ref={lineRef} className={styles.line} aria-hidden="true" />
       <span ref={fillRef} className={styles.fill} aria-hidden="true" />
       {steps.map((step, index) => (
-        <li key={step.id} className={styles.step} data-reached={index <= reached ? "" : undefined} data-actor={step.actor}>
+        <li key={step.id} className={styles.step} data-reached={index <= reached ? "" : undefined} data-actor={step.actor} style={{ "--i": index } as React.CSSProperties}>
           <span className={styles.mark} data-mark aria-hidden="true" />
-          <div className={styles.body}>
-            <p className={styles.number}>{step.number}</p>
-            <h3 className={styles.stepTitle}>{step.title}</h3>
-            <span className={`chip chip-${step.actor} ${styles.chip}`}>{step.actorLabel}</span>
-            <p className={styles.text}>{step.body}</p>
-          </div>
+          <p className={styles.number}>{step.number}</p>
+          <h3 className={styles.stepTitle}>{step.title}</h3>
+          <span className={`chip chip-${step.actor} ${styles.chip}`}>{step.actorLabel}</span>
+          <p className={styles.text}>{step.body}</p>
         </li>
       ))}
     </ol>

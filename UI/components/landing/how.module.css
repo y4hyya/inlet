@@ -1,3 +1,17 @@
+.how {
+  /* The runway the reader scrolls through while the rail is held in place. */
+  --runway: 100vh;
+  min-height: calc(100vh + var(--runway));
+}
+
+.pin {
+  position: sticky;
+  top: 0;
+  display: grid;
+  align-content: center;
+  height: 100vh;
+}
+
 .head {
   display: grid;
   gap: var(--space-3);
@@ -18,9 +32,10 @@
   position: relative;
   list-style: none;
   margin: 0;
-  padding: var(--space-12) var(--space-8);
+  padding: var(--space-8);
   display: grid;
-  gap: var(--space-12);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-4);
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
@@ -32,9 +47,9 @@
 .line,
 .fill {
   position: absolute;
-  left: calc(var(--space-8) + 7px);
-  width: 2px;
+  height: 2px;
   border-radius: 1px;
+  transform-origin: left;
 }
 
 .line {
@@ -43,16 +58,14 @@
 
 .fill {
   background: var(--accent);
-  transform: scaleY(0);
-  transform-origin: top;
+  transform: scaleX(0);
 }
 
 .step {
-  position: relative;
   display: grid;
-  grid-template-columns: 16px 1fr;
-  gap: var(--space-8);
-  align-items: start;
+  grid-template-rows: 16px auto auto 1fr;
+  gap: var(--space-3);
+  align-content: start;
 }
 
 .mark {
@@ -60,13 +73,14 @@
   z-index: 1;
   width: 16px;
   height: 16px;
-  margin-top: 6px;
   border-radius: 50%;
   border: 2px solid var(--line-strong);
   background: var(--ground);
   transition:
     border-color var(--dur-ui) var(--ease-out),
-    background-color var(--dur-ui) var(--ease-out);
+    background-color var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 20ms);
 }
 
 .step[data-reached] .mark {
@@ -94,77 +108,108 @@
   --actor-color: var(--relayer);
 }
 
-.body {
-  display: grid;
-  grid-template-columns: 56px 1fr auto;
-  grid-template-areas:
-    "number title chip"
-    "number text text";
-  column-gap: var(--space-4);
-  row-gap: var(--space-2);
-  align-items: baseline;
-  max-width: 72ch;
-  transition: opacity var(--dur-ui) var(--ease-out);
-  opacity: 0.55;
-}
-
-.step[data-reached] .body {
-  opacity: 1;
-}
-
 .number {
-  grid-area: number;
   font-family: var(--font-mono);
   font-size: var(--text-caption);
   color: var(--soft);
 }
 
 .stepTitle {
-  grid-area: title;
-  font-size: var(--text-3);
+  font-size: var(--text-2);
+  letter-spacing: -0.015em;
 }
 
+.mark,
 .chip {
-  grid-area: chip;
   justify-self: start;
 }
 
 .text {
-  grid-area: text;
+  min-width: 0;
   color: var(--muted);
-  max-width: 60ch;
+  font-size: var(--text-small);
+  line-height: 1.5;
 }
 
-@media (max-width: 720px) {
-  .body {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "number"
-      "title"
-      "chip"
-      "text";
+.number,
+.stepTitle,
+.chip,
+.text {
+  opacity: 0.55;
+  transform: translateY(6px);
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 20ms + 60ms);
+}
+
+.step[data-reached] .number,
+.step[data-reached] .stepTitle,
+.step[data-reached] .chip,
+.step[data-reached] .text {
+  opacity: 1;
+  transform: none;
+}
+
+/* Below one row the steps are taller than the viewport, so holding them would clip. */
+@media (max-width: 1080px) {
+  .how {
+    min-height: 0;
   }
 
-  .step {
-    gap: var(--space-4);
+  .pin {
+    position: static;
+    height: auto;
+    padding-block: var(--section);
   }
 
   .timeline {
-    padding: var(--space-8) var(--space-4);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
   }
+}
 
-  .line,
-  .fill {
-    left: calc(var(--space-4) + 7px);
+@media (max-width: 720px) {
+  .timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .timeline {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fill {
-    transform: scaleY(1);
+  .how {
+    min-height: 0;
   }
 
-  .body {
+  .pin {
+    position: static;
+    height: auto;
+    padding-block: var(--section);
+  }
+
+  .fill {
+    transform: scaleX(1);
+  }
+
+  .mark,
+  .number,
+  .stepTitle,
+  .chip,
+  .text {
+    transition: none;
+  }
+
+  .number,
+  .stepTitle,
+  .chip,
+  .text {
     opacity: 1;
+    transform: none;
   }
 }
