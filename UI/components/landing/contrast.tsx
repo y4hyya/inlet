@@ -16,7 +16,7 @@ export function Contrast() {
         </div>
         <div className={styles.columns}>
           <div className={styles.column} data-reveal style={delay(1)}>
-            <p className={styles.label}>Today</p>
+            <p className={styles.label}>Without Inlet</p>
             <ol className={styles.list}>
               {today.map((item, index) => (
                 <li key={item} className={styles.item}>
