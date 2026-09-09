@@ -4,7 +4,7 @@ import { InletProvider } from "@inletkit/widget";
 import type { ReactNode } from "react";
 import { site } from "@/lib/site";
 
-const appearance = { theme: "dark", accentColor: "#f08a59", logo: `${site.url}/icon.svg` } as const;
+const appearance = { theme: "dark", accentColor: "#f08a59", logo: `${site.url}/wordmark.svg` } as const;
 
 export function Providers({ children }: { children: ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;

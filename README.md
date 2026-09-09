@@ -1,4 +1,4 @@
-# Inlet
+<img src="brand/wordmark.png?v=1" width="220" alt="Inlet">
 
 From any chain into any position.
 

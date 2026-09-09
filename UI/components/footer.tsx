@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { builtWith } from "@/lib/content";
 import { links, site } from "@/lib/site";
-import { Mark } from "./mark";
+import { Wordmark } from "./wordmark";
 import styles from "./footer.module.css";
 
 export function Footer() {
@@ -10,8 +10,8 @@ export function Footer() {
       <div className={`rail ${styles.grid}`}>
         <div className={styles.about}>
           <p className={styles.brand}>
-            <Mark size={20} />
-            <span>Inlet</span>
+            <Wordmark height={30} />
+            <span className="sr-only">Inlet</span>
           </p>
           <p className={styles.blurb}>A deposit rail for DeFi. Native USDC only, Arc as the settlement hub, nothing wrapped and nothing stuck.</p>
           <p className="eyebrow">Hub on Arc testnet</p>

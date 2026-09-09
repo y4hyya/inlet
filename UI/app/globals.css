@@ -327,6 +327,15 @@ body:has([data-wallpaper]) {
   --line-strong: rgba(245, 245, 245, 0.22);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .glass {
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);

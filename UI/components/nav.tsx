@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Mark } from "./mark";
+import { Wordmark } from "./wordmark";
 import { NavLinks } from "./nav-links";
 import styles from "./nav.module.css";
 
@@ -35,8 +35,7 @@ export function Nav() {
       <span className={styles.veil} aria-hidden="true" />
       <div className={styles.capsule}>
         <Link href="/" className={styles.brand} aria-label="Inlet home">
-          <Mark />
-          <span>Inlet</span>
+          <Wordmark height={22} />
         </Link>
         <NavLinks />
       </div>
