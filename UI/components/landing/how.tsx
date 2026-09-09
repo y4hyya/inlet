@@ -7,7 +7,7 @@ import styles from "./how.module.css";
 export function How() {
   return (
     <RevealGroup>
-      <section className={`rail section ${styles.how}`} aria-labelledby="how-title" id="how">
+      <section className="rail section" aria-labelledby="how-title" id="how">
         <div className={styles.head} data-reveal>
           <p className="eyebrow">How it works</p>
           <h2 id="how-title" className={styles.title}>

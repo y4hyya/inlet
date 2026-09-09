@@ -33,7 +33,7 @@ const samples = [
 export function Integrate() {
   return (
     <RevealGroup>
-      <section className={`rail section ${styles.section}`} aria-labelledby="integrate-title" id="integrate">
+      <section className="rail section" aria-labelledby="integrate-title" id="integrate">
         <div className={styles.grid}>
           <div className={styles.copy} data-reveal>
             <p className="eyebrow">Integrate</p>

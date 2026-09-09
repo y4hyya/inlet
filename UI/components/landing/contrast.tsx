@@ -7,7 +7,7 @@ const today = ["Bridge the USDC to the chain the protocol lives on", "Swap or un
 export function Contrast() {
   return (
     <RevealGroup>
-      <section className={`rail section ${styles.contrast}`} aria-labelledby="contrast-title">
+      <section className="rail section" aria-labelledby="contrast-title">
         <div className={styles.head} data-reveal>
           <p className="eyebrow">Why a rail</p>
           <h2 id="contrast-title" className={styles.title}>

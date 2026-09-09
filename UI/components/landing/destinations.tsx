@@ -8,7 +8,7 @@ import styles from "./destinations.module.css";
 export function Destinations() {
   return (
     <RevealGroup>
-      <section className={`rail section ${styles.section}`} aria-labelledby="destinations-title" id="destinations">
+      <section className="rail section" aria-labelledby="destinations-title" id="destinations">
         <div className={styles.head} data-reveal>
           <p className="eyebrow">Destinations live on testnet</p>
           <h2 id="destinations-title" className={styles.title}>

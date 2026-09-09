@@ -7,7 +7,7 @@ import styles from "./guarantees.module.css";
 export function Guarantees() {
   return (
     <RevealGroup>
-      <section className={`rail section ${styles.section}`} aria-labelledby="guarantees-title">
+      <section className="rail section" aria-labelledby="guarantees-title">
         <div className={styles.head} data-reveal>
           <p className="eyebrow">Why nothing gets stuck</p>
           <h2 id="guarantees-title" className={styles.title}>

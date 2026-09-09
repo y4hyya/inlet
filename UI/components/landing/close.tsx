@@ -7,7 +7,7 @@ import styles from "./close.module.css";
 export function Close() {
   return (
     <RevealGroup>
-      <section className={`rail section ${styles.section}`} aria-labelledby="close-title">
+      <section className="rail section" aria-labelledby="close-title">
         <ul className={styles.built} data-reveal aria-label="Built with">
           {builtWith.map((name) => (
             <li key={name}>{name}</li>
