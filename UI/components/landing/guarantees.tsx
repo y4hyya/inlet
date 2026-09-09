@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { RevealGroup } from "@/components/reveal";
 import { guarantees } from "@/lib/content";
 import { delay } from "@/lib/format";
@@ -23,12 +22,6 @@ export function Guarantees() {
             </li>
           ))}
         </ol>
-        <figure className={styles.figure} data-reveal>
-          <img src="/diagrams/intent-lifecycle.svg" alt="State diagram of an intent: created, funded, swept, attested, executed, with claimable, refunding, refunded and expired as the other exits" width={1280} height={720} loading="lazy" />
-          <figcaption>
-            Every state an intent can be in. Every path ends in a position, a claim, or a refund. <Link href="/docs/how-it-works#lifecycle">The lifecycle in detail</Link>
-          </figcaption>
-        </figure>
       </section>
     </RevealGroup>
   );
