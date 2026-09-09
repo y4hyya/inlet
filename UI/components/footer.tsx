@@ -48,11 +48,6 @@ export function Footer() {
               <Link href="/docs/addresses">Addresses</Link>
             </li>
             <li>
-              <a href={links.hub} target="_blank" rel="noreferrer">
-                Hub on Arcscan
-              </a>
-            </li>
-            <li>
               <a href={site.repo} target="_blank" rel="noreferrer">
                 Source on GitHub
               </a>

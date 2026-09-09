@@ -88,17 +88,4 @@ export const tools = [
   { name: "fund_gateway_balance", what: "top up the unified balance before depositing" },
 ];
 
-export const builtWith = [
-  "Circle Gateway",
-  "CCTP V2",
-  "Arc",
-  "Privy",
-  "Uniswap Trading API",
-  "Foundry",
-  "OpenZeppelin",
-  "viem",
-  "wagmi",
-  "Fastify",
-  "Next.js",
-  "Model Context Protocol",
-];
+export const builtWith = ["Circle Gateway", "CCTP V2", "Arc", "Privy", "Uniswap Trading API", "Model Context Protocol"];
