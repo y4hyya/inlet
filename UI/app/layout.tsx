@@ -13,7 +13,7 @@ const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: "ital
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: { default: `${site.name}, ${site.tagline.toLowerCase()}`, template: `%s · ${site.name}` },
+  title: { default: site.name, template: `%s · ${site.name}` },
   description: site.description,
   openGraph: {
     title: `${site.name}, ${site.tagline.toLowerCase()}`,
