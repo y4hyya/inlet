@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { builtWith } from "@/lib/content";
 import { links, site } from "@/lib/site";
 import { Mark } from "./mark";
 import styles from "./footer.module.css";
@@ -60,7 +61,13 @@ export function Footer() {
         </div>
       </div>
       <div className={`rail ${styles.note}`}>
-        <p className="soft">MIT licensed. Testnet only. Version one charges no fee.</p>
+        <p className="eyebrow">Built with</p>
+        <ul className={styles.built}>
+          {builtWith.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+        <p className={`soft ${styles.legal}`}>MIT licensed. Testnet only. Version one charges no fee.</p>
       </div>
     </footer>
   );
