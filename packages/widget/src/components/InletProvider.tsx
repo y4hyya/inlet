@@ -1,7 +1,7 @@
 import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type ComponentProps, type ReactNode } from "react";
 import { http } from "viem";
 import { arbitrumSepolia, arcTestnet, baseSepolia } from "viem/chains";
 import { InletContext } from "../context.js";
@@ -14,6 +14,10 @@ export interface InletAppearance {
   logo?: string;
 }
 
+// One identity across renders. A fresh object rebuilds the wagmi config every render.
+const noRpc: Partial<Record<number, string>> = {};
+const noAppearance: InletAppearance = {};
+
 export interface InletProviderProps {
   privyAppId: string;
   relayerUrl: string;
@@ -22,7 +26,7 @@ export interface InletProviderProps {
   children: ReactNode;
 }
 
-export function InletProvider({ privyAppId, relayerUrl, rpc = {}, appearance = {}, children }: InletProviderProps) {
+export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance = noAppearance, children }: InletProviderProps) {
   const queryClient = useMemo(() => new QueryClient(), []);
   const wagmiConfig = useMemo(
     () =>
@@ -37,10 +41,9 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = {}, appearance = {
     [rpc],
   );
 
-  return (
-    <PrivyProvider
-      appId={privyAppId}
-      config={{
+  const privyConfig = useMemo(
+    () =>
+      ({
         loginMethods: ["email", "wallet"],
         embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" }, solana: { createOnLogin: "off" } },
         defaultChain: baseSepolia,
@@ -52,8 +55,12 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = {}, appearance = {
           walletChainType: "ethereum-only",
           walletList: ["metamask", "detected_ethereum_wallets", "wallet_connect_qr"],
         },
-      }}
-    >
+      }) satisfies ComponentProps<typeof PrivyProvider>["config"],
+    [appearance.theme, appearance.accentColor, appearance.logo],
+  );
+
+  return (
+    <PrivyProvider appId={privyAppId} config={privyConfig}>
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>
           <Bridge relayerUrl={relayerUrl}>{children}</Bridge>
