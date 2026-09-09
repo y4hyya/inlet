@@ -53,7 +53,7 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
           accentColor: appearance.accentColor ?? "#0f6fff",
           logo: appearance.logo,
           walletChainType: "ethereum-only",
-          walletList: ["metamask", "detected_ethereum_wallets", "wallet_connect_qr"],
+          walletList: ["metamask", "detected_ethereum_wallets", "rainbow", "coinbase_wallet", "phantom", "uniswap", "wallet_connect_qr"],
         },
       }) satisfies ComponentProps<typeof PrivyProvider>["config"],
     [appearance.theme, appearance.accentColor, appearance.logo],
