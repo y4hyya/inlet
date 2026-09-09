@@ -112,3 +112,18 @@
     gap: var(--space-8);
   }
 }
+
+@media (pointer: coarse) {
+  /* Reach the 24px minimum on touch without moving anything on a desktop. */
+  .list a,
+  .address {
+    position: relative;
+  }
+
+  .list a::after,
+  .address::after {
+    content: "";
+    position: absolute;
+    inset: -4px 0;
+  }
+}

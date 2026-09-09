@@ -16,6 +16,7 @@
   max-width: 440px;
   font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  min-width: 0;
 }
 @media (prefers-color-scheme: dark) {
   .inlet {
@@ -32,11 +33,13 @@
 .inlet-relayer-online::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--inlet-done); margin-right: 6px; }
 .inlet-relayer-offline { color: var(--inlet-warn); }
 .inlet-body { display: grid; gap: 12px; }
-.inlet-field { display: grid; gap: 4px; }
+.inlet-field { display: grid; gap: 4px; min-width: 0; }
 .inlet-field span { color: var(--inlet-muted); font-size: 12px; }
 .inlet-field select, .inlet-field input {
   font: inherit; color: inherit; background: transparent;
   border: 1px solid var(--inlet-line); border-radius: 10px; padding: 10px 12px;
+  /* A select sizes to its longest option and will not shrink past it without these. */
+  width: 100%; min-width: 0;
 }
 .inlet-routes { display: flex; gap: 8px; }
 .inlet-chip { font: inherit; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--inlet-line); background: transparent; color: var(--inlet-fg); cursor: pointer; }
@@ -84,3 +87,8 @@
 @keyframes inlet-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
 
 .inlet-note { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--inlet-accent-bg, #eef4ff); color: var(--inlet-accent); font-size: 13px; line-height: 1.4; }
+
+@media (pointer: coarse) {
+  /* Below 16px iOS zooms the page when a control takes focus. */
+  .inlet-field select, .inlet-field input { font-size: 16px; }
+}

@@ -30,6 +30,19 @@
   color: var(--ink);
 }
 
+/* Below one row the rail unpins, and holding a screen costs more than it gives on a phone. */
+@media (max-width: 1080px) {
+  .section {
+    min-height: 0;
+  }
+
+  .pin {
+    position: static;
+    height: auto;
+    padding-block: var(--section);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .section {
     min-height: 0;
