@@ -14,8 +14,8 @@ export default function Home() {
       <Hero />
       <How />
       <Contrast />
-      <Tagline />
       <Guarantees />
+      <Tagline />
       <Integrate />
       <BuiltWith />
     </>
