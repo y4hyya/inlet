@@ -27,15 +27,17 @@
   box-shadow: var(--glass-shadow);
   border-radius: var(--glass-radius);
   transition-property: background-color, border-color, box-shadow, transform;
-  transition-duration: var(--dur-ui);
+  transition-duration: 330ms;
   transition-timing-function: var(--ease-out);
 }
 
 .column:hover {
+  /* The reveal stagger sets a delay on this element. The hover must not inherit it. */
+  transition-delay: 0s;
   background: var(--glass-bg-strong);
   border-color: rgba(255, 255, 255, 0.24);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 32px 72px rgba(0, 0, 0, 0.45);
-  transform: translateY(-3px);
+  transform: translateY(-12px);
 }
 
 .after {
