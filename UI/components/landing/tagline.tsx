@@ -5,9 +5,12 @@ import styles from "./tagline.module.css";
 
 const text = "The address is the commitment. USDC can only move along the path the intent names, or back to the sender after the deadline.";
 
+// The reveal finishes before the runway ends, so the whole sentence is readable for a beat.
+const finish = 0.85;
+
 export function Tagline() {
   const words = text.split(" ");
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -20,9 +23,13 @@ export function Tagline() {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const rect = element.getBoundingClientRect();
-      const trigger = window.innerHeight * 0.82;
-      const progress = Math.min(1, Math.max(0, (trigger - rect.top) / (rect.height + window.innerHeight * 0.25)));
+      const runway = element.offsetHeight - window.innerHeight;
+      if (runway <= 0) {
+        setCount(words.length);
+        return;
+      }
+      const travelled = -element.getBoundingClientRect().top;
+      const progress = Math.min(1, Math.max(0, travelled / runway / finish));
       setCount(Math.round(progress * words.length));
     };
     const schedule = () => {
@@ -39,14 +46,16 @@ export function Tagline() {
   }, [words.length]);
 
   return (
-    <section className={`rail ${styles.section}`} aria-label="Guarantee">
-      <p ref={ref} className={styles.tagline}>
-        {words.map((word, index) => (
-          <span key={`${word}-${index}`} className={styles.word} data-on={index < count ? "" : undefined}>
-            {word}{" "}
-          </span>
-        ))}
-      </p>
+    <section ref={ref} className={styles.section} aria-label="Guarantee">
+      <div className={`rail ${styles.pin}`}>
+        <p className={styles.tagline}>
+          {words.map((word, index) => (
+            <span key={`${word}-${index}`} className={styles.word} data-on={index < count ? "" : undefined}>
+              {word}{" "}
+            </span>
+          ))}
+        </p>
+      </div>
     </section>
   );
 }

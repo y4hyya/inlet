@@ -1,5 +1,15 @@
 .section {
-  padding-block: var(--section);
+  /* The runway the reader scrolls through while the sentence is held in place. */
+  --runway: 130vh;
+  min-height: calc(100vh + var(--runway));
+}
+
+.pin {
+  position: sticky;
+  top: 0;
+  display: grid;
+  align-content: center;
+  height: 100vh;
 }
 
 .tagline {
@@ -18,4 +28,20 @@
 
 .word[data-on] {
   color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section {
+    min-height: 0;
+  }
+
+  .pin {
+    position: static;
+    height: auto;
+    padding-block: var(--section);
+  }
+
+  .word {
+    transition: none;
+  }
 }
