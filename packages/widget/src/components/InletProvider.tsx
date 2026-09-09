@@ -71,7 +71,7 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
 }
 
 function Bridge({ relayerUrl, children }: { relayerUrl: string; children: ReactNode }) {
-  const { login, logout, ready } = usePrivy();
-  const value = useMemo(() => ({ relayerUrl, login, logout, ready }), [relayerUrl, login, logout, ready]);
+  const { login, logout, ready, authenticated } = usePrivy();
+  const value = useMemo(() => ({ relayerUrl, login, logout, ready, authenticated }), [relayerUrl, login, logout, ready, authenticated]);
   return <InletContext.Provider value={value}>{children}</InletContext.Provider>;
 }

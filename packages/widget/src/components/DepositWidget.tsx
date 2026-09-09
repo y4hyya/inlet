@@ -5,6 +5,7 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { defaultSources } from "../config.js";
 import { useInlet } from "../context.js";
 import { short, usdc } from "../format.js";
+import { isSignedIn } from "../session.js";
 import type { Destination, RoutePreference, SourceChain } from "../types.js";
 import { useDeposit } from "../useDeposit.js";
 import { StatusTimeline } from "./StatusTimeline.js";
@@ -33,6 +34,7 @@ export function DepositWidget({
   const { address, chainId, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
+  const signedIn = isSignedIn({ address, authenticated: inlet.authenticated, isConnected });
 
   const [destinationId, setDestinationId] = useState(destinations.find((entry) => entry.id === defaultDestinationId)?.id ?? destinations[0]?.id);
   const [sourceDomain, setSourceDomain] = useState(sources[0]?.domain);
@@ -75,8 +77,16 @@ export function DepositWidget({
     if (state.record) onRecord?.(state.record);
   }, [state.record, onRecord]);
 
+  // The quote, the record, the notices and any error belong to the session that asked for them.
   useEffect(() => {
-    if (!isConnected || !address) return;
+    if (signedIn) return;
+    reset();
+    setGatewayTx(undefined);
+    setMoved(undefined);
+  }, [signedIn, reset]);
+
+  useEffect(() => {
+    if (!signedIn || !address) return;
     const handle = setTimeout(() => {
       if (["creating", "signing", "sending", "tracking", "done"].includes(phase.current)) return;
       void quote(amount, preference).then((next) => {
@@ -88,7 +98,7 @@ export function DepositWidget({
       });
     }, 400);
     return () => clearTimeout(handle);
-  }, [amount, preference, isConnected, address, source, sources, destination, quote]);
+  }, [amount, preference, signedIn, address, source, sources, destination, quote]);
 
   const [price, setPrice] = useState<{ quote: UniswapQuote; amount: string } | undefined>();
   useEffect(() => {
@@ -119,6 +129,15 @@ export function DepositWidget({
   const busy = ["creating", "signing", "sending"].includes(state.phase);
   const quoting = state.phase === "quoting";
   const tracking = state.phase === "tracking" || state.phase === "done";
+  const signOutLabel = inlet.logout ? "Log out" : "Disconnect";
+  const signOut = async () => {
+    if (!inlet.logout) return disconnect();
+    try {
+      await inlet.logout();
+    } catch (error) {
+      console.error("Inlet could not end the session", error);
+    }
+  };
 
   return (
     <section className="inlet">
@@ -129,9 +148,13 @@ export function DepositWidget({
             {relayerStatus === "online" ? "relayer online" : relayerStatus === "offline" ? `relayer unreachable at ${url}` : "checking relayer"}
           </span>
         </h2>
-        {isConnected && address ? (
-          <button className="inlet-link" type="button" onClick={() => (inlet.logout ? inlet.logout() : disconnect())}>
-            {short(address)}
+        {signedIn && address ? (
+          <button className="inlet-account" type="button" onClick={signOut} title={`${signOutLabel}, ${address}`} aria-label={`${signOutLabel} ${short(address)}`}>
+            <span className="inlet-account-name">{short(address)}</span>
+            <svg className="inlet-account-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M9.5 13.5H4.5A1.5 1.5 0 0 1 3 12V4a1.5 1.5 0 0 1 1.5-1.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M7.5 8H14m-2.5-2.5L14 8l-2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
         ) : null}
       </header>
@@ -179,7 +202,7 @@ export function DepositWidget({
             ))}
           </div>
 
-          {state.quote ? (
+          {signedIn && state.quote ? (
             <dl className={`inlet-quote ${quoting ? "inlet-quote-stale" : ""}`}>
               <div>
                 <dt>Route</dt>
@@ -238,7 +261,7 @@ export function DepositWidget({
           ) : null}
           {state.error ? <p className="inlet-warn">{state.error}</p> : null}
 
-          {!isConnected ? (
+          {!signedIn ? (
             <button
               className="inlet-primary"
               type="button"

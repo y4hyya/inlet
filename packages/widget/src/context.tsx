@@ -3,8 +3,11 @@ import { createContext, useContext } from "react";
 export interface InletContextValue {
   relayerUrl: string;
   login?: () => void;
-  logout?: () => void;
+  logout?: () => Promise<void> | void;
   ready: boolean;
+  // The host's session flag. An injected wallet stays connected after logout, so
+  // wagmi keeps reporting an address and cannot tell us whether the session ended.
+  authenticated?: boolean;
 }
 
 export const InletContext = createContext<InletContextValue>({ relayerUrl: "", ready: true });
