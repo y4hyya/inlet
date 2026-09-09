@@ -1,4 +1,4 @@
-import { Close } from "@/components/landing/close";
+import { BuiltWith } from "@/components/landing/built-with";
 import { Contrast } from "@/components/landing/contrast";
 import { Guarantees } from "@/components/landing/guarantees";
 import { Hero } from "@/components/landing/hero";
@@ -12,12 +12,12 @@ export default function Home() {
     <>
       <Wallpaper />
       <Hero />
+      <How />
       <Contrast />
       <Tagline />
-      <How />
       <Guarantees />
       <Integrate />
-      <Close />
+      <BuiltWith />
     </>
   );
 }
