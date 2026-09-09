@@ -19,6 +19,13 @@
   max-width: 11ch;
 }
 
+.any {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
 .lead {
   font-size: var(--text-2);
   line-height: 1.4;

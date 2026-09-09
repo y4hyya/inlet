@@ -10,7 +10,7 @@ export function Hero() {
       <section className={`rail ${styles.hero}`}>
         <div className={styles.copy}>
           <h1 className={styles.title} data-reveal>
-            From any chain into any position.
+            From <em className={styles.any}>any</em> chain into <em className={styles.any}>any</em> position.
           </h1>
           <p className={styles.lead} data-reveal style={delay(1)}>
             One signature, and your USDC arrives as a position, not a balance.
