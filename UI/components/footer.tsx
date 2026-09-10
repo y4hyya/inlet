@@ -13,7 +13,7 @@ export function Footer() {
             <Wordmark height={30} />
             <span className="sr-only">Inlet</span>
           </p>
-          <p className={styles.blurb}>A deposit rail for DeFi. Native USDC only, Arc as the settlement hub, nothing wrapped and nothing stuck.</p>
+          <p className={styles.blurb}>A deposit and exit rail for DeFi. Native USDC only, Arc as the settlement hub, nothing wrapped and nothing stuck.</p>
           <p className="eyebrow">Hub on Arc testnet</p>
           <a className={`hash ${styles.address}`} href={links.hub} target="_blank" rel="noreferrer">
             {site.hub}

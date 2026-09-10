@@ -13,7 +13,7 @@ export function Hero() {
             From <em className={styles.any}>any</em> chain into <em className={styles.any}>any</em> position.
           </h1>
           <p className={styles.lead} data-reveal style={delay(1)}>
-            One signature, and your USDC arrives as a position, not a balance.
+            One signature, and your USDC arrives as a position, not a balance. One more brings it back out, to any chain you name.
           </p>
           <div className={styles.actions} data-reveal style={delay(2)}>
             <Link className="btn btn-secondary" href="/docs">
