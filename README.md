@@ -49,6 +49,18 @@ The diagrams live in [`diagram/`](diagram/) as HTML, SVG and PNG. [`docs/spec.md
 - Sweep, refund, receive and claim are permissionless. A relayer can delay a deposit. It cannot redirect one, and it is not needed to finish one.
 - Version one charges nothing. The intent carries a fee field and the hub rejects any value other than zero.
 
+## The way out
+
+A position is only real once the capital is in the venue, and it is only yours again once it is back on the chain you want it on. Inlet does both ends. The exit rail takes a position back out with one signature and lands native USDC in your wallet on the chains you choose, in the amounts you choose: five to Base, the rest to Ethereum, one signature, no gas on the chain the position lives on.
+
+It is the same trick in reverse. The permit you sign on the position token names as spender an executor address derived from every parameter of the exit: which position, how much, which chains, how much to each, who receives, the deadline. Only an executor created for exactly that intent can pull the position, so the one signature can only produce the exit you described. Anyone can submit it, the relayer cannot redirect it, and if any leg fails nothing moves and the signature stays unused.
+
+1. The widget derives the executor address from the exit intent and asks for one EIP 712 signature: an EIP 2612 permit for Aave and vault shares, an `allowBySig` authorization for Compound III.
+2. Anyone calls `execute` on the `InletExit` of the position's chain. It creates the executor with CREATE2, and the executor redeems the position through the exit adapter and burns one CCTP message per leg. The last leg takes the remainder.
+3. Circle attests each burn and the relayer mints each leg on its chain.
+
+Withdrawable today: Aave V3 on Arbitrum Sepolia, the Morpho Oneshot vault and Compound III on Base Sepolia. Any ERC 4626 vault with EIP 2612 works with no contract work. Legs can land on any chain the relayer serves, Arc included. Recorded exit: 1 aUSDC out of Aave V3 on Arbitrum Sepolia, half to Base Sepolia and the rest to Ethereum Sepolia, one signature, 37 seconds from the signature to both mints: [redeem on Arbitrum Sepolia](https://sepolia.arbiscan.io/tx/0xd71aae599f8e20fd5914d41e39b5f317853415016e1bb7a65ee0b75abc77866d), [mint on Base Sepolia](https://sepolia.basescan.org/tx/0xcc92404d8956e19729864261d506a6378ffe438f28fcfdbc069726d1ca588887), [mint on Ethereum Sepolia](https://sepolia.etherscan.io/tx/0x02a2677806a3e3bd80a7f3e6e22f5b5006b8a3d11a8aad8fc22a83c4a7d7b3c1).
+
 ## Destinations live on testnet
 
 | Destination | Chain | Adapter | Position | Recorded deposit |
@@ -140,10 +152,10 @@ Recorded deposit: [burn on Base Sepolia](https://sepolia.basescan.org/tx/0x08244
 
 ## Repository layout
 
-- `contracts/` the hub on Arc, per intent forwarders, the EVM receiver, and the adapters for ERC 4626 vaults, Aave V3, Compound III and Uniswap v4 (Foundry)
-- `packages/sdk` intents, adapter data encoders, the destination catalog, Gateway and CCTP helpers, the relayer client
-- `packages/widget` the React deposit widget with optional Privy login
-- `services/relayer` deposit tracking, Arc mints, sweeps, attestations, destination execution, refunds, and the Uniswap quote proxy
+- `contracts/` the hub on Arc, per intent forwarders, the EVM receiver, the adapters for ERC 4626 vaults, Aave V3, Compound III and Uniswap v4, and the exit rail with its per intent executors and exit adapters (Foundry)
+- `packages/sdk` intents and exit intents, adapter data encoders, the destination catalog, Gateway and CCTP helpers, permit typed data, the relayer client
+- `packages/widget` the React widget, deposit and withdraw, with optional Privy login
+- `services/relayer` deposit tracking, Arc mints, sweeps, attestations, destination execution, refunds, exits, and the Uniswap quote proxy
 - `UI` the site: landing page, live app with replay of recorded runs, and docs
 - `apps/mcp` the MCP server for agents
 - `skills/inlet` the agent skill for integrating the kit
@@ -157,12 +169,13 @@ Recorded deposit: [burn on Base Sepolia](https://sepolia.basescan.org/tx/0x08244
 ```
 pnpm install
 pnpm -r build
-cd contracts && forge test                    # 43 tests; the fork tests run when the RPC variables are set
+cd contracts && forge test                    # 67 tests; the fork tests run when the RPC variables are set
 pnpm --filter @inletkit/sdk test              # hashing parity with the deployed hub
 pnpm --filter @inletkit/widget test           # route planning across chains
 pnpm --filter @inletkit/relayer dev           # local relayer on port 8787
 pnpm --filter @inletkit/ui dev                # http://localhost:3000
 DESTINATION=aave pnpm --filter @inletkit/relayer e2e   # one real deposit; also compound, morpho, uniswap
+DESTINATION=aave LEGS=6:0.5,0 pnpm --filter @inletkit/relayer e2e:exit   # one real exit, half to Base Sepolia and the rest to Ethereum Sepolia
 ```
 
 Three env files, each with an `.env.example` next to it: `contracts/.env` holds the deployer key, `services/relayer/.env` the relayer key, the RPC URLs and an optional Uniswap API key, `UI/.env.local` the Privy app id and the relayer URL. Hosting is described in [`infra/README.md`](infra/README.md).
