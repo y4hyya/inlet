@@ -65,7 +65,7 @@ export function Integrate() {
             <p className="eyebrow">For agents</p>
             <h3 className={styles.subtitle}>The same rail over MCP.</h3>
             <p className={styles.body}>
-              A stdio server over the SDK and the relayer API the widget uses. An agent lists destinations, quotes, signs with its own wallet, and follows the deposit to the position.
+              A stdio server over the SDK and the relayer API the widget uses. An agent lists destinations, quotes, signs with its own wallet, and follows the deposit to the position. The way out is the same size: one permit, one call.
             </p>
           </div>
           <ul className={styles.tools}>
@@ -77,7 +77,7 @@ export function Integrate() {
             ))}
           </ul>
           <p className={styles.more} data-reveal>
-            Six more cover the source chains, the Gateway route, status and live pool prices. <Link href="/docs/agents">Set it up</Link> or read the{" "}
+            Ten more cover the exact payloads to sign, the source chains, the Gateway route, status in both directions and live pool prices. <Link href="/docs/agents">Set it up</Link> or read the{" "}
             <a href={links.skill} target="_blank" rel="noreferrer">
               skill file
             </a>{" "}

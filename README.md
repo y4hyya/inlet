@@ -111,7 +111,7 @@ const vault = erc4626Destination({
 
 ## For agents
 
-[`apps/mcp`](apps/mcp) is a stdio MCP server over the same SDK and relayer API the widget uses. Tools: `list_destinations`, `list_sources`, `quote_deposit`, `create_intent` (returns the deposit address and the exact transaction or EIP 712 payload to sign), `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`, and, when `INLET_PRIVATE_KEY` is set, `deposit` and `fund_gateway_balance`, which run the whole flow with that wallet.
+[`apps/mcp`](apps/mcp) is a stdio MCP server over the same SDK and relayer API the widget uses. Tools: `list_destinations`, `list_sources`, `quote_deposit`, `create_intent` (returns the deposit address and the exact transaction or EIP 712 payload to sign), `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`, then the way out, `list_withdrawable`, `create_exit` (returns the derived executor and the exact permit to sign), `submit_exit`, `exit_status`, and, when `INLET_PRIVATE_KEY` is set, `deposit`, `withdraw` and `fund_gateway_balance`, which run the whole flow with that wallet.
 
 ```json
 {
@@ -127,7 +127,7 @@ const vault = erc4626Destination({
 
 [`skills/inlet/SKILL.md`](skills/inlet/SKILL.md) teaches a coding agent how to mount the widget, write an adapter, and run a relayer.
 
-Recorded agent run: one `deposit` tool call moved 1 USDC from a Base Sepolia Gateway balance into Compound III in sixteen seconds: [mint on Arc](https://testnet.arcscan.app/tx/0x2180a82f73e121449b52f616883ffa71a26c44b66eaee012edad9887f37e1a31), [sweep](https://testnet.arcscan.app/tx/0x113d8d04186c5082eb9c54dbbd87b92a733d8db03d13ecbaa0c9b6f864fe80c1), [execute on Base Sepolia](https://sepolia.basescan.org/tx/0xdcf11694a8160eec3413e20302a36cbb50a40ff93b7bbcc8508fcf44106e7cad).
+Recorded agent runs: one `deposit` tool call moved 1 USDC from a Base Sepolia Gateway balance into Compound III in sixteen seconds: [mint on Arc](https://testnet.arcscan.app/tx/0x2180a82f73e121449b52f616883ffa71a26c44b66eaee012edad9887f37e1a31), [sweep](https://testnet.arcscan.app/tx/0x113d8d04186c5082eb9c54dbbd87b92a733d8db03d13ecbaa0c9b6f864fe80c1), [execute on Base Sepolia](https://sepolia.basescan.org/tx/0xdcf11694a8160eec3413e20302a36cbb50a40ff93b7bbcc8508fcf44106e7cad). One `withdraw` tool call took 0.5 aUSDC out of Aave and landed it on Base Sepolia and Arc in seventeen seconds: [redeem](https://sepolia.arbiscan.io/tx/0x7a83ed9a3b1893f34a47bc5077442df6a69c7cd9b10139910ade2465b78ed4e3), [mint on Base Sepolia](https://sepolia.basescan.org/tx/0x3af9abc6a8b772c0ef4d1f07ff1129dac2f3e011bdf46eb40b0b2bc377d38e44), [mint on Arc](https://testnet.arcscan.app/tx/0xae80bc05eca48ba10482eb23eb7472c10c3cbf9db21d02be3054d47aecec5f01).
 
 ## Uniswap integration
 

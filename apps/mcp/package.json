@@ -1,7 +1,7 @@
 {
   "name": "@inletkit/mcp",
   "version": "0.1.0",
-  "description": "MCP server that lets agents deposit USDC from any chain into any position through Inlet.",
+  "description": "MCP server that lets agents deposit USDC from any chain into any position through Inlet, and take it back out.",
   "license": "MIT",
   "type": "module",
   "bin": {

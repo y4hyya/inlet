@@ -7,13 +7,23 @@ import {
   InletRelayerClient,
   IrisClient,
   burnIntentTypedData,
+  cometAbi,
+  cometAuthorizationTypedData,
   createBurnIntent,
+  exitableDestinations,
   explorers,
   findDestinationSpec,
   findSourceSpec,
   gatewayMaxFee,
   gatewayWalletAbi,
+  hashExit,
+  inletExitAbi,
+  maxFeeBpsFor,
+  parseExit,
+  permitAbi,
+  permitTypedData,
   serializeBurnIntent,
+  serializeExit,
   serializeIntent,
   testnetChains,
   testnetDestinations,
@@ -21,6 +31,8 @@ import {
   toBytes32,
   tokenMessengerV2Abi,
   type DepositIntent,
+  type ExitIntent,
+  type ExitRecord,
   type IntentRecord,
   type Route,
 } from "@inletkit/sdk";
@@ -37,6 +49,8 @@ const hubDomain = 26;
 const rawKey = process.env.INLET_PRIVATE_KEY?.trim();
 const account = rawKey ? privateKeyToAccount((rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`) as Hex) : undefined;
 const chains: Record<number, Chain> = { 6: baseSepolia, 3: arbitrumSepolia, 10: unichainSepolia, 0: sepolia };
+const rpcs: Record<number, string> = { 6: testnetChains.baseSepolia.rpc, 3: testnetChains.arbitrumSepolia.rpc };
+const chainNames: Record<number, string> = { 0: "Ethereum Sepolia", 3: "Arbitrum Sepolia", 6: "Base Sepolia", 10: "Unichain Sepolia", 15: "Monad Testnet", 26: "Arc Testnet" };
 
 const address = z.string().regex(/^0x[0-9a-fA-F]{40}$/, "an EVM address");
 const hex = z.string().regex(/^0x[0-9a-fA-F]*$/, "hex bytes");
@@ -328,6 +342,173 @@ if (account) {
       const deposit = await walletClient.writeContract({ address: source.gatewayWallet, abi: gatewayWalletAbi, functionName: "deposit", args: [source.usdc, amount], gas: 250_000n });
       await publicClient.waitForTransactionReceipt({ hash: deposit });
       return text({ approveTx: `${source.explorer}${approve}`, depositTx: `${source.explorer}${deposit}`, note: "spendable once Circle sees finality on the source chain" });
+    },
+  );
+}
+
+function summarizeExit(record: ExitRecord) {
+  const spec = exitableDestinations.find((entry) => entry.exit.adapterId.toLowerCase() === record.intent.adapterId.toLowerCase() && entry.exit.adapterData.toLowerCase() === record.intent.adapterData.toLowerCase());
+  const link = (domain: number, hash?: Hex) => (hash && hash !== ("external" as string) ? `${explorers[domain] ?? ""}${hash}` : undefined);
+  return {
+    hash: record.hash,
+    state: record.state,
+    position: spec?.name ?? `domain ${record.domain}`,
+    positionChain: chainNames[record.domain] ?? `domain ${record.domain}`,
+    executor: record.executor,
+    exitTx: link(record.domain, record.exitTx),
+    receivedUsdc: record.received === undefined ? undefined : formatUnits(record.received, 6),
+    legs: record.legs.map((leg, index) => ({
+      chain: chainNames[leg.domain] ?? `domain ${leg.domain}`,
+      amountUsdc: index + 1 === record.legs.length ? "the rest" : formatUnits(leg.amount, 6),
+      attested: leg.attested,
+      mintTx: link(leg.domain, leg.mintTx),
+    })),
+    error: record.error,
+    statusPage: `https://inletkit.vercel.app/app?hash=${record.hash}`,
+  };
+}
+
+const legInput = z.array(z.object({ domain: z.number().int(), amountUsdc: usdcAmount.optional() })).min(1).max(4);
+
+/// The executor address is what the owner's signature names as spender, so it has to exist before anyone signs.
+async function buildExit(params: { owner: Address; destinationId: string; amountUsdc: string; legs: { domain: number; amountUsdc?: string }[]; recipient?: Address; deadlineMinutes?: number }) {
+  const spec = exitableDestinations.find((entry) => entry.id === params.destinationId);
+  if (!spec) throw new Error(`${params.destinationId} cannot be withdrawn through Inlet; call list_withdrawable`);
+  const exit = spec.exit;
+  const domain = spec.destinationDomain;
+  const chain = chains[domain];
+  const client = createPublicClient({ chain, transport: http(rpcs[domain]) });
+  const token = { address: exit.positionToken } as const;
+
+  const amount = parseUnits(params.amountUsdc, 6);
+  const shares = exit.adapterName === "erc4626-exit:v1";
+  const units = shares ? await client.readContract({ ...token, abi: permitAbi, functionName: "previewWithdraw", args: [amount] }) : amount;
+  const minAssets = (shares ? await client.readContract({ ...token, abi: permitAbi, functionName: "previewRedeem", args: [units] }) : amount) - 2n;
+
+  const recipient = toBytes32(params.recipient ?? params.owner);
+  const legs = params.legs.map((leg, index) => {
+    const last = index + 1 === params.legs.length;
+    if (leg.domain === domain) throw new Error(`a leg cannot land on ${chainNames[domain]}, the chain the position is on`);
+    if (!last && !leg.amountUsdc) throw new Error(`leg ${index} needs amountUsdc; only the last leg takes the rest`);
+    return { domain: leg.domain, recipient, amount: last ? 0n : parseUnits(leg.amountUsdc!, 6) };
+  });
+  let maxFeeBps = 0;
+  for (const leg of legs) maxFeeBps = Math.max(maxFeeBps, maxFeeBpsFor(await iris.getBurnFees(domain, leg.domain)));
+
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + (params.deadlineMinutes ?? 120) * 60);
+  const intent: ExitIntent = { owner: params.owner, adapterId: exit.adapterId, adapterData: exit.adapterData, amount: units, minAssets, legs, nonce: BigInt(Date.now()), deadline, maxFeeBps };
+  const hash = hashExit(intent, exit.exitContract, chain.id);
+  const executor = await client.readContract({ address: exit.exitContract, abi: inletExitAbi, functionName: "exitAddress", args: [hash] });
+
+  const sign =
+    exit.permit === "comet"
+      ? cometAuthorizationTypedData({
+          name: await client.readContract({ ...token, abi: cometAbi, functionName: "name" }),
+          version: await client.readContract({ ...token, abi: cometAbi, functionName: "version" }),
+          chainId: chain.id,
+          verifyingContract: exit.positionToken,
+          owner: params.owner,
+          manager: executor,
+          nonce: await client.readContract({ ...token, abi: cometAbi, functionName: "userNonce", args: [params.owner] }),
+          expiry: deadline,
+        })
+      : permitTypedData({
+          name: await client.readContract({ ...token, abi: permitAbi, functionName: "name" }),
+          chainId: chain.id,
+          verifyingContract: exit.positionToken,
+          owner: params.owner,
+          spender: executor,
+          value: units,
+          nonce: await client.readContract({ ...token, abi: permitAbi, functionName: "nonces", args: [params.owner] }),
+          deadline,
+        });
+  return { spec, chain, intent, hash, executor, sign, units, minAssets };
+}
+
+server.registerTool(
+  "list_withdrawable",
+  {
+    title: "List withdrawable positions",
+    description: "Positions the exit rail can turn back into USDC on other chains, with the InletExit and the kind of signature each needs. With an owner address, also what that wallet holds in each.",
+    inputSchema: { owner: address.optional() },
+  },
+  async ({ owner }) => {
+    const rows = await Promise.all(
+      exitableDestinations.map(async (spec) => {
+        const exit = spec.exit;
+        const client = createPublicClient({ chain: chains[spec.destinationDomain], transport: http(rpcs[spec.destinationDomain]) });
+        const balance = owner ? await client.readContract({ address: exit.positionToken, abi: permitAbi, functionName: "balanceOf", args: [owner as Address] }).catch(() => undefined) : undefined;
+        return {
+          id: spec.id,
+          name: spec.name,
+          chain: spec.chain,
+          positionToken: exit.positionToken,
+          positionLabel: spec.positionLabel,
+          signature: exit.permit === "comet" ? "Compound allowBySig authorization" : "EIP 2612 permit",
+          inletExit: exit.exitContract,
+          balance: balance === undefined ? undefined : formatUnits(balance, exit.positionDecimals),
+        };
+      }),
+    );
+    return text({ positions: rows, legChains: Object.entries(chainNames).map(([domain, name]) => ({ domain: Number(domain), name })), note: "a leg can land on any listed chain except the one the position is on; the last leg takes whatever is left" });
+  },
+);
+
+server.registerTool(
+  "create_exit",
+  {
+    title: "Create a withdrawal",
+    description: "Builds the exit intent for a position, derives the executor address, and returns exactly what the owner signs: an EIP 2612 permit or a Compound authorization naming that executor. Nothing moves until submit_exit receives the signature.",
+    inputSchema: { owner: address, destinationId: z.string(), amountUsdc: usdcAmount, legs: legInput, recipient: address.optional(), deadlineMinutes: z.number().int().min(5).max(1440).optional() },
+  },
+  async (params) => {
+    const built = await buildExit({ ...params, owner: params.owner as Address, recipient: params.recipient as Address | undefined });
+    return text({
+      hash: built.hash,
+      executor: built.executor,
+      position: built.spec.name,
+      redeems: `${formatUnits(built.units, built.spec.exit.positionDecimals)} ${built.spec.positionLabel} for at least ${formatUnits(built.minAssets, 6)} USDC`,
+      intent: serializeExit(built.intent),
+      sign: built.sign,
+      purpose: `sign this typed data with the owner's wallet on ${built.spec.chain}, no gas, then call submit_exit with the intent and the signature`,
+    });
+  },
+);
+
+server.registerTool(
+  "submit_exit",
+  { title: "Submit a signed withdrawal", description: "Hands the exit intent from create_exit and the owner's signature to the relayer, which redeems the position and lands the USDC on every leg.", inputSchema: { intent: z.record(z.string(), z.unknown()), signature: hex } },
+  async ({ intent, signature }) => text(summarizeExit(await relayer.createExit(parseExit(intent), signature as Hex))),
+);
+
+server.registerTool(
+  "exit_status",
+  { title: "Withdrawal status", description: "Current state of a withdrawal with the redemption transaction and the mint transaction of every leg.", inputSchema: { hash: hex } },
+  async ({ hash }) => text(summarizeExit(await relayer.getExit(hash as Hex))),
+);
+
+if (account) {
+  server.registerTool(
+    "withdraw",
+    {
+      title: "Withdraw with the configured wallet",
+      description: "Runs a whole withdrawal with the wallet in INLET_PRIVATE_KEY: builds the exit, signs the permit for the derived executor, submits it, and waits for the USDC to land on every leg. Returns every transaction hash.",
+      inputSchema: { destinationId: z.string(), amountUsdc: usdcAmount, legs: legInput, waitSeconds: z.number().int().min(0).max(600).default(180) },
+    },
+    async ({ destinationId, amountUsdc, legs, waitSeconds }) => {
+      const built = await buildExit({ owner: account.address, destinationId, amountUsdc, legs });
+      const signature =
+        built.spec.exit.permit === "comet"
+          ? await account.signTypedData(built.sign as ReturnType<typeof cometAuthorizationTypedData>)
+          : await account.signTypedData(built.sign as ReturnType<typeof permitTypedData>);
+      const record = await relayer.createExit(built.intent, signature);
+      const until = Date.now() + waitSeconds * 1000;
+      let latest = record;
+      while (Date.now() < until && latest.state !== "delivered") {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        latest = await relayer.getExit(record.hash);
+      }
+      return text(summarizeExit(latest));
     },
   );
 }

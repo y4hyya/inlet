@@ -1,10 +1,10 @@
-export const metadata = { title: "MCP server and skill", description: "The Inlet MCP server for agents, its ten tools, the recorded agent run, and the skill file for coding agents." };
+export const metadata = { title: "MCP server and skill", description: "The Inlet MCP server for agents, its fifteen tools for deposits and withdrawals, the recorded agent runs, and the skill file for coding agents." };
 
 <p className="eyebrow">Agents</p>
 
 # MCP server and skill
 
-`apps/mcp` is a stdio Model Context Protocol server over the same SDK and relayer API the widget uses. An agent lists destinations, quotes, creates the intent, signs with its own wallet, and follows the deposit to the position.
+`apps/mcp` is a stdio Model Context Protocol server over the same SDK and relayer API the widget uses. An agent lists destinations, quotes, creates the intent, signs with its own wallet, and follows the deposit to the position. The same server takes the position back out: it builds the exit, hands the agent the permit to sign, and follows the USDC to every chain it lands on.
 
 ## Configure
 
@@ -22,7 +22,7 @@ export const metadata = { title: "MCP server and skill", description: "The Inlet
 }
 ```
 
-Set `INLET_PRIVATE_KEY` as well and two more tools appear that run the whole flow with that wallet.
+Set `INLET_PRIVATE_KEY` as well and three more tools appear that run the whole flow with that wallet.
 
 ## Tools
 
@@ -36,14 +36,21 @@ Set `INLET_PRIVATE_KEY` as well and two more tools appear that run the whole flo
 | `submit_gateway_intent` | Submit the signed Gateway intent |
 | `deposit_status` | Follow a deposit all the way to the position |
 | `uniswap_quote` | Live pool price from the Uniswap Trading API |
-| `deposit` | Run the whole flow with the configured key |
+| `list_withdrawable` | Positions the exit rail can take back out, with what the wallet holds in each |
+| `create_exit` | The exit intent, the derived executor, and the exact permit or authorization to sign |
+| `submit_exit` | Hand the signed withdrawal to the relayer |
+| `exit_status` | Follow a withdrawal to the USDC on every leg |
+| `deposit` | Run a whole deposit with the configured key |
+| `withdraw` | Run a whole withdrawal with the configured key |
 | `fund_gateway_balance` | Top up the unified balance before depositing |
 
 Signing stays with the agent. Without a key the server never touches funds, it only prepares the payloads and reports state.
 
-## Recorded agent run
+## Recorded agent runs
 
 One `deposit` tool call moved 1 USDC from a Base Sepolia Gateway balance into Compound III in sixteen seconds against the hosted relayer: [mint on Arc](https://testnet.arcscan.app/tx/0x2180a82f73e121449b52f616883ffa71a26c44b66eaee012edad9887f37e1a31), [sweep](https://testnet.arcscan.app/tx/0x113d8d04186c5082eb9c54dbbd87b92a733d8db03d13ecbaa0c9b6f864fe80c1), [execute on Base Sepolia](https://sepolia.basescan.org/tx/0xdcf11694a8160eec3413e20302a36cbb50a40ff93b7bbcc8508fcf44106e7cad). The [live app](/app) replays it.
+
+One `withdraw` tool call took 0.5 aUSDC out of Aave V3 on Arbitrum Sepolia and landed 0.2 USDC on Base Sepolia and the rest on Arc in seventeen seconds, one permit signed by the agent's key: [redeem on Arbitrum Sepolia](https://sepolia.arbiscan.io/tx/0x7a83ed9a3b1893f34a47bc5077442df6a69c7cd9b10139910ade2465b78ed4e3), [mint on Base Sepolia](https://sepolia.basescan.org/tx/0x3af9abc6a8b772c0ef4d1f07ff1129dac2f3e011bdf46eb40b0b2bc377d38e44), [mint on Arc](https://testnet.arcscan.app/tx/0xae80bc05eca48ba10482eb23eb7472c10c3cbf9db21d02be3054d47aecec5f01). The [live app](/app?hash=0xb60bada0e5ec61a5d1f5b3e685812690a03f6d32e9b94d8b6aa4a4d3526c2338) shows it.
 
 ## The skill file
 

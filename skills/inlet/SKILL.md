@@ -51,7 +51,7 @@ Use `@inletkit/sdk` and the relayer API. The flow is the same one the widget run
 4. Gateway route: sign a Gateway burn intent (`createBurnIntent` and `burnIntentTypedData`) whose recipient is the deposit address, then `POST /intents/:hash/gateway`. No gas needed.
 5. Poll `GET /intents/:hash` until the state is `executed` (or `claimable`, `refunded`, `expired`).
 
-The MCP server in `apps/mcp` wraps these steps as tools for agents: `list_destinations`, `quote_deposit`, `create_intent`, `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`. Signing stays with the agent's own wallet.
+The MCP server in `apps/mcp` wraps these steps as tools for agents: `list_destinations`, `quote_deposit`, `create_intent`, `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`, and for the way out `list_withdrawable`, `create_exit`, `submit_exit`, `exit_status`. Signing stays with the agent's own wallet.
 
 ## Withdraw without a browser
 
