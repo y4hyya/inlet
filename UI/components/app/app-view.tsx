@@ -1,15 +1,15 @@
 "use client";
 
-import { InletRelayerClient, testnetSources, type ExitRecord, type IntentRecord } from "@inletkit/sdk";
+import { InletRelayerClient, testnetSources, toBytes32, type ExitRecord, type ExitState, type IntentRecord } from "@inletkit/sdk";
 import { ExitTimeline, InletWidget, StatusTimeline, findDestination, testnetDestinations, type InletMode } from "@inletkit/widget";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { short } from "@/lib/format";
-import { runs } from "@/lib/runs";
+import { exits, runs } from "@/lib/runs";
 import { site } from "@/lib/site";
 import { ExitFlow } from "./exit-flow";
 import { Flow, finals, order, type FlowView } from "./flow";
-import { lastStep, Replay, type ReplayState } from "./replay";
+import { lastStepFor, Replay, type ReplayState } from "./replay";
 import styles from "./app.module.css";
 
 const stepMs = 1500;
@@ -60,6 +60,28 @@ function viewFromReplay(state: ReplayState): FlowView | undefined {
     sweepTx: state.step >= 2 ? run.sweepTx : undefined,
     destinationTx: state.step >= 4 ? run.destinationTx : undefined,
     seconds: state.step >= 4 ? run.seconds : undefined,
+  };
+}
+
+const exitOrder: ExitState[] = ["signed", "executed", "attested", "delivered"];
+
+function exitFromReplay(state: ReplayState): ExitRecord | undefined {
+  const run = exits.find((entry) => entry.id === state.runId);
+  if (!run) return undefined;
+  const step = Math.min(state.step, exitOrder.length - 1);
+  const owner = "0xFDeA5eBbe7970A00792562e1C5299215CF6A3813";
+  const received = BigInt(run.receivedUnits);
+  return {
+    hash: run.hash,
+    state: exitOrder[step],
+    domain: run.positionDomain,
+    intent: { owner, adapterId: "0x", adapterData: "0x", amount: 0n, minAssets: received, legs: run.legs.map((leg) => ({ domain: leg.domain, recipient: toBytes32(owner), amount: 0n })), nonce: 0n, deadline: 0n, maxFeeBps: 0 },
+    executor: run.executor,
+    exitTx: step >= 1 ? run.exitTx : undefined,
+    received: step >= 1 ? received : undefined,
+    legs: run.legs.map((leg) => ({ domain: leg.domain, recipient: toBytes32(owner), amount: 0n, attested: step >= 2, mintTx: step >= 3 ? leg.mintTx : undefined })),
+    createdAt: 0,
+    updatedAt: run.seconds * 1000,
   };
 }
 
@@ -142,11 +164,11 @@ export function AppView() {
 
   useEffect(() => {
     if (focus !== "replay" || !replay.playing) return;
-    if (replay.step >= lastStep) {
+    if (replay.step >= lastStepFor(replay.runId)) {
       setReplay((current) => ({ ...current, playing: false }));
       return;
     }
-    const handle = window.setTimeout(() => setReplay((current) => ({ ...current, step: Math.min(lastStep, current.step + 1) })), stepMs);
+    const handle = window.setTimeout(() => setReplay((current) => ({ ...current, step: Math.min(lastStepFor(current.runId), current.step + 1) })), stepMs);
     return () => window.clearTimeout(handle);
   }, [focus, replay.playing, replay.step]);
 
@@ -171,6 +193,8 @@ export function AppView() {
 
   const followedDestination = followed ? findDestination(followed) ?? testnetDestinations[0] : undefined;
   const shownExit = mode === "withdraw" && exit ? exit : !live && followedExit ? followedExit : undefined;
+  const replayExit = focus === "replay" ? exitFromReplay(replay) : undefined;
+  const liveExit = focus === "replay" ? undefined : shownExit;
 
   return (
     <section className={`rail ${styles.app}`}>
@@ -206,11 +230,11 @@ export function AppView() {
           <p className={styles.caption}>The same widget a protocol mounts. Wallet agnostic, runs on wagmi, Privy only for the login here.</p>
         </div>
         <div className={styles.right}>
-          {shownExit ? (
-            <ExitFlow record={shownExit} />
+          {liveExit ? (
+            <ExitFlow record={liveExit} />
           ) : (
             <>
-              <Flow view={view} />
+              {replayExit ? <ExitFlow record={replayExit} /> : <Flow view={view} />}
               <Replay
                 state={replay}
                 active={focus === "replay"}

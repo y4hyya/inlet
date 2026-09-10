@@ -21,6 +21,40 @@ export interface RecordedRun {
   note?: string;
 }
 
+export interface RecordedExit {
+  id: string;
+  protocol: string;
+  position: string;
+  positionDomain: number;
+  positionName: string;
+  legs: { domain: number; name: string; mintTx: Hex; amount: string }[];
+  amount: string;
+  receivedUnits: number;
+  seconds: number;
+  hash: Hex;
+  executor: Hex;
+  exitTx: Hex;
+  note?: string;
+}
+
+export const exits: RecordedExit[] = [
+  {
+    id: "exit-aave-monad",
+    protocol: "Aave V3",
+    position: "2 aArbSepUSDC",
+    positionDomain: 3,
+    positionName: "Arbitrum Sepolia",
+    legs: [{ domain: 15, name: "Monad Testnet", mintTx: "0x12d1b4ddd6bedafb90ab23253c70ca3d2b753f189475ba93f9b0e44c55d291a7", amount: "the rest" }],
+    amount: "2 USDC",
+    receivedUnits: 2000001,
+    seconds: 13,
+    hash: "0xb21b5cc488f1e3bb2894aadeabeb9edbfce1223ee141280b07063a28a684ebd3",
+    executor: "0xfbaa16F1C7787D0E7e22d09ecFd34DB635Ab7F25",
+    exitTx: "0x4c8b160080b18cf8eadd315a20f84facee8b86f2ce79eec66c7b34c88b29466c",
+    note: "One permit signed in the widget from a browser wallet, against the hosted relayer",
+  },
+];
+
 export const runs: RecordedRun[] = [
   {
     id: "aave",
