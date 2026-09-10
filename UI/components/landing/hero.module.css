@@ -4,6 +4,8 @@
   gap: var(--space-12);
   align-items: center;
   padding-block: clamp(56px, 8vw, 112px) clamp(48px, 6vw, 80px);
+  /* Fill what is left of the first screen so the next section cannot peek in. */
+  min-height: calc(100svh - var(--nav-h));
 }
 
 .copy {

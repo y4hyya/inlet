@@ -58,6 +58,7 @@
   --glass-shadow: inset 0 1px 0 var(--glass-edge), 0 24px 60px rgba(0, 0, 0, 0.35);
   --glass-radius: 20px;
 
+  --nav-h: 76px;
   --nav-bg: var(--surface);
   --nav-border: var(--line-strong);
   --nav-blur: none;
