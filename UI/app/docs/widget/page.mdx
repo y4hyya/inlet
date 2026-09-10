@@ -1,10 +1,10 @@
-export const metadata = { title: "Mount the widget", description: "Install the Inlet widget, declare a destination, theme it, and read the deposit record back." };
+export const metadata = { title: "Mount the widget", description: "Install the Inlet widget, declare a destination, put deposit and withdraw under one header, theme it, and read the records back." };
 
 <p className="eyebrow">Build</p>
 
 # Mount the widget
 
-The widget is a React component that quotes, routes, signs and follows a deposit. It runs on wagmi, so it drops into the stack a protocol already has.
+The widget is a React component that quotes, routes, signs and follows a deposit, and does the same for a withdrawal back to native USDC on the chains the user chooses. It runs on wagmi, so it drops into the stack a protocol already has.
 
 ## Install
 
@@ -35,13 +35,36 @@ const vault = erc4626Destination({
 </InletProvider>
 ```
 
+`DepositWidget` is the deposit form on its own. `InletWidget` puts deposit and withdraw under one header with a toggle, and takes the same destinations:
+
+```tsx title="app.tsx"
+import { InletProvider, InletWidget, testnetDestinations } from "@inletkit/widget";
+
+<InletProvider privyAppId={PRIVY_APP_ID} relayerUrl={RELAYER_URL}>
+  <InletWidget destinations={testnetDestinations} />
+</InletProvider>
+```
+
 Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. For Aave V3, Compound III and Uniswap v4 pools with USDC on one side, the presets in `@inletkit/widget` already point at the deployed adapters. Anything else needs [one adapter with one function](/docs/adapters).
 
 ## Inside an app that already runs wagmi
 
-`InletProvider` brings Privy login and wagmi for apps that have neither. An app that already runs wagmi renders `DepositWidget` inside its own provider and skips `InletProvider`. The widget only uses wagmi hooks and the `relayerUrl` prop, and it falls back to the first wagmi connector for the connect button.
+`InletProvider` brings Privy login and wagmi for apps that have neither. An app that already runs wagmi renders `InletWidget` or `DepositWidget` inside its own provider and skips `InletProvider`. The widget only uses wagmi hooks and the `relayerUrl` prop, and it falls back to the first wagmi connector for the connect button.
 
 ## Props
+
+`InletWidget`
+
+| Prop | Type | Meaning |
+| --- | --- | --- |
+| `destinations` | `Destination[]` | Positions a user can deposit into. The ones that carry an `exit` entry are also offered for withdrawal |
+| `relayerUrl` | `string` | Overrides the relayer from `InletProvider` |
+| `sources` | `SourceChain[]` | Chains a deposit can start from |
+| `defaultDestinationId` | `string` | Which destination starts selected |
+| `defaultMode` | `"deposit" \| "withdraw"` | Which form shows first. Defaults to deposit |
+| `onModeChange` | `(mode) => void` | Called when the user flips the toggle |
+| `onRecord` | `(record: IntentRecord) => void` | Every update of a deposit record |
+| `onExit` | `(record: ExitRecord) => void` | Every update of a withdrawal record |
 
 `DepositWidget`
 
@@ -54,6 +77,8 @@ Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. 
 | `defaultDestinationId` | `string` | Which destination starts selected |
 | `title` | `string` | The widget heading |
 | `onRecord` | `(record: IntentRecord) => void` | Called with every update of the intent record, from creation to the final state. Use it to show the deposit elsewhere in your app or to route to a status page |
+
+`ExitWidget` takes `destinations`, `relayerUrl`, `defaultDestinationId`, `title` and `onExit`, and only shows the destinations that carry an `exit` entry.
 
 `InletProvider`
 
@@ -68,18 +93,20 @@ Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. 
 
 | Builder | Adapter | Arguments |
 | --- | --- | --- |
-| `erc4626Destination` | `erc4626:v1` | `vault`, and optionally `minShares` |
+| `erc4626Destination` | `erc4626:v1` | `vault`, optionally `minShares`, and `exitContract` to make the vault withdrawable when it implements EIP 2612 |
 | `aaveV3Destination` | `aave-v3:v1` | `pool`, and optionally `minATokens` |
 | `compoundV3Destination` | `compound-v3:v1` | `comet`, and optionally `minSupplied` |
 | `uniswapV4LpDestination` | `uniswap-v4-lp:v1` | `poolKey`, `rangeTicks`, `minLiquidity`, and a `price` hint for the live quote |
 
-Every builder also takes `id`, `name`, `destinationDomain`, `receiver` and an `explorer` base URL. The ready made presets for the testnet destinations are exported as `testnetDestinations`, with `findDestination(record)` to look one up from an intent record.
+Every builder also takes `id`, `name`, `destinationDomain`, `receiver` and an `explorer` base URL. The ready made presets for the testnet destinations are exported as `testnetDestinations`, with `findDestination(record)` to look one up from an intent record. The Aave V3, Morpho and Compound III presets carry an `exit` entry, so they show up on the withdraw side as well. A destination of your own is withdrawable once its `exit` names the exit adapter, the position token, the kind of signature it accepts and the [InletExit](/docs/exit) on its chain.
 
 ## What the user sees
 
 Before login the form is visible: destination, source chain, amount, and the route. After login the widget quotes the deposit every time the amount changes: the route it picked, what the user sends, what the position receives, Circle's fee at most, the wallet balance and the Gateway balances on every source chain. When a Gateway balance on another chain can pay, the widget moves the source there and says so, without touching the wallet's network. Deposit stays disabled until the route can succeed.
 
 After the signature the widget shows the status timeline: intent registered, USDC on Arc, swept, attested, position delivered, each with its explorer link. A user who wants gasless deposits later can fund a Gateway balance from the same widget.
+
+On the withdraw side the user picks one of the positions the wallet holds, shown with its live balance, enters an amount with a Max control, and lists where the USDC should land: one chain by default, up to four, the last one taking the rest. The quote shows the position redeemed, the USDC out at least, Circle's fee at most and what lands on each chain. One signature follows. An injected wallet has to be on the position's chain to sign it, which is a network switch and nothing else. The timeline then shows the redemption, Circle's attestation and one landing per chain, each with its link.
 
 ## Theming
 
@@ -102,6 +129,6 @@ The widget is styled through CSS custom properties on `.inlet`, so a host app re
 
 The defaults are a light theme with a dark variant behind `prefers-color-scheme`.
 
-## Following a deposit outside the widget
+## Following a deposit or a withdrawal outside the widget
 
-`onRecord` hands you the `IntentRecord` on every change. Its `hash` identifies the deposit on the relayer, so `GET /intents/:hash` returns the same record from any client, and the [live app](/app) accepts `?hash=` to show it.
+`onRecord` hands you the `IntentRecord` on every change and `onExit` the `ExitRecord`. Each `hash` identifies the record on the relayer, so `GET /intents/:hash` or `GET /exits/:hash` returns the same record from any client, and the [live app](/app) accepts `?hash=` for either.

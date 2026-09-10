@@ -107,7 +107,7 @@ const vault = erc4626Destination({
 </InletProvider>
 ```
 
-Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. Anything else needs one adapter with one function. [`docs/adapters.md`](docs/adapters.md) walks through writing, testing and deploying one, and lists the receivers and adapters deployed on each chain. The relayer is open source and anyone can run one against the same hub, see [`services/relayer/README.md`](services/relayer/README.md).
+`InletWidget` puts deposit and withdraw under one header with a toggle, and takes the same destinations. Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work, and one that implements EIP 2612 becomes withdrawable by naming the InletExit on its chain. Anything else needs one adapter with one function. [`docs/adapters.md`](docs/adapters.md) walks through writing, testing and deploying one, and lists the receivers and adapters deployed on each chain. The relayer is open source and anyone can run one against the same hub, see [`services/relayer/README.md`](services/relayer/README.md).
 
 ## For agents
 

@@ -1,6 +1,6 @@
 ---
 name: inlet
-description: Add cross chain USDC deposits to a DeFi protocol with Inlet. Use when a user wants deposits from any chain into a vault, market, or pool, wants to write an Inlet adapter, or wants to mount the Inlet widget or run the relayer.
+description: Add cross chain USDC deposits and withdrawals to a DeFi protocol with Inlet. Use when a user wants deposits from any chain into a vault, market, or pool, wants positions withdrawn back to USDC on any chain, wants to write an Inlet adapter, or wants to mount the Inlet widget or run the relayer.
 ---
 
 # Inlet
@@ -23,7 +23,7 @@ pnpm add @inletkit/widget @inletkit/sdk
 ```
 
 ```tsx
-import { InletProvider, DepositWidget, erc4626Destination } from "@inletkit/widget";
+import { InletProvider, InletWidget, erc4626Destination } from "@inletkit/widget";
 import "@inletkit/widget/styles.css";
 
 const vault = erc4626Destination({
@@ -35,11 +35,11 @@ const vault = erc4626Destination({
 });
 
 <InletProvider privyAppId={PRIVY_APP_ID} relayerUrl={RELAYER_URL}>
-  <DepositWidget destinations={[vault]} />
+  <InletWidget destinations={[vault]} />
 </InletProvider>
 ```
 
-`InletProvider` brings Privy login and wagmi. An app that already runs wagmi renders `DepositWidget` inside its own provider and skips `InletProvider`; the widget only uses wagmi hooks and the `relayerUrl` prop.
+`InletWidget` is deposit and withdraw under one header. `DepositWidget` and `ExitWidget` are the two halves on their own. `InletProvider` brings Privy login and wagmi. An app that already runs wagmi renders the widget inside its own provider and skips `InletProvider`; the widget only uses wagmi hooks and the `relayerUrl` prop. A vault that implements EIP 2612 becomes withdrawable by passing `exitContract`, the InletExit on its chain, to `erc4626Destination`.
 
 ## Deposit without a browser
 
@@ -52,6 +52,18 @@ Use `@inletkit/sdk` and the relayer API. The flow is the same one the widget run
 5. Poll `GET /intents/:hash` until the state is `executed` (or `claimable`, `refunded`, `expired`).
 
 The MCP server in `apps/mcp` wraps these steps as tools for agents: `list_destinations`, `quote_deposit`, `create_intent`, `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`. Signing stays with the agent's own wallet.
+
+## Withdraw without a browser
+
+The exit rail is the deposit in reverse. One signature on the position token, and the position becomes native USDC on one or more chains.
+
+1. Pick a destination with an `exit` entry from `exitableDestinations` in `@inletkit/sdk`: Aave V3 on Arbitrum Sepolia, the Morpho vault and Compound III on Base Sepolia.
+2. Build an `ExitIntent`: owner, `exit.adapterId`, `exit.adapterData`, amount in position units (vault shares from `previewWithdraw`, otherwise the USDC amount), minAssets, legs as `(domain, recipient bytes32, amount)` where the last leg's amount is 0 and takes the rest, nonce, deadline, maxFeeBps from `maxFeeBpsFor(IrisClient.getBurnFees(positionDomain, legDomain))`.
+3. Read `hashExit(intent)` and `exitAddress(hash)` on the InletExit of the position's chain (`hashExit` in the SDK gives the same value).
+4. Sign for that executor: `permitTypedData` with the executor as spender for Aave aTokens and vault shares, `cometAuthorizationTypedData` with the executor as manager for Compound. The nonce and the domain name come from the token. No gas.
+5. `POST /exits` with the intent and the signature, then poll `GET /exits/:hash` through `signed`, `executed`, `attested` and `delivered`, which carries a mint transaction per leg.
+
+`services/relayer/scripts/e2e-exit.ts` is the runnable version. Legs land on any chain the relayer serves, Arc included, except the position's own chain.
 
 ## Write an adapter
 
@@ -93,7 +105,10 @@ Everything the relayer does is permissionless: `sweep` and `refund` on the hub, 
 | Receiver on Unichain Sepolia, domain 10 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
 | Receiver on Ethereum Sepolia, domain 0 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
 | Receiver on Monad Testnet, domain 15 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
+| InletExit on Arbitrum Sepolia | 0xBBA8b8f139e27101812340fc750e39f096ECD677 |
+| InletExit on Base Sepolia | 0xfa6000e83B141bDA1aD067a5a5A32912f43F0258 |
 | Adapter ids | `erc4626:v1`, `aave-v3:v1`, `compound-v3:v1`, `uniswap-v4-lp:v1` |
+| Exit adapter ids | `erc4626-exit:v1`, `aave-v3-exit:v1`, `compound-v3-exit:v1` |
 | Circle | TokenMessengerV2 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA, MessageTransmitterV2 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275, GatewayWallet 0x0077777d7EBA4688BDeF3E311b846F25870A19B9, GatewayMinter 0x0022222ABE238Cc2C7Bb1f21003F0a260052475B on every EVM testnet |
 
 Every other address is in `config/chains.testnet.json`, `config/deployments.testnet.json` and `config/protocols.testnet.json`, exported by the SDK as `testnetChains`, `testnetDeployments` and `testnetProtocols`.

@@ -3,6 +3,7 @@ import {
   adapterId,
   compoundV3AdapterData,
   erc4626AdapterData,
+  erc4626ExitData,
   exitAdapterIds,
   explorers as sdkExplorers,
   fromBytes32,
@@ -56,6 +57,7 @@ export const arcUsdc = testnetChains.arcTestnet.usdc as Address;
 
 export const defaultSources: SourceChain[] = testnetSources.filter((entry) => entry.domain === 6 || entry.domain === 3);
 
+/// A vault that implements EIP 2612 becomes withdrawable by naming the InletExit on its chain.
 export function erc4626Destination(params: {
   id: string;
   name: string;
@@ -65,7 +67,10 @@ export function erc4626Destination(params: {
   receiver: Address;
   vault: Address;
   positionLabel?: string;
+  exitContract?: Address;
+  positionDecimals?: number;
 }): Destination {
+  const positionLabel = params.positionLabel ?? "vault shares";
   return {
     id: params.id,
     name: params.name,
@@ -75,8 +80,19 @@ export function erc4626Destination(params: {
     receiver: params.receiver,
     adapterId: adapterId("erc4626:v1"),
     adapterData: () => erc4626AdapterData(params.vault, 0n),
-    positionLabel: params.positionLabel ?? "vault shares",
+    positionLabel,
     explorer: explorers[params.destinationDomain] ?? "",
+    exit: params.exitContract
+      ? {
+          adapterId: exitAdapterIds["erc4626-exit:v1"],
+          adapterData: erc4626ExitData(params.vault),
+          positionToken: params.vault,
+          positionDecimals: params.positionDecimals ?? 18,
+          permit: "eip2612",
+          exitContract: params.exitContract,
+          positionLabel,
+        }
+      : undefined,
   };
 }
 
