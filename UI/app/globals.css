@@ -372,6 +372,7 @@ body:has([data-wallpaper]) {
   --inlet-warn: var(--contract);
   --inlet-warn-bg: rgba(255, 238, 140, 0.08);
   --inlet-done: var(--relayer);
+  --inlet-bad: var(--bad);
   font-family: var(--font-sans);
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);

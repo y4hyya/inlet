@@ -118,6 +118,17 @@
   gap: var(--space-3);
 }
 
+.stationsFour {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Four columns put the end markers at an eighth in from each side, not a tenth. */
+.trackFour .rail,
+.trackFour .fill {
+  left: 12.5%;
+  right: 12.5%;
+}
+
 .station {
   display: grid;
   justify-items: center;
@@ -191,6 +202,14 @@
   font-size: 0.75rem;
 }
 
+/* A leg per line, so several hashes under one station never stack on top of each other. */
+.links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
 .linkGap {
   height: 18px;
 }
@@ -250,8 +269,13 @@
   }
 
   .link,
-  .linkGap {
+  .linkGap,
+  .links {
     grid-area: link;
+  }
+
+  .links {
+    align-items: start;
   }
 
   .linkGap {

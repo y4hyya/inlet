@@ -1,12 +1,13 @@
 "use client";
 
-import { InletRelayerClient, testnetSources, type IntentRecord } from "@inletkit/sdk";
-import { DepositWidget, StatusTimeline, findDestination, testnetDestinations } from "@inletkit/widget";
+import { InletRelayerClient, testnetSources, type ExitRecord, type IntentRecord } from "@inletkit/sdk";
+import { InletWidget, StatusTimeline, findDestination, testnetDestinations, type InletMode } from "@inletkit/widget";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { short } from "@/lib/format";
 import { runs } from "@/lib/runs";
 import { site } from "@/lib/site";
+import { ExitFlow } from "./exit-flow";
 import { Flow, finals, order, type FlowView } from "./flow";
 import { lastStep, Replay, type ReplayState } from "./replay";
 import styles from "./app.module.css";
@@ -68,12 +69,16 @@ export function AppView() {
   const hashParam = params.get("hash");
   const destinationParam = params.get("destination") ?? undefined;
 
+  const [mode, setMode] = useState<InletMode>("deposit");
+  const [exit, setExit] = useState<ExitRecord>();
   const [live, setLive] = useState<IntentRecord>();
   const [followed, setFollowed] = useState<IntentRecord>();
   const [followError, setFollowError] = useState<string>();
   const [focus, setFocus] = useState<"record" | "replay">("record");
   const [replay, setReplay] = useState<ReplayState>({ runId: runs[0].id, step: 0, playing: false });
   const [hashInput, setHashInput] = useState(hashParam ?? "");
+
+  const onExit = useCallback((record: ExitRecord) => setExit(record), []);
 
   const onRecord = useCallback((record: IntentRecord) => {
     setLive(record);
@@ -175,19 +180,25 @@ export function AppView() {
 
       <div className={styles.grid}>
         <div className={styles.left}>
-          <DepositWidget destinations={testnetDestinations} defaultDestinationId={destinationParam} onRecord={onRecord} />
+          <InletWidget destinations={testnetDestinations} defaultDestinationId={destinationParam} onModeChange={setMode} onRecord={onRecord} onExit={onExit} />
           <p className={styles.caption}>The same widget a protocol mounts. Wallet agnostic, runs on wagmi, Privy only for the login here.</p>
         </div>
         <div className={styles.right}>
-          <Flow view={view} />
-          <Replay
-            state={replay}
-            active={focus === "replay"}
-            onChange={(next) => {
-              setReplay(next);
-              setFocus("replay");
-            }}
-          />
+          {mode === "withdraw" && exit ? (
+            <ExitFlow record={exit} />
+          ) : (
+            <>
+              <Flow view={view} />
+              <Replay
+                state={replay}
+                active={focus === "replay"}
+                onChange={(next) => {
+                  setReplay(next);
+                  setFocus("replay");
+                }}
+              />
+            </>
+          )}
         </div>
       </div>
 
