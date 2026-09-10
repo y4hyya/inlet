@@ -1,13 +1,15 @@
 import type { Hex } from "viem";
+import { parseExitRecord, serializeExit } from "./exit.js";
 import { parseIntent, serializeIntent } from "./intent.js";
 import { serializeBurnIntent, type SignedBurnIntent } from "./gateway.js";
-import type { DepositIntent, IntentRecord, Route } from "./types.js";
+import type { DepositIntent, ExitIntent, ExitRecord, IntentRecord, Route } from "./types.js";
 
 export interface RelayerHealth {
   ok: boolean;
   hub: Hex;
   relayer: Hex;
   destinations?: number[];
+  exits?: number[];
   uniswapQuotes?: boolean;
 }
 
@@ -52,7 +54,15 @@ export class InletRelayerClient {
     return this.request("GET", `/intents/${hash}`);
   }
 
-  async uniswapQuote(params: { chainId: number; tokenIn: Hex; tokenOut: Hex; amount: bigint }): Promise<UniswapQuote> {
+  async createExit(intent: ExitIntent, signature: Hex): Promise<ExitRecord> {
+    return this.exitRequest("POST", "/exits", { intent: serializeExit(intent), signature });
+  }
+
+  async getExit(hash: Hex): Promise<ExitRecord> {
+    return this.exitRequest("GET", `/exits/${hash}`);
+  }
+
+  async uniswapQuote(params:{ chainId: number; tokenIn: Hex; tokenOut: Hex; amount: bigint }): Promise<UniswapQuote> {
     const query = new URLSearchParams({ chainId: String(params.chainId), tokenIn: params.tokenIn, tokenOut: params.tokenOut, amount: params.amount.toString() });
     const response = await this.fetch(`/quotes/uniswap?${query}`, { method: "GET" });
     return (await response.json()) as UniswapQuote;
@@ -66,6 +76,15 @@ export class InletRelayerClient {
     });
     const raw = (await response.json()) as Record<string, unknown>;
     return { ...(raw as unknown as IntentRecord), intent: parseIntent(raw.intent as Record<string, unknown>) };
+  }
+
+  private async exitRequest(method: string, path: string, body?: unknown): Promise<ExitRecord> {
+    const response = await this.fetch(path, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return parseExitRecord((await response.json()) as Record<string, unknown>);
   }
 
   private async fetch(path: string, init: RequestInit): Promise<Response> {

@@ -1247,6 +1247,559 @@ export const inletReceiverAbi = [
   }
 ] as const;
 
+export const inletExitAbi = [
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "usdc_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenMessenger_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "adapters",
+    "inputs": [
+      {
+        "name": "adapterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "adapter",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "domainSeparator",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "eip712Domain",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "fields",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "version",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyingContract",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "extensions",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "execute",
+    "inputs": [
+      {
+        "name": "intent",
+        "type": "tuple",
+        "internalType": "struct ExitIntent",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "adapterId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "adapterData",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minAssets",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "legs",
+            "type": "tuple[]",
+            "internalType": "struct ExitLeg[]",
+            "components": [
+              {
+                "name": "domain",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "recipient",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "amount",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "maxFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executed",
+    "inputs": [
+      {
+        "name": "exitHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "exitAddress",
+    "inputs": [
+      {
+        "name": "exitHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hashExit",
+    "inputs": [
+      {
+        "name": "intent",
+        "type": "tuple",
+        "internalType": "struct ExitIntent",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "adapterId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "adapterData",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minAssets",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "legs",
+            "type": "tuple[]",
+            "internalType": "struct ExitLeg[]",
+            "components": [
+              {
+                "name": "domain",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "recipient",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "amount",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "maxFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pending",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "intent",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "renounceOwnership",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setAdapter",
+    "inputs": [
+      {
+        "name": "adapterId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "adapter",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tokenMessenger",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract ITokenMessengerV2"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "usdc",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "AdapterSet",
+    "inputs": [
+      {
+        "name": "adapterId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "adapter",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EIP712DomainChanged",
+    "inputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Exited",
+    "inputs": [
+      {
+        "name": "exitHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "adapterId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "executor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "received",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "legs",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyExecuted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "IntentExpired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidShortString",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoLegs",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OwnableInvalidOwner",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "OwnableUnauthorizedAccount",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StringTooLong",
+    "inputs": [
+      {
+        "name": "str",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UnknownAdapter",
+    "inputs": []
+  }
+] as const;
+
 export const eRC4626AdapterAbi = [
   {
     "type": "function",
@@ -1734,6 +2287,206 @@ export const uniswapV4LpAdapterAbi = [
         "name": "minLiquidity",
         "type": "uint128",
         "internalType": "uint128"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "WrongAsset",
+    "inputs": []
+  }
+] as const;
+
+export const eRC4626ExitAdapterAbi = [
+  {
+    "type": "function",
+    "name": "redeem",
+    "inputs": [
+      {
+        "name": "usdc",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "shares",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "error",
+    "name": "BadSignatureLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "WrongAsset",
+    "inputs": []
+  }
+] as const;
+
+export const aaveV3ExitAdapterAbi = [
+  {
+    "type": "function",
+    "name": "redeem",
+    "inputs": [
+      {
+        "name": "usdc",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "error",
+    "name": "BadSignatureLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NoReserve",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SafeERC20FailedOperation",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  }
+] as const;
+
+export const compoundV3ExitAdapterAbi = [
+  {
+    "type": "function",
+    "name": "redeem",
+    "inputs": [
+      {
+        "name": "usdc",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "received",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "error",
+    "name": "BadSignatureLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ]
   },

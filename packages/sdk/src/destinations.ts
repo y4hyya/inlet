@@ -1,8 +1,10 @@
 import type { Address, Hex } from "viem";
+import { aaveV3ExitData, compoundV3ExitData, erc4626ExitData } from "./exit.js";
 import { testnetChains } from "./generated/chains.js";
 import { testnetDeployments } from "./generated/deployments.js";
 import { testnetProtocols } from "./generated/protocols.js";
 import { aaveV3AdapterData, adapterId, compoundV3AdapterData, erc4626AdapterData, uniswapV4LpAdapterData, type PoolKey } from "./intent.js";
+import type { PermitKind } from "./types.js";
 
 export const explorers: Record<number, string> = {
   0: "https://sepolia.etherscan.io/tx/",
@@ -13,6 +15,22 @@ export const explorers: Record<number, string> = {
   26: "https://testnet.arcscan.app/tx/",
   27: "https://stellar.expert/explorer/testnet/tx/",
 };
+
+export const exitAdapterNames = ["erc4626-exit:v1", "aave-v3-exit:v1", "compound-v3-exit:v1"] as const;
+
+export type ExitAdapterName = (typeof exitAdapterNames)[number];
+
+export const exitAdapterIds = Object.fromEntries(exitAdapterNames.map((name) => [name, adapterId(name)])) as Record<ExitAdapterName, Hex>;
+
+export interface DestinationExit {
+  adapterName: ExitAdapterName;
+  adapterId: Hex;
+  adapterData: Hex;
+  positionToken: Address;
+  positionDecimals: number;
+  permit: PermitKind;
+  exitContract: Address;
+}
 
 export interface DestinationSpec {
   id: string;
@@ -29,6 +47,14 @@ export interface DestinationSpec {
   positionLabel: string;
   positionToken?: Address;
   explorer: string;
+  exit?: DestinationExit;
+}
+
+const deployed = testnetDeployments as unknown as Record<string, Record<string, string | undefined>>;
+
+function exitOn(chain: string, spec: Omit<DestinationExit, "exitContract" | "adapterId">): DestinationExit | undefined {
+  const exitContract = deployed[chain]?.inletExit as Address | undefined;
+  return exitContract ? { ...spec, adapterId: exitAdapterIds[spec.adapterName], exitContract } : undefined;
 }
 
 export interface SourceSpec {
@@ -65,6 +91,13 @@ export const testnetDestinations: DestinationSpec[] = [
     positionLabel: "aArbSepUSDC",
     positionToken: testnetProtocols.arbitrumSepolia.aaveV3AUsdc as Address,
     explorer: explorers[3],
+    exit: exitOn("arbitrumSepolia", {
+      adapterName: "aave-v3-exit:v1",
+      adapterData: aaveV3ExitData(testnetProtocols.arbitrumSepolia.aaveV3Pool as Address),
+      positionToken: testnetProtocols.arbitrumSepolia.aaveV3AUsdc as Address,
+      positionDecimals: 6,
+      permit: "eip2612",
+    }),
   },
   {
     id: "compound-v3-base-sepolia",
@@ -81,6 +114,13 @@ export const testnetDestinations: DestinationSpec[] = [
     positionLabel: "Compound USDC balance",
     positionToken: testnetProtocols.baseSepolia.compoundV3Comet as Address,
     explorer: explorers[6],
+    exit: exitOn("baseSepolia", {
+      adapterName: "compound-v3-exit:v1",
+      adapterData: compoundV3ExitData(testnetProtocols.baseSepolia.compoundV3Comet as Address),
+      positionToken: testnetProtocols.baseSepolia.compoundV3Comet as Address,
+      positionDecimals: 6,
+      permit: "comet",
+    }),
   },
   {
     id: "morpho-oneshot-base-sepolia",
@@ -97,6 +137,13 @@ export const testnetDestinations: DestinationSpec[] = [
     positionLabel: "vUSDC shares",
     positionToken: testnetProtocols.baseSepolia.morphoOneshotVault as Address,
     explorer: explorers[6],
+    exit: exitOn("baseSepolia", {
+      adapterName: "erc4626-exit:v1",
+      adapterData: erc4626ExitData(testnetProtocols.baseSepolia.morphoOneshotVault as Address),
+      positionToken: testnetProtocols.baseSepolia.morphoOneshotVault as Address,
+      positionDecimals: 18,
+      permit: "eip2612",
+    }),
   },
   {
     id: "uniswap-v4-eth-usdc-unichain-sepolia",
@@ -183,6 +230,12 @@ export const testnetSources: SourceSpec[] = [
   source("unichainSepolia", "Unichain Sepolia"),
   source("ethereumSepolia", "Ethereum Sepolia"),
 ];
+
+export type ExitableDestinationSpec = DestinationSpec & { exit: DestinationExit };
+
+export const exitableDestinations: ExitableDestinationSpec[] = testnetDestinations.filter(
+  (entry): entry is ExitableDestinationSpec => Boolean(entry.exit),
+);
 
 export function findDestinationSpec(id: string): DestinationSpec | undefined {
   return testnetDestinations.find((entry) => entry.id === id);

@@ -46,3 +46,45 @@ export interface IntentRecord {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface ExitLeg {
+  domain: number;
+  recipient: Hex;
+  amount: bigint;
+}
+
+export interface ExitIntent {
+  owner: Address;
+  adapterId: Hex;
+  adapterData: Hex;
+  amount: bigint;
+  minAssets: bigint;
+  legs: ExitLeg[];
+  nonce: bigint;
+  deadline: bigint;
+  maxFeeBps: number;
+}
+
+export type ExitState = "signed" | "executed" | "attested" | "delivered";
+
+export interface ExitLegRecord extends ExitLeg {
+  message?: Hex;
+  attested: boolean;
+  mintTx?: Hex;
+}
+
+export interface ExitRecord {
+  hash: Hex;
+  state: ExitState;
+  domain: number;
+  intent: ExitIntent;
+  executor: Address;
+  exitTx?: Hex;
+  received?: bigint;
+  legs: ExitLegRecord[];
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type PermitKind = "eip2612" | "comet";

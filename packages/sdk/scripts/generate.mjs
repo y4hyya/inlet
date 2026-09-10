@@ -7,7 +7,7 @@ const repo = join(here, "..", "..", "..");
 const out = join(here, "..", "src", "generated");
 mkdirSync(out, { recursive: true });
 
-const contracts = ["InletHub", "InletReceiver", "ERC4626Adapter", "AaveV3Adapter", "CompoundV3Adapter", "UniswapV4LpAdapter", "DemoVault"];
+const contracts = ["InletHub", "InletReceiver", "InletExit", "ERC4626Adapter", "AaveV3Adapter", "CompoundV3Adapter", "UniswapV4LpAdapter", "ERC4626ExitAdapter", "AaveV3ExitAdapter", "CompoundV3ExitAdapter", "DemoVault"];
 let abi = "";
 for (const name of contracts) {
   const artifact = JSON.parse(readFileSync(join(repo, "contracts", "out", `${name}.sol`, `${name}.json`), "utf8"));

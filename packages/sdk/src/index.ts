@@ -1,5 +1,6 @@
 export * from "./types.js";
 export * from "./intent.js";
+export * from "./exit.js";
 export * from "./circle.js";
 export * from "./gateway.js";
 export * from "./relayerClient.js";
