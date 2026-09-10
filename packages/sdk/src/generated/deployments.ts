@@ -6,12 +6,20 @@ export const testnetDeployments = {
     "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
     "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9",
     "demoVault": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED",
-    "aaveV3Adapter": "0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736"
+    "aaveV3Adapter": "0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736",
+    "inletExit": "0xBBA8b8f139e27101812340fc750e39f096ECD677",
+    "erc4626ExitAdapter": "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+    "aaveV3ExitAdapter": "0x6253A9a287803111eD736c0C234de17bBE7672ED",
+    "compoundV3ExitAdapter": "0xeC0bBb2DA7a4c4f8F9c82bbf3AF7912d186D8001"
   },
   "baseSepolia": {
     "inletReceiver": "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
     "erc4626Adapter": "0x6253A9a287803111eD736c0C234de17bBE7672ED",
-    "compoundV3Adapter": "0x77D23de84220E4Dc86b6B8c181Be1E49D6a23f7c"
+    "compoundV3Adapter": "0x77D23de84220E4Dc86b6B8c181Be1E49D6a23f7c",
+    "inletExit": "0xfa6000e83B141bDA1aD067a5a5A32912f43F0258",
+    "erc4626ExitAdapter": "0x145083628c9dF6980fe2747B286835e7c637ed22",
+    "aaveV3ExitAdapter": "0x5105e5af7a8C56d8fff2A1794aBC18e5ec31639B",
+    "compoundV3ExitAdapter": "0xC7DA09Fc180062d0b31627686E7f7041E9288F90"
   },
   "unichainSepolia": {
     "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
@@ -31,6 +39,9 @@ export const testnetDeployments = {
     "erc4626:v1": "keccak256 of the string erc4626:v1",
     "aave-v3:v1": "keccak256 of the string aave-v3:v1",
     "compound-v3:v1": "keccak256 of the string compound-v3:v1",
-    "uniswap-v4-lp:v1": "keccak256 of the string uniswap-v4-lp:v1"
+    "uniswap-v4-lp:v1": "keccak256 of the string uniswap-v4-lp:v1",
+    "erc4626-exit:v1": "keccak256 of the string erc4626-exit:v1",
+    "aave-v3-exit:v1": "keccak256 of the string aave-v3-exit:v1",
+    "compound-v3-exit:v1": "keccak256 of the string compound-v3-exit:v1"
   }
 } as const;
