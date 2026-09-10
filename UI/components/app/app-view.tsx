@@ -1,7 +1,7 @@
 "use client";
 
 import { InletRelayerClient, testnetSources, type ExitRecord, type IntentRecord } from "@inletkit/sdk";
-import { InletWidget, StatusTimeline, findDestination, testnetDestinations, type InletMode } from "@inletkit/widget";
+import { ExitTimeline, InletWidget, StatusTimeline, findDestination, testnetDestinations, type InletMode } from "@inletkit/widget";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { short } from "@/lib/format";
@@ -73,12 +73,18 @@ export function AppView() {
   const [exit, setExit] = useState<ExitRecord>();
   const [live, setLive] = useState<IntentRecord>();
   const [followed, setFollowed] = useState<IntentRecord>();
+  const [followedExit, setFollowedExit] = useState<ExitRecord>();
   const [followError, setFollowError] = useState<string>();
   const [focus, setFocus] = useState<"record" | "replay">("record");
   const [replay, setReplay] = useState<ReplayState>({ runId: runs[0].id, step: 0, playing: false });
   const [hashInput, setHashInput] = useState(hashParam ?? "");
 
-  const onExit = useCallback((record: ExitRecord) => setExit(record), []);
+  const onExit = useCallback((record: ExitRecord) => {
+    setExit(record);
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("hash") !== record.hash) {
+      window.history.replaceState(null, "", `/app?hash=${record.hash}`);
+    }
+  }, []);
 
   const onRecord = useCallback((record: IntentRecord) => {
     setLive(record);
@@ -88,25 +94,40 @@ export function AppView() {
     }
   }, []);
 
+  // A hash names either a deposit or a withdrawal. The relayer keeps them apart, so ask for
+  // the deposit first and fall back to the withdrawal.
   useEffect(() => {
-    if (!hashParam || hashParam === live?.hash) {
+    if (!hashParam || hashParam === live?.hash || hashParam === exit?.hash) {
       setFollowed(undefined);
+      setFollowedExit(undefined);
       setFollowError(undefined);
       return;
     }
     const client = new InletRelayerClient(site.relayerUrl);
+    const hash = hashParam as `0x${string}`;
     let stopped = false;
     let handle = 0;
     const load = () =>
       client
-        .getIntent(hashParam as `0x${string}`)
+        .getIntent(hash)
         .then((record) => {
           if (stopped) return;
           setFollowed(record);
+          setFollowedExit(undefined);
           setFollowError(undefined);
           setFocus("record");
           if (!finals.has(record.state)) handle = window.setTimeout(load, 3000);
         })
+        .catch(() =>
+          client.getExit(hash).then((record) => {
+            if (stopped) return;
+            setFollowedExit(record);
+            setFollowed(undefined);
+            setFollowError(undefined);
+            setFocus("record");
+            if (record.state !== "delivered") handle = window.setTimeout(load, 3000);
+          }),
+        )
         .catch((cause) => {
           if (stopped) return;
           setFollowError(cause instanceof Error ? cause.message : String(cause));
@@ -117,7 +138,7 @@ export function AppView() {
       stopped = true;
       window.clearTimeout(handle);
     };
-  }, [hashParam, live?.hash]);
+  }, [hashParam, live?.hash, exit?.hash]);
 
   useEffect(() => {
     if (focus !== "replay" || !replay.playing) return;
@@ -140,7 +161,7 @@ export function AppView() {
     event.preventDefault();
     const value = hashInput.trim();
     if (!/^0x[0-9a-fA-F]{64}$/.test(value)) {
-      setFollowError("An intent hash is 32 bytes, 0x followed by 64 hex characters.");
+      setFollowError("A hash is 32 bytes, 0x followed by 64 hex characters.");
       return;
     }
     setLive(undefined);
@@ -149,6 +170,7 @@ export function AppView() {
   };
 
   const followedDestination = followed ? findDestination(followed) ?? testnetDestinations[0] : undefined;
+  const shownExit = mode === "withdraw" && exit ? exit : !live && followedExit ? followedExit : undefined;
 
   return (
     <section className={`rail ${styles.app}`}>
@@ -166,7 +188,7 @@ export function AppView() {
         </div>
         <form className={styles.follow} onSubmit={follow}>
           <label className={styles.followLabel} htmlFor="follow-hash">
-            Follow a deposit by intent hash
+            Follow a deposit or a withdrawal by hash
           </label>
           <div className={styles.followRow}>
             <input id="follow-hash" className={styles.followInput} value={hashInput} onChange={(event) => setHashInput(event.target.value)} placeholder="0x…" spellCheck={false} autoComplete="off" />
@@ -184,8 +206,8 @@ export function AppView() {
           <p className={styles.caption}>The same widget a protocol mounts. Wallet agnostic, runs on wagmi, Privy only for the login here.</p>
         </div>
         <div className={styles.right}>
-          {mode === "withdraw" && exit ? (
-            <ExitFlow record={exit} />
+          {shownExit ? (
+            <ExitFlow record={shownExit} />
           ) : (
             <>
               <Flow view={view} />
@@ -210,6 +232,15 @@ export function AppView() {
             <span className={styles.recordState}>{followed.state}</span>
           </p>
           <StatusTimeline record={followed} destination={followedDestination} sourceExplorer={testnetSources.find((entry) => entry.domain === followed.intent.sourceDomain)?.explorer} />
+        </div>
+      ) : followedExit ? (
+        <div className={styles.record}>
+          <p className={styles.recordHead}>
+            <span className="eyebrow">Withdrawal</span>
+            <code className={styles.recordHash}>{short(followedExit.hash, 10, 8)}</code>
+            <span className={styles.recordState}>{followedExit.state}</span>
+          </p>
+          <ExitTimeline record={followedExit} />
         </div>
       ) : null}
     </section>
