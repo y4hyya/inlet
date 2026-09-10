@@ -20,7 +20,8 @@ if (!spec) throw new Error(`DESTINATION must be one of ${Object.keys(aliases).jo
 const exit = spec.exit;
 const shares = exit.adapterName === "erc4626-exit:v1";
 const config = loadConfig({ ...process.env, DB_PATH: `data/e2e-exit-${Date.now()}.db`, PORT: "0" });
-const user = privateKeyToAccount((process.env.USER_PRIVATE_KEY ?? config.privateKey) as Hex);
+const rawKey = (process.env.USER_PRIVATE_KEY ?? config.privateKey).trim();
+const user = privateKeyToAccount((rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`) as Hex);
 const domain = spec.destinationDomain;
 const chain = positionChains[domain];
 const publicClient = createPublicClient({ chain, transport: http(config.rpc[domain]) });
