@@ -1,0 +1,25 @@
+{
+  "adapterData": "0x00000000000000000000000055da7c3b5e99816a7a9cd9dc47e24bfd7b19d6ed",
+  "adapterId": "0x953553a0aa42e96bdfff6f04a9c75bc450a9d1ab00b62f05d26ba98528be3ec4",
+  "amount": 1000000,
+  "chainId": 84532,
+  "deadline": 1800000000,
+  "hash": "0xbf62906d56082df60f250bcf568ae050a1b80015d38e185a8a4c6ee874a297bf",
+  "legs": [
+    {
+      "amount": 400000,
+      "domain": 6,
+      "recipient": "0x00000000000000000000000031b1610ec633ed09ce15dfdf697dd631daa3bd02"
+    },
+    {
+      "amount": 0,
+      "domain": 0,
+      "recipient": "0x00000000000000000000000031b1610ec633ed09ce15dfdf697dd631daa3bd02"
+    }
+  ],
+  "maxFeeBps": 3,
+  "minAssets": 999000,
+  "nonce": 42,
+  "owner": "0x31b1610Ec633Ed09Ce15dfDf697DD631daa3Bd02",
+  "verifyingContract": "0x1111111111111111111111111111111111111111"
+}
