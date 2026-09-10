@@ -34,6 +34,24 @@ Every address here is exported by the SDK as `testnetChains`, `testnetDeployment
 
 Adapter ids are `keccak256` of the name: `erc4626:v1`, `aave-v3:v1`, `compound-v3:v1`, `uniswap-v4-lp:v1`.
 
+## Exit rail
+
+| Item | Address |
+| --- | --- |
+| InletExit on Arbitrum Sepolia, domain 3 | [`0xBBA8b8f139e27101812340fc750e39f096ECD677`](https://sepolia.arbiscan.io/address/0xBBA8b8f139e27101812340fc750e39f096ECD677) |
+| InletExit on Base Sepolia, domain 6 | [`0xfa6000e83B141bDA1aD067a5a5A32912f43F0258`](https://sepolia.basescan.org/address/0xfa6000e83B141bDA1aD067a5a5A32912f43F0258) |
+
+| Chain | Exit adapter | Address |
+| --- | --- | --- |
+| Arbitrum Sepolia | ERC 4626 `erc4626-exit:v1` | `0x643AD7be131Aa7eE9fADB1596A66E69715F5a594` |
+| Arbitrum Sepolia | Aave V3 `aave-v3-exit:v1` | `0x6253A9a287803111eD736c0C234de17bBE7672ED` |
+| Arbitrum Sepolia | Compound III `compound-v3-exit:v1` | `0xeC0bBb2DA7a4c4f8F9c82bbf3AF7912d186D8001` |
+| Base Sepolia | ERC 4626 `erc4626-exit:v1` | `0x145083628c9dF6980fe2747B286835e7c637ed22` |
+| Base Sepolia | Aave V3 `aave-v3-exit:v1` | `0x5105e5af7a8C56d8fff2A1794aBC18e5ec31639B` |
+| Base Sepolia | Compound III `compound-v3-exit:v1` | `0xC7DA09Fc180062d0b31627686E7f7041E9288F90` |
+
+Every exit executor is a CREATE2 child of the InletExit on its chain, at `exitAddress(hash)` for the intent's hash.
+
 ## Protocols behind the presets
 
 | Protocol | Chain | Address |

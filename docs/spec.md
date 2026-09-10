@@ -186,8 +186,23 @@ The relayer also proxies the Uniswap Trading API behind `GET /quotes/uniswap`, s
 - September 4: skeleton and this specification.
 - September 5: hub, forwarder, EVM receiver, ERC 4626 adapter, tests, deployment to Arc testnet and Arbitrum Sepolia; relayer; first end to end deposits over CCTP and Gateway; widget with Privy; playground and relayer hosted on Azure.
 - September 6: Aave V3, Compound III, Morpho and Uniswap v4 destinations live with recorded runs; Base Sepolia and Unichain Sepolia receivers; Uniswap Trading API quotes; MCP server, skill, adapter guide.
-- Next: Stellar receiver and the Noether vault destination, video, architecture diagram, submission.
+- September 10: the exit rail, section 15, with InletExit on Base Sepolia and Arbitrum Sepolia, three exit adapters, the withdraw side of the widget, and the first recorded exit out of Aave split across two chains.
+- Next: video, submission, Arc mainnet after September 16.
 
 ## 14. Out of scope for version 1
 
 Non USDC inputs, fee collection, permissioned adapters, mainnet deployment, Solana, Aptos, Injective, and Starknet execution. Routing to those chains works through the hub; execution adapters for them come later.
+
+## 15. Exit rail
+
+The deposit rail puts USDC into a position with one signature. The exit rail takes it out with one signature and lands native USDC on one or more chains of the user's choice.
+
+**Mechanism.** An `ExitIntent` names the owner, the exit adapter and its data, the position units to redeem, a floor on the USDC that must come out, one or more legs of `(domain, recipient, amount)`, a nonce, a deadline and a fee cap in basis points. Its EIP 712 hash under the `InletExit` domain of the position's chain is the CREATE2 salt of a one shot `InletExitExecutor` whose init code is constant, so `exitAddress(hash)` is computable from the hash alone. The user signs an EIP 2612 permit on the position token, or an `allowBySig` authorization on a Compound Comet, with that executor address as the spender. Only an executor created for exactly that intent can pull the position, so the signature can only produce the exit it was signed for.
+
+**Execution.** Anyone calls `execute(intent, signature)` on the `InletExit` of the position's chain. The contract marks the hash executed, hands the encoded intent and the signature to the executor through `pending()`, and creates the executor. In its constructor the executor delegatecalls the registered exit adapter, which applies the signature and redeems the position to USDC held by the executor, then burns one CCTP V2 message per leg toward the leg's domain and recipient with fast finality and `amount * maxFeeBps / 10000` as the fee cap. The last leg takes whatever remains. If anything reverts, nothing moves and the signature stays unused. The executor has no function that can act after construction.
+
+**Adapters.** `erc4626-exit:v1` redeems shares of any ERC 4626 vault over USDC that implements EIP 2612. `aave-v3-exit:v1` pulls aTokens with a permit and withdraws from the pool. `compound-v3-exit:v1` becomes the owner's manager through `allowBySig` and withdraws the base balance. Exit adapters are stateless and registered by the owner of the `InletExit`, the same trust as the receiver's adapter registry.
+
+**Relayer.** `POST /exits` stores a signed intent and `GET /exits/:hash` follows it through `signed`, `executed`, `attested` and `delivered`. The relayer submits `execute`, waits for Circle's attestation of every leg, and mints each leg on its chain. Every step is permissionless.
+
+**Limits.** Legs land on the EVM chains the relayer serves, Arc included. Exits burn directly from the position's chain and do not pass through the hub. Euler's EVK vault authorises through the EVC and a Uniswap v4 position unwinds into two assets, so both stay deposit only in this version.

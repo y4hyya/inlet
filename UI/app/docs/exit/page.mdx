@@ -1,0 +1,61 @@
+export const metadata = { title: "Withdraw to any chain", description: "The exit rail: one signature turns a position back into native USDC on the chains you choose, in the amounts you choose." };
+
+<p className="eyebrow">Build</p>
+
+# Withdraw to any chain
+
+A deposit puts USDC into a position with one signature. The exit rail takes it out the same way. Sign once on the position token, and the position becomes native USDC in your wallet on one or more chains, split however you like, with no gas on the chain the position lives on.
+
+## The same trick in reverse
+
+The deposit works because the deposit address is the commitment. The exit reverses it. The approval you sign on the position token names as spender an executor address derived from every parameter of the exit: which position, how much, which chains, how much to each, who receives, the deadline. Change any parameter and it is a different address. Only an executor created for exactly that intent can pull the position, so the one signature can only produce the exit you described.
+
+Anyone can submit it. The relayer cannot redirect it. If any leg fails the whole call reverts and the signature stays unused.
+
+## What happens
+
+1. **Sign.** The widget reads the position token's nonce and domain, derives the executor address from the exit intent, and asks for one EIP 712 signature: an EIP 2612 permit for Aave and for vault shares, an authorization for Compound III. An injected wallet has to be on the position's chain to sign, which is a network switch and nothing else. Nothing is paid.
+2. **Execute.** The relayer calls `execute(intent, signature)` on the InletExit contract of the position's chain. It creates the executor with CREATE2 at the derived address. The executor applies the signature, redeems the position to USDC, and burns one CCTP message per leg toward the chains in the intent. The last leg takes the remainder, so vault rounding can never make it fail.
+3. **Attest and land.** Circle attests each burn. The relayer mints on each chain, and the USDC arrives in your wallet, native, in the amounts you chose.
+
+## The exit intent
+
+```solidity title="ExitIntent"
+struct ExitLeg {
+    uint32  domain;      // CCTP domain of the chain the USDC lands on
+    bytes32 recipient;   // left padded EVM address
+    uint256 amount;      // USDC units; the last leg ignores this and takes the rest
+}
+
+struct ExitIntent {
+    address   owner;       // holder of the position
+    bytes32   adapterId;   // keccak256 of the exit adapter name, for example "aave-v3-exit:v1"
+    bytes     adapterData; // abi.encode(pool), abi.encode(vault) or abi.encode(comet)
+    uint256   amount;      // position units to redeem: aToken units, vault shares, Compound base units
+    uint256   minAssets;   // least USDC the redeem must yield
+    ExitLeg[] legs;
+    uint256   nonce;
+    uint64    deadline;    // also the deadline of the permit
+    uint16    maxFeeBps;   // Circle fast transfer fee cap per leg
+}
+```
+
+Its EIP 712 hash under the InletExit domain is the CREATE2 salt of the executor, and the executor's init code is constant, so `exitAddress(hash)` is computable from the hash alone, exactly like a deposit address on the hub. The executor does all of its work in its constructor and has no function that can act afterwards.
+
+## Positions you can withdraw
+
+| Position | Chain | Signature | Adapter |
+| --- | --- | --- | --- |
+| Aave V3 aUSDC | Arbitrum Sepolia | EIP 2612 permit on the aToken | `aave-v3-exit:v1` |
+| Morpho Oneshot vault shares | Base Sepolia | EIP 2612 permit on the vault | `erc4626-exit:v1` |
+| Compound III balance | Base Sepolia | `allowBySig` on the Comet | `compound-v3-exit:v1` |
+
+Any ERC 4626 vault over USDC that implements EIP 2612 works with the vault adapter and no contract work. Euler's EVK vault authorises through the EVC rather than a permit, and a Uniswap v4 position unwinds into two assets, so those two stay deposit only for now.
+
+## Where it can land
+
+Any chain the relayer serves: Ethereum Sepolia, Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Monad Testnet and Arc. Legs burn directly from the position's chain, so an exit does not pass through the hub. Arc is one of the chains you can choose.
+
+## Without a browser
+
+`scripts/e2e-exit.ts` in the relayer signs and submits an exit with a key. `POST /exits` takes the intent and the signature, and `GET /exits/:hash` follows it through `signed`, `executed`, `attested` and `delivered`, with a mint transaction per leg.

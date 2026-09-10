@@ -17,6 +17,7 @@ export const docsGroups = [
     items: [
       { href: "/docs/widget", label: "Mount the widget" },
       { href: "/docs/sdk", label: "Deposit without a browser" },
+      { href: "/docs/exit", label: "Withdraw to any chain" },
       { href: "/docs/adapters", label: "Destinations and adapters" },
       { href: "/docs/relayer", label: "Run a relayer" },
     ],
