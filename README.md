@@ -20,6 +20,17 @@ Circle Gateway or CCTP V2 brings native USDC to Arc, the Inlet hub on Arc escrow
 
 Log in with an email through Privy or connect a wallet, pick a destination, enter an amount, and watch the timeline fill. The Gateway route needs a unified balance on the source chain and no gas. The CCTP route needs USDC and a little ETH there.
 
+<table>
+<tr>
+<td align="center"><a href="diagram/screens/widget-deposit.png"><img src="diagram/screens/widget-deposit.png" width="300" alt="The widget in deposit mode"></a><br><sub>Deposit: pick a position, pick where the USDC is, sign once</sub></td>
+<td align="center"><a href="diagram/screens/widget-withdraw.png"><img src="diagram/screens/widget-withdraw.png" width="300" alt="The widget in withdraw mode"></a><br><sub>Withdraw: pick a position, split it across chains, sign once</sub></td>
+</tr>
+<tr>
+<td align="center"><a href="diagram/screens/flow-deposit.png"><img src="diagram/screens/flow-deposit.png" width="300" alt="A deposit landing as an Aave position"></a><br><sub>A deposit from Base Sepolia landing as aUSDC on Arbitrum Sepolia in 42 seconds</sub></td>
+<td align="center"><a href="diagram/screens/flow-withdraw.png"><img src="diagram/screens/flow-withdraw.png" width="300" alt="A withdrawal landing as USDC on two chains"></a><br><sub>A withdrawal from Morpho on Base Sepolia landing on Arbitrum Sepolia and Arc in 21 seconds</sub></td>
+</tr>
+</table>
+
 ## How it works
 
 ![How a deposit moves through Inlet](diagram/architecture.png?v=2)
