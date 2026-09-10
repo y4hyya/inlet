@@ -16,3 +16,12 @@ export function parseUsdc(input: string): bigint | undefined {
 export function short(hash: string): string {
   return `${hash.slice(0, 8)}…${hash.slice(-6)}`;
 }
+
+export function tokens(value: bigint, decimals: number, label: string): string {
+  return `${formatUnits(value, decimals)} ${label}`;
+}
+
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message.split("\n")[0].slice(0, 240);
+  return String(error).slice(0, 240);
+}

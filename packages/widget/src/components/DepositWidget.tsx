@@ -1,13 +1,15 @@
 import { InletRelayerClient, type IntentRecord, type UniswapQuote } from "@inletkit/sdk";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { formatUnits, parseUnits } from "viem";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { defaultSources } from "../config.js";
 import { useInlet } from "../context.js";
 import { short, usdc } from "../format.js";
 import { isSignedIn } from "../session.js";
 import type { Destination, RoutePreference, SourceChain } from "../types.js";
 import { useDeposit } from "../useDeposit.js";
+import { useRelayerHealth } from "../useRelayerHealth.js";
+import { AccountPill } from "./AccountPill.js";
 import { StatusTimeline } from "./StatusTimeline.js";
 
 export interface DepositWidgetProps {
@@ -17,6 +19,8 @@ export interface DepositWidgetProps {
   defaultAmount?: string;
   defaultDestinationId?: string;
   title?: string;
+  // A replacement header, or false for none. The combined widget passes its own.
+  header?: ReactNode;
   onRecord?: (record: IntentRecord) => void;
 }
 
@@ -27,13 +31,13 @@ export function DepositWidget({
   defaultAmount = "1",
   defaultDestinationId,
   title = "Deposit from any chain",
+  header,
   onRecord,
 }: DepositWidgetProps) {
   const inlet = useInlet();
   const url = relayerUrl ?? inlet.relayerUrl;
   const { address, chainId, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
-  const { disconnect } = useDisconnect();
   const signedIn = isSignedIn({ address, authenticated: inlet.authenticated, isConnected });
 
   const [destinationId, setDestinationId] = useState(destinations.find((entry) => entry.id === defaultDestinationId)?.id ?? destinations[0]?.id);
@@ -41,22 +45,7 @@ export function DepositWidget({
   const [amount, setAmount] = useState(defaultAmount);
   const [preference, setPreference] = useState<RoutePreference>("auto");
 
-  const [relayerStatus, setRelayerStatus] = useState<"checking" | "online" | "offline">("checking");
-  useEffect(() => {
-    let stopped = false;
-    const client = new InletRelayerClient(url, 8000);
-    const check = () =>
-      client
-        .health()
-        .then((health) => !stopped && setRelayerStatus(health.ok ? "online" : "offline"))
-        .catch(() => !stopped && setRelayerStatus("offline"));
-    void check();
-    const handle = setInterval(check, 15_000);
-    return () => {
-      stopped = true;
-      clearInterval(handle);
-    };
-  }, [url]);
+  const { status: relayerStatus } = useRelayerHealth(url);
 
   const destination = destinations.find((entry) => entry.id === destinationId) ?? destinations[0];
   const source = sources.find((entry) => entry.domain === sourceDomain) ?? sources[0];
@@ -129,35 +118,22 @@ export function DepositWidget({
   const busy = ["creating", "signing", "sending"].includes(state.phase);
   const quoting = state.phase === "quoting";
   const tracking = state.phase === "tracking" || state.phase === "done";
-  const signOutLabel = inlet.logout ? "Log out" : "Disconnect";
-  const signOut = async () => {
-    if (!inlet.logout) return disconnect();
-    try {
-      await inlet.logout();
-    } catch (error) {
-      console.error("Inlet could not end the session", error);
-    }
-  };
 
   return (
     <section className="inlet">
-      <header className="inlet-header">
-        <h2 className="inlet-title">
-          {title}
-          <span className={`inlet-relayer inlet-relayer-${relayerStatus}`} title={url}>
-            {relayerStatus === "online" ? "relayer online" : relayerStatus === "offline" ? `relayer unreachable at ${url}` : "checking relayer"}
-          </span>
-        </h2>
-        {signedIn && address ? (
-          <button className="inlet-account" type="button" onClick={signOut} title={`${signOutLabel}, ${address}`} aria-label={`${signOutLabel} ${short(address)}`}>
-            <span className="inlet-account-name">{short(address)}</span>
-            <svg className="inlet-account-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M9.5 13.5H4.5A1.5 1.5 0 0 1 3 12V4a1.5 1.5 0 0 1 1.5-1.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M7.5 8H14m-2.5-2.5L14 8l-2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        ) : null}
-      </header>
+      {header === undefined ? (
+        <header className="inlet-header">
+          <h2 className="inlet-title">
+            {title}
+            <span className={`inlet-relayer inlet-relayer-${relayerStatus}`} title={url}>
+              {relayerStatus === "online" ? "relayer online" : relayerStatus === "offline" ? `relayer unreachable at ${url}` : "checking relayer"}
+            </span>
+          </h2>
+          <AccountPill />
+        </header>
+      ) : (
+        header
+      )}
 
       {tracking && state.record ? (
         <div className="inlet-body">

@@ -16,6 +16,7 @@ import { erc20Abi, parseUnits, type Address, type Hex } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { getBalance, getBlockNumber, readContract, signTypedData, switchChain, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { arcGatewayMinter, arcUsdc, gatewayApi, hubDomain, irisApi } from "./config.js";
+import { errorMessage } from "./format.js";
 import { planRoute } from "./route.js";
 import type { DepositState, Destination, Quote, RoutePreference, SourceChain } from "./types.js";
 
@@ -99,7 +100,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "ready", quote: next }));
         return next;
       } catch (error) {
-        setState((previous) => ({ ...previous, phase: "error", error: message(error) }));
+        setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
         return undefined;
       }
     },
@@ -115,7 +116,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
           setState((previous) => ({ ...previous, phase: terminal.has(record.state) ? "done" : "tracking", record }));
           if (terminal.has(record.state)) clearInterval(poller.current);
         } catch (error) {
-          setState((previous) => ({ ...previous, error: message(error) }));
+          setState((previous) => ({ ...previous, error: errorMessage(error) }));
         }
       }, 2000);
     },
@@ -213,7 +214,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "tracking" }));
         track(record.hash);
       } catch (error) {
-        setState((previous) => ({ ...previous, phase: "error", error: message(error) }));
+        setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
       }
     },
     [address, config, destination, relayer, chainFor, ensureChain, approveIfNeeded, track],
@@ -239,7 +240,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "ready", sourceTx: deposit }));
         return deposit;
       } catch (error) {
-        setState((previous) => ({ ...previous, phase: "error", error: message(error) }));
+        setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
         return undefined;
       }
     },
@@ -252,9 +253,4 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   }, []);
 
   return { state, quote, deposit, fundGateway, reset, address, chainId, connectedToSource: chainId === source.chainId };
-}
-
-function message(error: unknown): string {
-  if (error instanceof Error) return error.message.split("\n")[0].slice(0, 240);
-  return String(error).slice(0, 240);
 }

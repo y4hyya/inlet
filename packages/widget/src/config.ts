@@ -3,6 +3,7 @@ import {
   adapterId,
   compoundV3AdapterData,
   erc4626AdapterData,
+  exitAdapterIds,
   explorers as sdkExplorers,
   fromBytes32,
   testnetChains,
@@ -13,10 +14,39 @@ import {
   type IntentRecord,
   type PoolKey,
 } from "@inletkit/sdk";
-import type { Address } from "viem";
-import type { Destination, PriceHint, SourceChain } from "./types.js";
+import type { Address, Hex } from "viem";
+import type { Destination, DestinationExit, PriceHint, SourceChain } from "./types.js";
 
 export const explorers = sdkExplorers;
+
+const chainIds: Record<number, number> = {};
+for (const chain of Object.values(testnetChains)) if ("chainId" in chain && "cctpDomain" in chain) chainIds[chain.cctpDomain] = chain.chainId;
+
+const chainNames: Record<number, string> = { 26: "Arc Testnet" };
+for (const entry of testnetSources) chainNames[entry.domain] = entry.name;
+for (const entry of catalog) chainNames[entry.destinationDomain] ??= entry.chain;
+
+export function chainIdForDomain(domain: number): number {
+  return chainIds[domain] ?? 0;
+}
+
+export function chainNameForDomain(domain: number): string {
+  return chainNames[domain] ?? `domain ${domain}`;
+}
+
+export type ExitKind = "vault" | "aave" | "comet";
+
+/// Aave and Compound hold USDC one to one, every other exit is a share of a vault.
+export function exitKind(exit: { adapterId: Hex }): ExitKind {
+  const id = exit.adapterId.toLowerCase();
+  if (id === exitAdapterIds["aave-v3-exit:v1"].toLowerCase()) return "aave";
+  if (id === exitAdapterIds["compound-v3-exit:v1"].toLowerCase()) return "comet";
+  return "vault";
+}
+
+export function exitable(destinations: Destination[]): Destination[] {
+  return destinations.filter((entry) => entry.exit);
+}
 
 export const irisApi = testnetChains.circle.irisApi;
 export const gatewayApi = testnetChains.circle.gatewayApi;
@@ -30,6 +60,7 @@ export function erc4626Destination(params: {
   id: string;
   name: string;
   description?: string;
+  chainId?: number;
   destinationDomain: number;
   receiver: Address;
   vault: Address;
@@ -39,6 +70,7 @@ export function erc4626Destination(params: {
     id: params.id,
     name: params.name,
     description: params.description,
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("erc4626:v1"),
@@ -52,6 +84,7 @@ export function aaveV3Destination(params: {
   id: string;
   name: string;
   description?: string;
+  chainId?: number;
   destinationDomain: number;
   receiver: Address;
   pool: Address;
@@ -61,6 +94,7 @@ export function aaveV3Destination(params: {
     id: params.id,
     name: params.name,
     description: params.description,
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("aave-v3:v1"),
@@ -74,6 +108,7 @@ export function compoundV3Destination(params: {
   id: string;
   name: string;
   description?: string;
+  chainId?: number;
   destinationDomain: number;
   receiver: Address;
   comet: Address;
@@ -83,6 +118,7 @@ export function compoundV3Destination(params: {
     id: params.id,
     name: params.name,
     description: params.description,
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("compound-v3:v1"),
@@ -96,6 +132,7 @@ export function uniswapV4LpDestination(params: {
   id: string;
   name: string;
   description?: string;
+  chainId?: number;
   destinationDomain: number;
   receiver: Address;
   pool: PoolKey;
@@ -107,6 +144,7 @@ export function uniswapV4LpDestination(params: {
     id: params.id,
     name: params.name,
     description: params.description,
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("uniswap-v4-lp:v1"),
@@ -126,11 +164,26 @@ const uniswapPrice: PriceHint = {
   venue: "Uniswap Trading API",
 };
 
+function exitFromSpec(spec: DestinationSpec): DestinationExit | undefined {
+  const exit = spec.exit;
+  if (!exit) return undefined;
+  return {
+    adapterId: exit.adapterId,
+    adapterData: exit.adapterData,
+    positionToken: exit.positionToken,
+    positionDecimals: exit.positionDecimals,
+    permit: exit.permit,
+    exitContract: exit.exitContract,
+    positionLabel: spec.positionLabel,
+  };
+}
+
 export function fromSpec(spec: DestinationSpec): Destination {
   return {
     id: spec.id,
     name: spec.name,
     description: spec.description,
+    chainId: spec.chainId,
     destinationDomain: spec.destinationDomain,
     receiver: spec.receiver,
     adapterId: spec.adapterId,
@@ -138,6 +191,7 @@ export function fromSpec(spec: DestinationSpec): Destination {
     positionLabel: spec.positionLabel,
     explorer: spec.explorer,
     price: spec.adapterName === "uniswap-v4-lp:v1" ? uniswapPrice : undefined,
+    exit: exitFromSpec(spec),
   };
 }
 
