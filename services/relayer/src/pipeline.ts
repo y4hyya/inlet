@@ -2,16 +2,18 @@ import {
   GatewayClient,
   IrisClient,
   gatewayMinterAbi,
+  inletExitAbi,
   inletHubAbi,
   inletReceiverAbi,
   messageTransmitterV2Abi,
+  type ExitState,
   type IntentState,
 } from "@inletkit/sdk";
-import { erc20Abi, parseEventLogs, slice, type Hex } from "viem";
+import { erc20Abi, hexToNumber, parseEventLogs, slice, type Address, type Hex } from "viem";
 import type { PrivateKeyAccount } from "viem/accounts";
 import type { ChainContext } from "./chains.js";
 import type { RelayerConfig } from "./config.js";
-import type { IntentStore, StoredIntent } from "./db.js";
+import { serializeExitLegs, type ExitStore, type IntentStore, type StoredExit, type StoredIntent } from "./db.js";
 import { log } from "./log.js";
 
 export class Pipeline {
@@ -20,6 +22,7 @@ export class Pipeline {
     private readonly chains: Record<number, ChainContext>,
     private readonly account: PrivateKeyAccount,
     private readonly store: IntentStore,
+    private readonly exits: ExitStore,
     private readonly iris: IrisClient,
     private readonly gateway: GatewayClient,
   ) {}
@@ -30,9 +33,20 @@ export class Pipeline {
     for (const record of this.store.listByState(["swept"])) await this.guarded(record, () => this.attest(record));
     for (const record of this.store.listByState(["attested"])) await this.guarded(record, () => this.execute(record));
     for (const record of this.store.listByState(["refunding"])) await this.guarded(record, () => this.completeRefund(record));
+    for (const record of this.exits.listByState(["signed"])) await this.guardedExit(record, () => this.redeem(record));
+    for (const record of this.exits.listByState(["executed"])) await this.guardedExit(record, () => this.attestExit(record));
+    for (const record of this.exits.listByState(["attested"])) await this.guardedExit(record, () => this.deliver(record));
   }
 
   private async guarded(record: StoredIntent, step: () => Promise<void>) {
+    return this.attempt(record, step, (error) => this.store.update(record.hash, { error }));
+  }
+
+  private async guardedExit(record: StoredExit, step: () => Promise<void>) {
+    return this.attempt(record, step, (error) => this.exits.update(record.hash, { error }));
+  }
+
+  private async attempt(record: { hash: Hex; state: string; error?: string; updatedAt: number }, step: () => Promise<void>, fail: (error: string) => void) {
     const backoff = record.error && /nonce/i.test(record.error) ? 5_000 : 30_000;
     if (record.error && Date.now() - record.updatedAt < backoff) return;
     try {
@@ -40,7 +54,7 @@ export class Pipeline {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       log("pipeline", `${record.state} step failed for ${record.hash}: ${message.slice(0, 300)}`);
-      this.store.update(record.hash, { error: message.slice(0, 1000) });
+      fail(message.slice(0, 1000));
     }
   }
 
@@ -291,5 +305,117 @@ export class Pipeline {
     const receipt = await source.publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error(`refund mint reverted in ${hash}`);
     this.transition(record, "refunded", { refund_mint_tx: hash });
+  }
+
+  private transitionExit(record: StoredExit, state: ExitState, patch: Record<string, string | null> = {}) {
+    const { legs_json: _legs, ...loggable } = patch;
+    log("pipeline", `${record.hash} ${record.state} to ${state}`, loggable);
+    return this.exits.update(record.hash, { state, error: null, ...patch });
+  }
+
+  async redeem(record: StoredExit) {
+    const position = this.chains[record.domain];
+    const exit = this.config.exits[record.domain];
+    if (!position || !exit) throw new Error(`no exit rail on domain ${record.domain}`);
+
+    const executed = await position.publicClient.readContract({
+      address: exit,
+      abi: inletExitAbi,
+      functionName: "executed",
+      args: [record.hash],
+    });
+    if (executed) {
+      const event = await this.findExited(record, exit);
+      this.transitionExit(record, "executed", { exit_tx: event.transactionHash, received: event.args.received === undefined ? null : String(event.args.received) });
+      return;
+    }
+
+    const hash = await position.walletClient.writeContract({
+      address: exit,
+      abi: inletExitAbi,
+      functionName: "execute",
+      args: [record.intent, record.signature],
+      account: this.account,
+      chain: position.chain,
+      gas: 1_500_000n,
+    });
+    const receipt = await position.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status !== "success") throw new Error(`exit reverted in ${hash}`);
+    const [exited] = parseEventLogs({ abi: inletExitAbi, eventName: "Exited", logs: receipt.logs });
+    this.transitionExit(record, "executed", { exit_tx: hash, received: exited ? String(exited.args.received) : null });
+  }
+
+  private async findExited(record: StoredExit, exit: Address) {
+    const position = this.chains[record.domain];
+    const latest = await position.publicClient.getBlockNumber();
+    const logs = await position.publicClient.getContractEvents({
+      address: exit,
+      abi: inletExitAbi,
+      eventName: "Exited",
+      args: { exitHash: record.hash },
+      fromBlock: latest > 10_000n ? latest - 10_000n : 0n,
+      toBlock: "latest",
+    });
+    const event = logs[0];
+    if (!event) throw new Error("the exit reports executed but no Exited event was found");
+    return event;
+  }
+
+  async attestExit(record: StoredExit) {
+    const messages = await this.iris.getMessages(record.domain, record.exitTx!);
+    const ready = messages.filter((message) => message.status === "complete" && message.attestation !== "PENDING");
+    if (ready.length < record.legs.length) return;
+
+    const taken = new Set<number>();
+    const legs = record.legs.map((leg) => {
+      const index = ready.findIndex(
+        (message, position) =>
+          !taken.has(position) &&
+          hexToNumber(slice(message.message, 8, 12)) === leg.domain &&
+          slice(message.message, 184, 216).toLowerCase() === leg.recipient.toLowerCase(),
+      );
+      if (index < 0) throw new Error(`no Circle message for the leg to domain ${leg.domain}`);
+      taken.add(index);
+      return { ...leg, message: ready[index].message, attested: true };
+    });
+    this.transitionExit(record, "attested", { legs_json: serializeExitLegs(legs) });
+  }
+
+  async deliver(record: StoredExit) {
+    const messages = await this.iris.getMessages(record.domain, record.exitTx!);
+    const legs = record.legs.map((leg) => ({ ...leg }));
+    for (const leg of legs) {
+      if (leg.mintTx) continue;
+      const ready = messages.find((message) => message.message.toLowerCase() === leg.message?.toLowerCase() && message.status === "complete" && message.attestation !== "PENDING");
+      if (!ready) continue;
+      const destination = this.chains[leg.domain];
+      if (!destination) throw new Error(`no client for leg domain ${leg.domain}`);
+
+      const nonce = slice(ready.message, 12, 44);
+      const used = await destination.publicClient.readContract({
+        address: destination.messageTransmitter,
+        abi: messageTransmitterV2Abi,
+        functionName: "usedNonces",
+        args: [nonce],
+      });
+      if (used === 1n) {
+        leg.mintTx = "external" as Hex;
+      } else {
+        const hash = await destination.walletClient.writeContract({
+          address: destination.messageTransmitter,
+          abi: messageTransmitterV2Abi,
+          functionName: "receiveMessage",
+          args: [ready.message, ready.attestation as Hex],
+          account: this.account,
+          chain: destination.chain,
+          gas: destination.fixedGas,
+        });
+        const receipt = await destination.publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") throw new Error(`leg mint reverted in ${hash}`);
+        leg.mintTx = hash;
+      }
+      this.exits.update(record.hash, { legs_json: serializeExitLegs(legs) });
+    }
+    if (legs.every((leg) => leg.mintTx)) this.transitionExit(record, "delivered", { legs_json: serializeExitLegs(legs) });
   }
 }

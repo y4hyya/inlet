@@ -1,6 +1,6 @@
 import { testnetChains, testnetDeployments } from "@inletkit/sdk";
 import type { Address, Hex } from "viem";
-import { receiversByDomain } from "./chains.js";
+import { exitsByDomain, receiversByDomain } from "./chains.js";
 
 export interface RelayerConfig {
   privateKey: Hex;
@@ -13,6 +13,7 @@ export interface RelayerConfig {
   hub: Address;
   hubDomain: number;
   receivers: Record<number, Address>;
+  exits: Record<number, Address>;
   uniswapApiKey?: string;
 }
 
@@ -38,6 +39,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig 
     hub: testnetDeployments.arcTestnet.inletHub as Address,
     hubDomain: 26,
     receivers: receiversByDomain(),
+    exits: exitsByDomain(),
     uniswapApiKey: env.UNISWAP_API_KEY?.trim() || undefined,
   };
 }

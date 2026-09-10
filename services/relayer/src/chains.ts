@@ -50,6 +50,16 @@ export function receiversByDomain(): Record<number, Address> {
   return receivers;
 }
 
+export function exitsByDomain(): Record<number, Address> {
+  const deployments = testnetDeployments as unknown as Record<string, Record<string, string | undefined>>;
+  const exits: Record<number, Address> = {};
+  for (const { key, config } of evmChains) {
+    const inletExit = deployments[key]?.inletExit;
+    if (inletExit) exits[config.cctpDomain] = inletExit as Address;
+  }
+  return exits;
+}
+
 export function buildChains(config: RelayerConfig): { account: PrivateKeyAccount; byDomain: Record<number, ChainContext> } {
   const account = privateKeyToAccount(config.privateKey, { nonceManager });
   const byDomain: Record<number, ChainContext> = {};

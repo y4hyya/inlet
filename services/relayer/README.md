@@ -19,9 +19,13 @@ pnpm dev
 | POST | `/intents/:hash/source-tx` | report the CCTP burn on the source chain |
 | POST | `/intents/:hash/gateway` | submit the signed Gateway burn intent |
 | GET | `/intents/:hash` | current state and transaction hashes |
+| POST | `/exits` | register a signed withdrawal, returns its hash and the executor address derived from it |
+| GET | `/exits/:hash` | current state, the redemption hash and the mint hash of every leg |
 | GET | `/quotes/uniswap` | live quote from the Uniswap Trading API, when `UNISWAP_API_KEY` is set; query `chainId`, `tokenIn`, `tokenOut`, `amount` |
 
 States: created, funded, swept, attested, executed, claimable, refunding, refunded, expired.
+
+An exit is signed once the relayer has the owner's approval, executed once the position has been redeemed and burned on the position chain, attested once Circle has signed every leg, and delivered once every leg has been minted on its chain.
 
 ## End to end on testnet
 

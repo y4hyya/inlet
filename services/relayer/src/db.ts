@@ -1,7 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { parseBurnIntent, parseIntent, serializeBurnIntent, serializeIntent, type DepositIntent, type GatewayAttestation, type IntentRecord, type IntentState, type Route, type SignedBurnIntent } from "@inletkit/sdk";
+import { parseBurnIntent, parseExit, parseIntent, serializeBurnIntent, serializeExit, serializeIntent, type DepositIntent, type ExitIntent, type ExitLegRecord, type ExitRecord, type ExitState, type GatewayAttestation, type IntentRecord, type IntentState, type Route, type SignedBurnIntent } from "@inletkit/sdk";
 import type { Address, Hex } from "viem";
 
 interface Row {
@@ -36,7 +36,7 @@ export interface StoredIntent extends IntentRecord {
 }
 
 export class IntentStore {
-  private readonly db: DatabaseSync;
+  readonly db: DatabaseSync;
 
   constructor(path: string) {
     if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
@@ -136,4 +136,103 @@ function toRecord(row: Row): StoredIntent {
 
 function parseGatewayRequest(raw: { burnIntent: Record<string, unknown>; signature: Hex }): SignedBurnIntent {
   return { burnIntent: parseBurnIntent(raw.burnIntent), signature: raw.signature };
+}
+
+interface ExitRow {
+  hash: string;
+  state: string;
+  domain: number;
+  intent_json: string;
+  signature: string;
+  executor: string;
+  exit_tx: string | null;
+  received: string | null;
+  legs_json: string;
+  error: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface StoredExit extends ExitRecord {
+  signature: Hex;
+}
+
+export class ExitStore {
+  constructor(private readonly db: DatabaseSync) {
+    this.db.exec(`
+      create table if not exists exits (
+        hash text primary key,
+        state text not null,
+        domain integer not null,
+        intent_json text not null,
+        signature text not null,
+        executor text not null,
+        exit_tx text,
+        received text,
+        legs_json text not null,
+        error text,
+        created_at integer not null,
+        updated_at integer not null
+      )
+    `);
+  }
+
+  insert(hash: Hex, intent: ExitIntent, signature: Hex, domain: number, executor: Address): StoredExit {
+    const now = Date.now();
+    const legs: ExitLegRecord[] = intent.legs.map((leg) => ({ ...leg, attested: false }));
+    this.db
+      .prepare(
+        `insert into exits (hash, state, domain, intent_json, signature, executor, legs_json, created_at, updated_at)
+         values (?, 'signed', ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(hash, domain, JSON.stringify(serializeExit(intent)), signature, executor, serializeExitLegs(legs), now, now);
+    return this.get(hash)!;
+  }
+
+  get(hash: Hex): StoredExit | undefined {
+    const row = this.db.prepare("select * from exits where hash = ?").get(hash) as unknown as ExitRow | undefined;
+    return row ? toExitRecord(row) : undefined;
+  }
+
+  listByState(states: ExitState[]): StoredExit[] {
+    const marks = states.map(() => "?").join(",");
+    const rows = this.db.prepare(`select * from exits where state in (${marks}) order by created_at`).all(...states) as unknown as ExitRow[];
+    return rows.map(toExitRecord);
+  }
+
+  update(hash: Hex, patch: Partial<Record<"state" | "exit_tx" | "received" | "legs_json" | "error", string | null>>): StoredExit {
+    const keys = Object.keys(patch);
+    if (keys.length === 0) return this.get(hash)!;
+    const sets = keys.map((key) => `${key} = ?`).join(", ");
+    this.db.prepare(`update exits set ${sets}, updated_at = ? where hash = ?`).run(...keys.map((key) => patch[key as keyof typeof patch] ?? null), Date.now(), hash);
+    return this.get(hash)!;
+  }
+}
+
+export function serializeExitLegs(legs: ExitLegRecord[]): string {
+  return JSON.stringify(legs.map((leg) => ({ ...leg, amount: leg.amount.toString() })));
+}
+
+function toExitRecord(row: ExitRow): StoredExit {
+  return {
+    hash: row.hash as Hex,
+    state: row.state as ExitState,
+    domain: row.domain,
+    intent: parseExit(JSON.parse(row.intent_json)),
+    signature: row.signature as Hex,
+    executor: row.executor as Address,
+    exitTx: (row.exit_tx ?? undefined) as Hex | undefined,
+    received: row.received === null ? undefined : BigInt(row.received),
+    legs: (JSON.parse(row.legs_json) as Record<string, unknown>[]).map((leg) => ({
+      domain: Number(leg.domain),
+      recipient: leg.recipient as Hex,
+      amount: BigInt(leg.amount as string),
+      message: (leg.message ?? undefined) as Hex | undefined,
+      attested: Boolean(leg.attested),
+      mintTx: (leg.mintTx ?? undefined) as Hex | undefined,
+    })),
+    error: row.error ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }

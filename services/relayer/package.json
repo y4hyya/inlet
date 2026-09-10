@@ -12,6 +12,7 @@
     "start": "node --env-file=.env dist/src/index.js",
     "e2e": "tsx --env-file=.env scripts/e2e.ts",
     "e2e:gateway": "tsx --env-file=.env scripts/e2e-gateway.ts",
+    "e2e:exit": "tsx --env-file=.env scripts/e2e-exit.ts",
     "refund:stuck": "tsx --env-file=.env scripts/refund-stuck.ts",
     "gateway:deposit": "tsx --env-file=.env scripts/gateway-deposit.ts"
   },

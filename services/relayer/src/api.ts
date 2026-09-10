@@ -1,13 +1,13 @@
 import cors from "@fastify/cors";
-import { hashIntent, inletHubAbi, parseBurnIntent, parseIntent, serializeIntent, toBytes32, type Route } from "@inletkit/sdk";
+import { exitableDestinations, hashExit, hashIntent, inletExitAbi, inletHubAbi, parseBurnIntent, parseExit, parseIntent, serializeExitRecord, serializeIntent, toBytes32, type Route } from "@inletkit/sdk";
 import Fastify from "fastify";
-import { isAddress, type Address, type Hex } from "viem";
+import { isAddress, zeroAddress, type Address, type Hex } from "viem";
 import type { ChainContext } from "./chains.js";
 import type { RelayerConfig } from "./config.js";
-import type { IntentStore, StoredIntent } from "./db.js";
+import type { ExitStore, IntentStore, StoredExit, StoredIntent } from "./db.js";
 import { UniswapQuoter } from "./uniswap.js";
 
-export async function buildApp(config: RelayerConfig, chains: Record<number, ChainContext>, store: IntentStore) {
+export async function buildApp(config: RelayerConfig, chains: Record<number, ChainContext>, store: IntentStore, exits: ExitStore) {
   const app = Fastify({ logger: false });
   const origins = (process.env.CORS_ORIGIN ?? "*").split(",").map((entry) => entry.trim());
   await app.register(cors, { origin: origins.includes("*") ? true : origins });
@@ -16,7 +16,7 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
   const relayerAddress = arc.walletClient.account?.address as Address;
   const quoter = config.uniswapApiKey ? new UniswapQuoter(config.uniswapApiKey, relayerAddress) : undefined;
 
-  app.get("/health", async () => ({ ok: true, hub: config.hub, relayer: relayerAddress, destinations: Object.keys(config.receivers).map(Number), uniswapQuotes: Boolean(quoter) }));
+  app.get("/health", async () => ({ ok: true, hub: config.hub, relayer: relayerAddress, destinations: Object.keys(config.receivers).map(Number), exits: Object.keys(config.exits).map(Number), uniswapQuotes: Boolean(quoter) }));
 
   app.get<{ Querystring: { chainId: string; tokenIn: Address; tokenOut: Address; amount: string } }>("/quotes/uniswap", async (request, reply) => {
     if (!quoter) return reply.code(404).send({ error: "Uniswap quotes are not configured on this relayer" });
@@ -75,7 +75,51 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
     return present(record);
   });
 
+  app.post<{ Body: { intent: Record<string, unknown>; signature: Hex } }>("/exits", async (request, reply) => {
+    let intent;
+    try {
+      intent = parseExit(request.body?.intent ?? {});
+    } catch {
+      return reply.code(400).send({ error: "intent is missing fields" });
+    }
+    const signature = request.body?.signature;
+    if (!signature || !/^0x[0-9a-fA-F]{130}$/.test(signature)) return reply.code(400).send({ error: "signature must be 65 bytes" });
+    if (intent.deadline <= BigInt(Math.floor(Date.now() / 1000))) return reply.code(400).send({ error: "deadline is in the past" });
+    if (intent.legs.length === 0) return reply.code(400).send({ error: "at least one leg is required" });
+
+    const spec = exitableDestinations.find((entry) => entry.exit.adapterId.toLowerCase() === intent.adapterId.toLowerCase() && entry.exit.adapterData.toLowerCase() === intent.adapterData.toLowerCase());
+    if (!spec) return reply.code(400).send({ error: "no exit rail for this adapter and position" });
+    const position = chains[spec.destinationDomain];
+    const exit = config.exits[spec.destinationDomain];
+    if (!position || !exit) return reply.code(400).send({ error: `no InletExit on ${spec.chain}` });
+
+    for (const [index, leg] of intent.legs.entries()) {
+      if (!chains[leg.domain]) return reply.code(400).send({ error: `unsupported leg domain ${leg.domain}` });
+      if (index + 1 < intent.legs.length && leg.amount <= 0n) return reply.code(400).send({ error: `leg ${index} amount must be positive` });
+    }
+
+    const adapter = await position.publicClient.readContract({ address: exit, abi: inletExitAbi, functionName: "adapters", args: [intent.adapterId] });
+    if (adapter === zeroAddress) return reply.code(400).send({ error: `the adapter is not registered on the InletExit at ${exit}` });
+
+    const hash = hashExit(intent, exit, position.chain.id);
+    const existing = exits.get(hash);
+    if (existing) return presentExit(existing);
+
+    const executor = await position.publicClient.readContract({ address: exit, abi: inletExitAbi, functionName: "exitAddress", args: [hash] });
+    return presentExit(exits.insert(hash, intent, signature, spec.destinationDomain, executor));
+  });
+
+  app.get<{ Params: { hash: Hex } }>("/exits/:hash", async (request, reply) => {
+    const record = exits.get(request.params.hash);
+    if (!record) return reply.code(404).send({ error: "unknown exit" });
+    return presentExit(record);
+  });
+
   return app;
+}
+
+function presentExit(record: StoredExit) {
+  return serializeExitRecord(record);
 }
 
 function present(record: StoredIntent) {
