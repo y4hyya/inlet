@@ -193,7 +193,7 @@ Three env files, each with an `.env.example` next to it: `contracts/.env` holds 
 
 ## Status
 
-Built during ETHGlobal ETHOnline 2026 on Arc testnet. Zero fees. Not audited. Testnet only.
+Built during ETHGlobal ETHOnline 2026 on Arc testnet. Zero fees. Not audited. Testnet only. The path to Arc mainnet, the addresses to deploy against, the order of operations and the risks, is written in [`docs/mainnet.md`](docs/mainnet.md); [`config/chains.mainnet.json`](config/chains.mainnet.json) and [`config/deployments.mainnet.json`](config/deployments.mainnet.json) are the files that fill on launch day.
 
 ## License
 

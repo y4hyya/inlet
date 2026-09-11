@@ -1,0 +1,63 @@
+{
+  "_note": "Mainnet chain configuration, same schema as chains.testnet.json. Every value marked PENDING is unpublished because Arc mainnet launches 2026-09-16; docs/mainnet.md gives the order in which they fill. Confirm the Arc domain by calling localDomain() on the MessageTransmitter before trusting 26. Gateway is live on the four destination chains but not on Arc, and the Gateway route needs Arc's minter, so Inlet runs CCTP only on mainnet until Circle lists Arc.",
+  "arcMainnet": {
+    "chainId": "PENDING, read from Circle on launch day",
+    "cctpDomain": 26,
+    "rpc": "PENDING",
+    "explorer": "PENDING",
+    "usdc": "PENDING, may or may not keep the 0x3600000000000000000000000000000000000000 predeploy address",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayDomain": null,
+    "gatewayWallet": null,
+    "gatewayMinter": null
+  },
+  "ethereum": {
+    "chainId": 1,
+    "cctpDomain": 0,
+    "rpc": "PENDING, use a paid endpoint",
+    "explorer": "https://etherscan.io",
+    "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayDomain": null,
+    "gatewayWallet": null,
+    "gatewayMinter": null
+  },
+  "arbitrum": {
+    "chainId": 42161,
+    "cctpDomain": 3,
+    "rpc": "PENDING, use a paid endpoint",
+    "explorer": "https://arbiscan.io",
+    "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayDomain": null,
+    "gatewayWallet": null,
+    "gatewayMinter": null
+  },
+  "base": {
+    "chainId": 8453,
+    "cctpDomain": 6,
+    "rpc": "PENDING, use a paid endpoint",
+    "explorer": "https://basescan.org",
+    "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayDomain": null,
+    "gatewayWallet": null,
+    "gatewayMinter": null
+  },
+  "unichain": {
+    "chainId": 130,
+    "cctpDomain": 10,
+    "rpc": "PENDING, use a paid endpoint",
+    "explorer": "https://uniscan.xyz",
+    "usdc": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayDomain": null,
+    "gatewayWallet": null,
+    "gatewayMinter": null
+  }
+}

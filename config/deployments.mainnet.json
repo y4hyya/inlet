@@ -1,0 +1,50 @@
+{
+  "_note": "Mainnet deployment addresses, same schema as deployments.testnet.json. Every address fills as the scripts run, in the order given in docs/mainnet.md section 4. The third party protocol addresses the adapters are constructed against must be confirmed against each protocol's own documentation before deploying, not copied from testnet.",
+  "arcMainnet": {
+    "inletHub": "PENDING, DeployHub.s.sol"
+  },
+  "ethereum": {
+    "inletReceiver": "PENDING, DeployReceiver.s.sol",
+    "erc4626Adapter": "PENDING, DeployAdapter.s.sol",
+    "inletExit": "PENDING, DeployExit.s.sol",
+    "erc4626ExitAdapter": "PENDING, DeployExit.s.sol",
+    "aaveV3ExitAdapter": "PENDING, DeployExit.s.sol",
+    "compoundV3ExitAdapter": "PENDING, DeployExit.s.sol"
+  },
+  "arbitrum": {
+    "inletReceiver": "PENDING, DeployReceiver.s.sol",
+    "erc4626Adapter": "PENDING, DeployAdapter.s.sol",
+    "aaveV3Adapter": "PENDING, needs the Aave V3 pool address on Arbitrum One",
+    "inletExit": "PENDING, DeployExit.s.sol",
+    "erc4626ExitAdapter": "PENDING, DeployExit.s.sol",
+    "aaveV3ExitAdapter": "PENDING, DeployExit.s.sol",
+    "compoundV3ExitAdapter": "PENDING, DeployExit.s.sol"
+  },
+  "base": {
+    "inletReceiver": "PENDING, DeployReceiver.s.sol",
+    "erc4626Adapter": "PENDING, DeployAdapter.s.sol",
+    "compoundV3Adapter": "PENDING, needs the Compound III USDC Comet address on Base",
+    "inletExit": "PENDING, DeployExit.s.sol",
+    "erc4626ExitAdapter": "PENDING, DeployExit.s.sol",
+    "aaveV3ExitAdapter": "PENDING, DeployExit.s.sol",
+    "compoundV3ExitAdapter": "PENDING, DeployExit.s.sol"
+  },
+  "unichain": {
+    "inletReceiver": "PENDING, DeployReceiver.s.sol",
+    "erc4626Adapter": "PENDING, DeployAdapter.s.sol",
+    "uniswapV4LpAdapter": "PENDING, needs the Uniswap v4 PositionManager and StateView on Unichain",
+    "inletExit": "PENDING, DeployExit.s.sol",
+    "erc4626ExitAdapter": "PENDING, DeployExit.s.sol",
+    "aaveV3ExitAdapter": "PENDING, DeployExit.s.sol",
+    "compoundV3ExitAdapter": "PENDING, DeployExit.s.sol"
+  },
+  "adapters": {
+    "erc4626:v1": "keccak256 of the string erc4626:v1",
+    "aave-v3:v1": "keccak256 of the string aave-v3:v1",
+    "compound-v3:v1": "keccak256 of the string compound-v3:v1",
+    "uniswap-v4-lp:v1": "keccak256 of the string uniswap-v4-lp:v1",
+    "erc4626-exit:v1": "keccak256 of the string erc4626-exit:v1",
+    "aave-v3-exit:v1": "keccak256 of the string aave-v3-exit:v1",
+    "compound-v3-exit:v1": "keccak256 of the string compound-v3-exit:v1"
+  }
+}
