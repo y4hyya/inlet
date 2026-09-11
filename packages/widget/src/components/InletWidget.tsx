@@ -1,8 +1,6 @@
 import type { ExitRecord, IntentRecord } from "@inletkit/sdk";
 import { useState } from "react";
-import { useInlet } from "../context.js";
 import type { Destination, SourceChain } from "../types.js";
-import { useRelayerHealth } from "../useRelayerHealth.js";
 import { AccountPill } from "./AccountPill.js";
 import { DepositWidget } from "./DepositWidget.js";
 import { ExitWidget } from "./ExitWidget.js";
@@ -23,9 +21,6 @@ export interface InletWidgetProps {
 /// Both directions under one header. The forms stay their own components, so a host that only
 /// wants deposits keeps mounting DepositWidget.
 export function InletWidget({ destinations, relayerUrl, sources, defaultDestinationId, defaultMode = "deposit", onModeChange, onRecord, onExit }: InletWidgetProps) {
-  const inlet = useInlet();
-  const url = relayerUrl ?? inlet.relayerUrl;
-  const { status } = useRelayerHealth(url);
   const [mode, setMode] = useState<InletMode>(defaultMode);
 
   const change = (next: InletMode) => {
@@ -42,9 +37,6 @@ export function InletWidget({ destinations, relayerUrl, sources, defaultDestinat
           </button>
         ))}
       </div>
-      <span className={`inlet-dot inlet-dot-${status}`} title={url}>
-        <span className="inlet-hidden">{status === "online" ? "Relayer online" : status === "offline" ? `Relayer unreachable at ${url}` : "Checking the relayer"}</span>
-      </span>
       <AccountPill />
     </header>
   );

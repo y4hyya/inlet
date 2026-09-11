@@ -235,6 +235,7 @@ export function DepositWidget({
               . Circle credits it once {source.name} reaches finality, usually fifteen to twenty minutes.
             </p>
           ) : null}
+          {relayerStatus === "offline" ? <p className="inlet-warn">The relayer at {url} is not answering, so nothing can be submitted right now.</p> : null}
           {state.error ? <p className="inlet-warn">{state.error}</p> : null}
 
           {!signedIn ? (

@@ -207,6 +207,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
             </dl>
           ) : null}
 
+          {relayerStatus === "offline" && !state.quote?.blocker ? <p className="inlet-warn">The relayer at {url} is not answering, so nothing can be submitted right now.</p> : null}
           {state.quote?.blocker ? <p className="inlet-warn">{state.quote.blocker}</p> : null}
           {state.error ? <p className="inlet-warn">{state.error}</p> : null}
 
