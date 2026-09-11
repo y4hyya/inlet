@@ -1,6 +1,6 @@
 {
   "name": "@inletkit/widget",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deposit from any chain into any position. The React widget for Inlet.",
   "license": "MIT",
   "type": "module",
