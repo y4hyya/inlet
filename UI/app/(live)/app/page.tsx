@@ -4,8 +4,8 @@ import { AppView } from "@/components/app/app-view";
 import { Wallpaper } from "@/components/landing/wallpaper";
 
 export const metadata: Metadata = {
-  title: "Try a deposit",
-  description: "Make a real testnet deposit through Arc into Aave, Compound, Morpho or Uniswap, follow one by hash, or replay a recorded run.",
+  title: "Try a deposit, then take it back out",
+  description: "Make a real testnet deposit through Arc into Aave, Compound, Morpho or Uniswap, withdraw it back to the chains you choose, follow either by hash, or replay a recorded run.",
 };
 
 export default function AppPage() {

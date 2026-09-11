@@ -1,10 +1,10 @@
-export const metadata = { title: "Docs", description: "What Inlet is, how a deposit moves, and the three ways to use it: the widget, the SDK, and the MCP server." };
+export const metadata = { title: "Docs", description: "What Inlet is, how a deposit moves, how a withdrawal comes back out, and the three ways to use it: the widget, the SDK, and the MCP server." };
 
 <p className="eyebrow">Start</p>
 
 # Inlet
 
-Inlet delivers native USDC from any chain a user holds it on into a position on the chain a protocol runs on. The user signs once on the source chain. Circle Gateway or CCTP V2 brings the USDC to a per deposit address on Arc, the Inlet hub sweeps it through CCTP to the destination, and the Inlet receiver calls an adapter that makes the protocol deposit for the user.
+Inlet delivers native USDC from any chain a user holds it on into a position on the chain a protocol runs on. The user signs once on the source chain. Circle Gateway or CCTP V2 brings the USDC to a per deposit address on Arc, the Inlet hub sweeps it through CCTP to the destination, and the Inlet receiver calls an adapter that makes the protocol deposit for the user. The way out is the same size: one signature on the position, and the [exit rail](/docs/exit) lands native USDC on the chains the user names.
 
 ## What you get
 

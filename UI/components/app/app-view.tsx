@@ -201,9 +201,9 @@ export function AppView() {
       <div className={styles.head}>
         <div className={styles.intro}>
           <p className="eyebrow">Live on testnet</p>
-          <h1 className={styles.title}>Try a deposit.</h1>
+          <h1 className={styles.title}>Try a deposit. Then take it back out.</h1>
           <p className={styles.sub}>
-            Real USDC on Base Sepolia, Arbitrum Sepolia or Unichain Sepolia, settled through Arc. Log in with an email or a wallet, pick a destination, sign once, and watch it move. Testnet USDC comes from{" "}
+            Real USDC settled through Arc. Log in with an email or a wallet, pick a destination, sign once, and watch it move. Flip to Withdraw and one more signature lands it on the chains you name. Testnet USDC comes from{" "}
             <a href="https://faucet.circle.com" target="_blank" rel="noreferrer">
               Circle&apos;s faucet
             </a>

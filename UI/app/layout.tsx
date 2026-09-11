@@ -16,11 +16,11 @@ export const metadata: Metadata = {
   title: { default: site.name, template: `%s · ${site.name}` },
   description: site.description,
   openGraph: {
-    title: `${site.name}, ${site.tagline.toLowerCase()}`,
+    title: `${site.name}, from any chain into any position and back`,
     description: site.description,
     siteName: site.name,
     type: "website",
-    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Inlet, from any chain into any position" }],
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Inlet, from any chain into any position and back" }],
   },
   twitter: { card: "summary_large_image", images: ["/og.jpg"] },
 };
