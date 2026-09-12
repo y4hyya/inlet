@@ -55,7 +55,7 @@ export const hubDomain = 26;
 export const arcGatewayMinter = testnetChains.arcTestnet.gatewayMinter as Address;
 export const arcUsdc = testnetChains.arcTestnet.usdc as Address;
 
-export const defaultSources: SourceChain[] = testnetSources.filter((entry) => entry.kind === "evm");
+export const defaultSources: SourceChain[] = testnetSources;
 
 /// A vault that implements EIP 2612 becomes withdrawable by naming the InletExit on its chain.
 export function erc4626Destination(params: {

@@ -46,7 +46,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
   const legDomains = useMemo(() => {
     const served = new Set<number>([...(health?.exits ?? []), ...(health?.destinations ?? []), 26]);
     const known = [...served].filter((domain) => explorers[domain] && domain !== destination?.destinationDomain).sort((left, right) => left - right);
-    return known.length > 0 ? known : defaultSources.map((entry) => entry.domain).filter((domain) => domain !== destination?.destinationDomain);
+    return known.length > 0 ? known : defaultSources.filter((entry) => entry.kind === "evm").map((entry) => entry.domain).filter((domain) => domain !== destination?.destinationDomain);
   }, [health, destination?.destinationDomain]);
 
   useEffect(() => {

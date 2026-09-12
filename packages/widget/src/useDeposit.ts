@@ -3,16 +3,23 @@ import {
   GatewayClient,
   InletRelayerClient,
   IrisClient,
+  buildSolanaDepositForBurn,
   burnIntentTypedData,
+  bytes32FromSolanaAddress,
   createBurnIntent,
   gatewayWalletAbi,
   hasGateway,
+  solanaSignatureToBase58,
+  solanaUsdcAccount,
+  solanaUsdcBalance,
   toBytes32,
   tokenMessengerV2Abi,
   type DepositIntent,
   type EvmSource,
   type IntentRecord,
+  type SolanaSource,
 } from "@inletkit/sdk";
+import { address as solanaAddress, createSolanaRpc } from "@solana/kit";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { erc20Abi, parseUnits, type Address, type Hex } from "viem";
 import { useAccount, useConfig } from "wagmi";
@@ -24,8 +31,18 @@ import type { DepositState, Destination, Quote, RoutePreference, SourceChain } f
 
 const terminal = new Set(["executed", "claimable", "refunded", "expired", "failed"]);
 
-export function useDeposit(params: { relayerUrl: string; source: SourceChain; sources: SourceChain[]; destination: Destination }) {
-  const { relayerUrl, source, sources, destination } = params;
+/// The Solana wallet the host connected, and the one call the deposit needs from it.
+export interface SolanaWallet {
+  address: string;
+  signAndSend: (transaction: Uint8Array) => Promise<Uint8Array>;
+}
+
+function solanaCctp(source: SolanaSource) {
+  return { rpc: source.rpc, usdcMint: source.usdc, tokenMessengerMinter: source.tokenMessenger, messageTransmitter: source.messageTransmitter };
+}
+
+export function useDeposit(params: { relayerUrl: string; source: SourceChain; sources: SourceChain[]; destination: Destination; solana?: SolanaWallet }) {
+  const { relayerUrl, source, sources, destination, solana } = params;
   const config = useConfig();
   const { address, chainId } = useAccount();
   const [state, setState] = useState<DepositState>({ phase: "idle" });
@@ -39,9 +56,66 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
 
   const chainFor = useCallback((domain: number) => sources.find((entry) => entry.domain === domain) ?? source, [sources, source]);
 
+  /// Solana has no Gateway and no second chain to move to, so the quote is a plain CCTP burn.
+  const solanaQuote = useCallback(
+    async (target: SolanaSource, sendAmount: bigint): Promise<Quote | undefined> => {
+      if (!solana) {
+        const waiting: Quote = {
+          route: "cctp",
+          sourceDomain: target.domain,
+          sendAmount,
+          intentAmount: sendAmount,
+          circleFee: 0n,
+          walletUsdc: 0n,
+          gatewayAvailable: 0n,
+          gatewayBalances: {},
+          needsGas: false,
+          ready: false,
+          blocker: "Connect a Solana wallet",
+        };
+        setState((previous) => ({ ...previous, phase: "ready", quote: waiting }));
+        return waiting;
+      }
+      setState((previous) => ({ ...previous, phase: "quoting", error: undefined }));
+      try {
+        const [walletUsdc, sol, maxFee] = await Promise.all([
+          solanaUsdcBalance(solanaCctp(target), solana.address),
+          createSolanaRpc(target.rpc).getBalance(solanaAddress(solana.address)).send(),
+          iris.fastTransferMaxFee(target.domain, hubDomain, sendAmount),
+        ]);
+        const needsGas = sol.value === 0n;
+        const enough = walletUsdc >= sendAmount;
+        const next: Quote = {
+          route: "cctp",
+          sourceDomain: target.domain,
+          sendAmount,
+          intentAmount: sendAmount - maxFee,
+          circleFee: maxFee,
+          walletUsdc,
+          gatewayAvailable: 0n,
+          gatewayBalances: {},
+          needsGas,
+          ready: enough && !needsGas && Boolean(address),
+          blocker: !enough
+            ? `Not enough USDC in the wallet on ${target.name}.`
+            : needsGas
+              ? `This route needs a little SOL on ${target.name} to pay for the transaction.`
+              : !address
+                ? "Log in so the position has an EVM address"
+                : undefined,
+        };
+        setState((previous) => ({ ...previous, phase: "ready", quote: next }));
+        return next;
+      } catch (error) {
+        setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
+        return undefined;
+      }
+    },
+    [address, solana, iris],
+  );
+
   const quote = useCallback(
     async (amountInput: string, preference: RoutePreference): Promise<Quote | undefined> => {
-      if (!address) return undefined;
       let sendAmount: bigint;
       try {
         sendAmount = parseUnits(amountInput || "0", 6);
@@ -49,6 +123,8 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         return undefined;
       }
       if (sendAmount <= 0n) return undefined;
+      if (source.kind === "solana") return solanaQuote(source, sendAmount);
+      if (!address) return undefined;
       setState((previous) => ({ ...previous, phase: "quoting", error: undefined }));
       try {
         const gatewayChains = sources.filter(hasGateway);
@@ -108,7 +184,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         return undefined;
       }
     },
-    [address, config, source, sources, chainFor, gateway, iris],
+    [address, config, source, sources, chainFor, gateway, iris, solanaQuote],
   );
 
   const track = useCallback(
@@ -156,12 +232,57 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
     [config, waitForAllowance],
   );
 
+  /// The position lives on an EVM chain, so the owner and the beneficiary stay the EVM address
+  /// and only the refund comes back to the USDC account that paid.
+  const depositFromSolana = useCallback(
+    async (current: Quote, target: SolanaSource) => {
+      if (!address || !solana) return;
+      try {
+        setState({ phase: "creating", quote: current });
+        const cctp = solanaCctp(target);
+        const intent: DepositIntent = {
+          owner: address,
+          sourceDomain: target.domain,
+          destinationDomain: destination.destinationDomain,
+          adapterId: destination.adapterId,
+          receiver: toBytes32(destination.receiver),
+          beneficiary: toBytes32(address),
+          adapterData: destination.adapterData({ beneficiary: address, amount: current.intentAmount }),
+          amount: current.intentAmount,
+          nonce: BigInt(Date.now()),
+          deadline: BigInt(Math.floor(Date.now() / 1000) + 2 * 3600),
+          refundRecipient: bytes32FromSolanaAddress(await solanaUsdcAccount(solana.address, cctp.usdcMint)),
+          feeBps: 0,
+        };
+        const record: IntentRecord = await relayer.createIntent(intent, "cctp");
+        setState({ phase: "signing", quote: current, record });
+        const { transaction } = await buildSolanaDepositForBurn({
+          cctp,
+          owner: solana.address,
+          amount: current.sendAmount,
+          destinationDomain: hubDomain,
+          mintRecipient: record.depositAddress,
+          maxFee: current.circleFee,
+          minFinalityThreshold: 1000,
+        });
+        setState({ phase: "sending", quote: current, record });
+        const sourceTx = solanaSignatureToBase58(await solana.signAndSend(transaction));
+        await relayer.reportSourceTransaction(record.hash, sourceTx);
+        setState({ phase: "tracking", quote: current, record, sourceTx });
+        track(record.hash);
+      } catch (error) {
+        setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
+      }
+    },
+    [address, destination, relayer, solana, track],
+  );
+
   const deposit = useCallback(
     async (current: Quote) => {
       if (!address || !current.ready) return;
       const target = chainFor(current.sourceDomain);
+      if (target.kind === "solana") return depositFromSolana(current, target);
       try {
-        if (target.kind !== "evm") throw new Error(`${target.name} is not a deposit source yet.`);
         setState({ phase: "creating", quote: current });
         const intent: DepositIntent = {
           owner: address,
@@ -222,7 +343,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
       }
     },
-    [address, config, destination, relayer, chainFor, ensureChain, approveIfNeeded, track],
+    [address, config, destination, relayer, chainFor, ensureChain, approveIfNeeded, track, depositFromSolana],
   );
 
   const fundGateway = useCallback(

@@ -1,4 +1,5 @@
 import { PrivyProvider, useModalStatus, usePrivy, type ConnectedWallet } from "@privy-io/react-auth";
+import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo, type ComponentProps, type ReactNode } from "react";
@@ -55,13 +56,14 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
       ({
         loginMethods: ["email", "wallet"],
         embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" }, solana: { createOnLogin: "off" } },
+        externalWallets: { solana: { connectors: toSolanaWalletConnectors() } },
         defaultChain: baseSepolia,
         supportedChains: [...chains],
         appearance: {
           theme: appearance.theme ?? "light",
           accentColor: appearance.accentColor ?? "#0f6fff",
           logo: appearance.logo,
-          walletChainType: "ethereum-only",
+          walletChainType: "ethereum-and-solana",
           walletList: ["metamask", "detected_ethereum_wallets", "rainbow", "phantom", "uniswap", "wallet_connect_qr"],
         },
       }) satisfies ComponentProps<typeof PrivyProvider>["config"],
@@ -83,7 +85,7 @@ function Bridge({ relayerUrl, children }: { relayerUrl: string; children: ReactN
   const { login, logout, ready, authenticated } = usePrivy();
   const { isOpen } = useModalStatus();
   const value = useMemo(
-    () => ({ relayerUrl, login, logout, ready, authenticated, connecting: isOpen }),
+    () => ({ relayerUrl, login, logout, ready, authenticated, connecting: isOpen, privy: true }),
     [relayerUrl, login, logout, ready, authenticated, isOpen],
   );
   return <InletContext.Provider value={value}>{children}</InletContext.Provider>;

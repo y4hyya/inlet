@@ -7,9 +7,10 @@ import { useInlet } from "../context.js";
 import { short, usdc } from "../format.js";
 import { isSignedIn } from "../session.js";
 import type { Destination, RoutePreference, SourceChain } from "../types.js";
-import { useDeposit } from "../useDeposit.js";
+import { useDeposit, type SolanaWallet } from "../useDeposit.js";
 import { useRelayerHealth } from "../useRelayerHealth.js";
 import { AccountPill } from "./AccountPill.js";
+import { SolanaWalletRow } from "./SolanaWalletRow.js";
 import { StatusTimeline } from "./StatusTimeline.js";
 
 export interface DepositWidgetProps {
@@ -27,7 +28,7 @@ export interface DepositWidgetProps {
 export function DepositWidget({
   destinations,
   relayerUrl,
-  sources = defaultSources,
+  sources: offered = defaultSources,
   defaultAmount = "1",
   defaultDestinationId,
   title = "Deposit from any chain",
@@ -39,6 +40,9 @@ export function DepositWidget({
   const { address, chainId, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
   const signedIn = isSignedIn({ address, authenticated: inlet.authenticated, isConnected });
+  // Solana wallets come through Privy, so a host that brings only wagmi sees the EVM sources.
+  const sources = inlet.privy ? offered : offered.filter((entry) => entry.kind === "evm");
+  const [solana, setSolana] = useState<SolanaWallet | undefined>();
 
   const [destinationId, setDestinationId] = useState(destinations.find((entry) => entry.id === defaultDestinationId)?.id ?? destinations[0]?.id);
   const [sourceDomain, setSourceDomain] = useState(sources[0]?.domain);
@@ -52,14 +56,19 @@ export function DepositWidget({
   const gatewayHere = hasGateway(source);
   const routes: RoutePreference[] = gatewayHere ? ["auto", "gateway", "cctp"] : ["cctp"];
   const route = gatewayHere ? preference : "cctp";
-  const { state, quote, deposit, fundGateway, reset } = useDeposit({ relayerUrl: url, source, sources, destination });
+  const { state, quote, deposit, fundGateway, reset } = useDeposit({ relayerUrl: url, source, sources, destination, solana });
   const [gatewayTx, setGatewayTx] = useState<string>();
   const [moved, setMoved] = useState<SourceChain | undefined>();
   const chainName = (domain: number) => sources.find((entry) => entry.domain === domain)?.name ?? `domain ${domain}`;
 
+  // Following the wallet's network only makes sense while the From list is on an EVM chain.
   useEffect(() => {
     const connected = sources.find((entry) => entry.kind === "evm" && entry.chainId === chainId);
-    if (connected) setSourceDomain(connected.domain);
+    if (!connected) return;
+    setSourceDomain((current) => {
+      const selected = sources.find((entry) => entry.domain === current);
+      return selected && selected.kind !== "evm" ? current : connected.domain;
+    });
   }, [chainId, sources]);
 
   const phase = useRef(state.phase);
@@ -169,6 +178,7 @@ export function DepositWidget({
               ))}
             </select>
           </label>
+          {source.kind === "solana" ? <SolanaWalletRow busy={busy} onChange={setSolana} /> : null}
           <label className="inlet-field">
             <span>Amount</span>
             <input id="inlet-amount" name="amount" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} disabled={busy} />
@@ -185,7 +195,7 @@ export function DepositWidget({
             <dl className={`inlet-quote ${quoting ? "inlet-quote-stale" : ""}`}>
               <div>
                 <dt>Route</dt>
-                <dd>{state.quote.route === "gateway" ? `Gateway from your ${chainName(state.quote.sourceDomain)} balance, one signature, no gas, no network switch` : `CCTP fast transfer from ${chainName(state.quote.sourceDomain)}, approve and burn`}</dd>
+                <dd>{state.quote.route === "gateway" ? `Gateway from your ${chainName(state.quote.sourceDomain)} balance, one signature, no gas, no network switch` : `CCTP fast transfer from ${chainName(state.quote.sourceDomain)}, ${source.kind === "solana" ? "one transaction" : "approve and burn"}`}</dd>
               </div>
               <div>
                 <dt>You send</dt>
@@ -203,10 +213,12 @@ export function DepositWidget({
                 <dt>Wallet USDC</dt>
                 <dd>{usdc(state.quote.walletUsdc)}</dd>
               </div>
-              <div>
-                <dt>Gateway balances</dt>
-                <dd>{sources.filter(hasGateway).map((entry) => `${entry.name} ${usdc(state.quote!.gatewayBalances[entry.domain] ?? 0n)}`).join(", ")}</dd>
-              </div>
+              {Object.keys(state.quote.gatewayBalances).length > 0 ? (
+                <div>
+                  <dt>Gateway balances</dt>
+                  <dd>{sources.filter(hasGateway).map((entry) => `${entry.name} ${usdc(state.quote!.gatewayBalances[entry.domain] ?? 0n)}`).join(", ")}</dd>
+                </div>
+              ) : null}
               {destination?.price && price ? (
                 <div>
                   <dt>Pool price now</dt>

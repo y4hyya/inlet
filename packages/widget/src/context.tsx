@@ -10,6 +10,8 @@ export interface InletContextValue {
   authenticated?: boolean;
   // True while the host's own connect flow is on screen, so we do not ask the wallet twice.
   connecting?: boolean;
+  // True under InletProvider, where Privy can connect Solana wallets.
+  privy?: boolean;
 }
 
 export const InletContext = createContext<InletContextValue>({ relayerUrl: "", ready: true });

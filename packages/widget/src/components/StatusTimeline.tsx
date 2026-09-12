@@ -1,4 +1,4 @@
-import type { IntentRecord } from "@inletkit/sdk";
+import { explorerLink, type IntentRecord } from "@inletkit/sdk";
 import { explorers } from "../config.js";
 import { short } from "../format.js";
 import type { Destination } from "../types.js";
@@ -53,7 +53,7 @@ export function StatusTimeline({ record, destination, sourceExplorer }: { record
       {sourceExplorer && record.sourceTx ? (
         <li className="inlet-step inlet-step-note">
           Source burn{" "}
-          <a className="inlet-step-link" href={sourceExplorer + record.sourceTx} target="_blank" rel="noreferrer">
+          <a className="inlet-step-link" href={explorerLink(record.intent.sourceDomain, record.sourceTx)} target="_blank" rel="noreferrer">
             {short(record.sourceTx)}
           </a>
         </li>

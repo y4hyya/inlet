@@ -61,7 +61,7 @@ export interface DepositState {
   phase: Phase;
   quote?: Quote;
   record?: IntentRecord;
-  sourceTx?: Hex;
+  sourceTx?: string;
   error?: string;
 }
 
