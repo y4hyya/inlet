@@ -18,6 +18,7 @@ import {
   findSourceSpec,
   gatewayMaxFee,
   gatewayWalletAbi,
+  hasGateway,
   hashExit,
   inletExitAbi,
   maxFeeBpsFor,
@@ -40,7 +41,7 @@ import {
 } from "@inletkit/sdk";
 import { createPublicClient, createWalletClient, encodeFunctionData, erc20Abi, formatUnits, http, parseUnits, type Address, type Chain, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { arbitrumSepolia, baseSepolia, sepolia, unichainSepolia } from "viem/chains";
+import { arbitrumSepolia, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 import { z } from "zod";
 import { chainName, chainNames, legLabel, short } from "./timeline.js";
 
@@ -51,8 +52,14 @@ const gateway = new GatewayClient(testnetChains.circle.gatewayApi);
 const hubDomain = 26;
 const rawKey = process.env.INLET_PRIVATE_KEY?.trim();
 const account = rawKey ? privateKeyToAccount((rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`) as Hex) : undefined;
-const chains: Record<number, Chain> = { 6: baseSepolia, 3: arbitrumSepolia, 10: unichainSepolia, 0: sepolia };
-const rpcs: Record<number, string> = { 6: testnetChains.baseSepolia.rpc, 3: testnetChains.arbitrumSepolia.rpc };
+const chains: Record<number, Chain> = { 0: sepolia, 3: arbitrumSepolia, 6: baseSepolia, 10: unichainSepolia, 15: monadTestnet };
+const rpcs: Record<number, string> = {
+  0: testnetChains.ethereumSepolia.rpc,
+  3: testnetChains.arbitrumSepolia.rpc,
+  6: testnetChains.baseSepolia.rpc,
+  10: testnetChains.unichainSepolia.rpc,
+  15: testnetChains.monadTestnet.rpc,
+};
 
 const address = z.string().regex(/^0x[0-9a-fA-F]{40}$/, "an EVM address");
 const hex = z.string().regex(/^0x[0-9a-fA-F]*$/, "hex bytes");
@@ -87,7 +94,7 @@ function onChain(hash?: Hex): string {
 
 function summarize(record: IntentRecord) {
   const destination = testnetDestinations.find((entry) => entry.destinationDomain === record.intent.destinationDomain && entry.adapterId.toLowerCase() === record.intent.adapterId.toLowerCase());
-  const link = (domain: number, hash?: Hex) => (hash && hash !== ("external" as string) ? `${explorers[domain] ?? ""}${hash}` : undefined);
+  const link = (domain: number, hash?: string) => (hash && hash !== "external" ? `${explorers[domain] ?? ""}${hash}` : undefined);
   return {
     hash: record.hash,
     state: record.state,
@@ -130,11 +137,11 @@ server.registerTool(
     if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
     const sendAmount = parseUnits(amountUsdc, 6);
     const who = (depositor ?? account?.address) as Address | undefined;
-    const balances = who ? await gateway.balances(who, [sourceDomain]).catch(() => []) : [];
+    const balances = who && hasGateway(source) ? await gateway.balances(who, [sourceDomain]).catch(() => []) : [];
     const gatewayAvailable = parseUnits(balances[0]?.balance ?? "0", 6);
     const gatewayFee = gatewayMaxFee(sourceDomain, sendAmount);
     const cctpFee = await iris.fastTransferMaxFee(sourceDomain, hubDomain, sendAmount);
-    const gatewayPossible = gatewayAvailable >= sendAmount + gatewayFee;
+    const gatewayPossible = hasGateway(source) && gatewayAvailable >= sendAmount + gatewayFee;
     const chosen: Route = route === "auto" ? (gatewayPossible ? "gateway" : "cctp") : route;
     return text({
       route: chosen,
@@ -188,6 +195,8 @@ server.registerTool(
   async (params) => {
     const source = findSourceSpec(params.sourceDomain);
     if (!source) return text(`unknown source domain ${params.sourceDomain}; call list_sources`);
+    if (source.kind !== "evm") return text(`${source.name} is not an EVM chain, so this tool cannot build its transactions yet`);
+    if (params.route === "gateway" && !hasGateway(source)) return text(`${source.name} has no Circle Gateway, so this deposit has to use the cctp route`);
     const { intent, sendAmount, maxFee, destination } = await buildIntent({ ...params, owner: params.owner as Address, beneficiary: params.beneficiary as Address | undefined });
     const record = await relayer.createIntent(intent, params.route);
     const next =
@@ -213,7 +222,7 @@ server.registerTool(
                 depositor: params.owner as Address,
                 recipient: record.depositAddress,
                 value: sendAmount,
-                maxBlockHeight: (await createPublicClient({ chain: chains[source.domain], transport: http(source.domain === 6 ? testnetChains.baseSepolia.rpc : undefined) }).getBlockNumber()) + GATEWAY_EXPIRY_BLOCKS,
+                maxBlockHeight: (await createPublicClient({ chain: chains[source.domain], transport: http(rpcs[source.domain]) }).getBlockNumber()) + GATEWAY_EXPIRY_BLOCKS,
               }),
             ),
             purpose: "sign this EIP 712 BurnIntent with the owner's wallet and call submit_gateway_intent with the burnIntent and the signature",
@@ -270,14 +279,16 @@ if (account) {
     async ({ sourceDomain, destinationId, amountUsdc, route, beneficiary, waitSeconds }, extra) => {
       const source = findSourceSpec(sourceDomain);
       if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
+      if (source.kind !== "evm") return text(`${source.name} is not an EVM chain, so the configured wallet cannot deposit from it yet`);
+      if (route === "gateway" && !hasGateway(source)) return text(`${source.name} has no Circle Gateway, so this deposit has to use the cctp route`);
       const report = reporter(extra, 6);
       const chain = chains[sourceDomain];
-      const transport = http();
+      const transport = http(rpcs[sourceDomain]);
       const publicClient = createPublicClient({ chain, transport });
       const walletClient = createWalletClient({ account, chain, transport });
       const sendAmount = parseUnits(amountUsdc, 6);
       let chosen: Route = route === "cctp" || route === "gateway" ? route : "cctp";
-      if (route === "auto") {
+      if (route === "auto" && hasGateway(source)) {
         const balances = await gateway.balances(account.address, [sourceDomain]).catch(() => []);
         const available = parseUnits(balances[0]?.balance ?? "0", 6);
         chosen = available >= sendAmount + gatewayMaxFee(sourceDomain, sendAmount) ? "gateway" : "cctp";
@@ -368,9 +379,11 @@ if (account) {
     async ({ sourceDomain, amountUsdc }) => {
       const source = findSourceSpec(sourceDomain);
       if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
+      if (source.kind !== "evm") return text(`${source.name} is not an EVM chain, so the configured wallet cannot fund a Gateway balance there yet`);
+      if (!hasGateway(source)) return text(`${source.name} has no Circle Gateway, so there is no balance to fund`);
       const chain = chains[sourceDomain];
-      const publicClient = createPublicClient({ chain, transport: http() });
-      const walletClient = createWalletClient({ account, chain, transport: http() });
+      const publicClient = createPublicClient({ chain, transport: http(rpcs[sourceDomain]) });
+      const walletClient = createWalletClient({ account, chain, transport: http(rpcs[sourceDomain]) });
       const amount = parseUnits(amountUsdc, 6);
       const approve = await walletClient.writeContract({ address: source.usdc, abi: erc20Abi, functionName: "approve", args: [source.gatewayWallet, amount] });
       await publicClient.waitForTransactionReceipt({ hash: approve });

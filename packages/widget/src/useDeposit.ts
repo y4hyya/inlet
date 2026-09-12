@@ -6,9 +6,11 @@ import {
   burnIntentTypedData,
   createBurnIntent,
   gatewayWalletAbi,
+  hasGateway,
   toBytes32,
   tokenMessengerV2Abi,
   type DepositIntent,
+  type EvmSource,
   type IntentRecord,
 } from "@inletkit/sdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -49,13 +51,15 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
       if (sendAmount <= 0n) return undefined;
       setState((previous) => ({ ...previous, phase: "quoting", error: undefined }));
       try {
-        const balances = await gateway.balances(address, sources.map((entry) => entry.domain)).catch(() => []);
+        const gatewayChains = sources.filter(hasGateway);
+        const balances = gatewayChains.length ? await gateway.balances(address, gatewayChains.map((entry) => entry.domain)).catch(() => []) : [];
         const gatewayBalances: Record<number, bigint> = {};
-        for (const entry of sources) gatewayBalances[entry.domain] = 0n;
+        for (const entry of gatewayChains) gatewayBalances[entry.domain] = 0n;
         for (const entry of balances) gatewayBalances[entry.domain] = parseUnits(entry.balance ?? "0", 6);
 
         const plan = planRoute({ preference, source, sources, sendAmount, gatewayBalances });
         const chosen = chainFor(plan.sourceDomain);
+        if (chosen.kind !== "evm") throw new Error(`${chosen.name} is not a deposit source yet.`);
         const [walletUsdc, eth] = await Promise.all([
           readContract(config, { chainId: chosen.chainId, address: chosen.usdc, abi: erc20Abi, functionName: "balanceOf", args: [address] }),
           getBalance(config, { chainId: chosen.chainId, address }),
@@ -124,14 +128,14 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   );
 
   const ensureChain = useCallback(
-    async (target: SourceChain) => {
+    async (target: EvmSource) => {
       if (chainId !== target.chainId) await switchChain(config, { chainId: target.chainId });
     },
     [config, chainId],
   );
 
   const waitForAllowance = useCallback(
-    async (target: SourceChain, owner: Address, spender: Address, amount: bigint) => {
+    async (target: EvmSource, owner: Address, spender: Address, amount: bigint) => {
       for (let attempt = 0; attempt < 30; attempt++) {
         const visible = await readContract(config, { chainId: target.chainId, address: target.usdc, abi: erc20Abi, functionName: "allowance", args: [owner, spender] });
         if (visible >= amount) return;
@@ -142,7 +146,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   );
 
   const approveIfNeeded = useCallback(
-    async (target: SourceChain, owner: Address, spender: Address, amount: bigint) => {
+    async (target: EvmSource, owner: Address, spender: Address, amount: bigint) => {
       const allowance = await readContract(config, { chainId: target.chainId, address: target.usdc, abi: erc20Abi, functionName: "allowance", args: [owner, spender] });
       if (allowance >= amount) return;
       const approve = await writeContract(config, { chainId: target.chainId, account: owner, address: target.usdc, abi: erc20Abi, functionName: "approve", args: [spender, amount] });
@@ -157,6 +161,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
       if (!address || !current.ready) return;
       const target = chainFor(current.sourceDomain);
       try {
+        if (target.kind !== "evm") throw new Error(`${target.name} is not a deposit source yet.`);
         setState({ phase: "creating", quote: current });
         const intent: DepositIntent = {
           owner: address,
@@ -231,6 +236,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
       }
       if (amount <= 0n) return undefined;
       try {
+        if (source.kind !== "evm" || !hasGateway(source)) throw new Error(`There is no Circle Gateway on ${source.name}.`);
         setState((previous) => ({ ...previous, phase: "signing", error: undefined }));
         await ensureChain(source);
         await approveIfNeeded(source, address, source.gatewayWallet, amount);
@@ -252,5 +258,5 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
     setState({ phase: "idle" });
   }, []);
 
-  return { state, quote, deposit, fundGateway, reset, address, chainId, connectedToSource: chainId === source.chainId };
+  return { state, quote, deposit, fundGateway, reset, address, chainId, connectedToSource: source.kind === "evm" && chainId === source.chainId };
 }

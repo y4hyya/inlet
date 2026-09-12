@@ -1,4 +1,4 @@
-import type { Address, Hex } from "viem";
+import { zeroAddress, type Address, type Hex } from "viem";
 import { aaveV3ExitData, compoundV3ExitData, erc4626ExitData } from "./exit.js";
 import { testnetChains } from "./generated/chains.js";
 import { testnetDeployments } from "./generated/deployments.js";
@@ -9,6 +9,7 @@ import type { PermitKind } from "./types.js";
 export const explorers: Record<number, string> = {
   0: "https://sepolia.etherscan.io/tx/",
   3: "https://sepolia.arbiscan.io/tx/",
+  5: "https://explorer.solana.com/tx/",
   6: "https://sepolia.basescan.org/tx/",
   10: "https://sepolia.uniscan.xyz/tx/",
   15: "https://testnet.monadexplorer.com/tx/",
@@ -57,7 +58,8 @@ function exitOn(chain: string, spec: Omit<DestinationExit, "exitContract" | "ada
   return exitContract ? { ...spec, adapterId: exitAdapterIds[spec.adapterName], exitContract } : undefined;
 }
 
-export interface SourceSpec {
+export interface EvmSource {
+  kind: "evm";
   domain: number;
   chainId: number;
   name: string;
@@ -66,6 +68,20 @@ export interface SourceSpec {
   gatewayWallet: Address;
   explorer: string;
 }
+
+export interface SolanaSource {
+  kind: "solana";
+  domain: number;
+  name: string;
+  usdc: string;
+  tokenMessenger: string;
+  messageTransmitter: string;
+  explorer: string;
+  cluster: "devnet" | "mainnet-beta";
+  rpc: string;
+}
+
+export type SourceSpec = EvmSource | SolanaSource;
 
 export const unichainEthUsdcPool: PoolKey = {
   currency0: "0x0000000000000000000000000000000000000000",
@@ -211,9 +227,10 @@ export const testnetDestinations: DestinationSpec[] = [
   },
 ];
 
-function source(key: "baseSepolia" | "arbitrumSepolia" | "unichainSepolia" | "ethereumSepolia", name: string): SourceSpec {
+function source(key: "baseSepolia" | "arbitrumSepolia" | "unichainSepolia" | "ethereumSepolia" | "monadTestnet", name: string): EvmSource {
   const chain = testnetChains[key];
   return {
+    kind: "evm",
     domain: chain.cctpDomain,
     chainId: chain.chainId,
     name,
@@ -224,12 +241,37 @@ function source(key: "baseSepolia" | "arbitrumSepolia" | "unichainSepolia" | "et
   };
 }
 
+const solana = testnetChains.solanaDevnet;
+
 export const testnetSources: SourceSpec[] = [
   source("baseSepolia", "Base Sepolia"),
   source("arbitrumSepolia", "Arbitrum Sepolia"),
   source("unichainSepolia", "Unichain Sepolia"),
   source("ethereumSepolia", "Ethereum Sepolia"),
+  source("monadTestnet", "Monad Testnet"),
+  {
+    kind: "solana",
+    domain: solana.cctpDomain,
+    name: "Solana Devnet",
+    usdc: solana.usdc,
+    tokenMessenger: solana.tokenMessengerMinterV2,
+    messageTransmitter: solana.messageTransmitterV2,
+    explorer: solana.explorer,
+    cluster: solana.cluster,
+    rpc: solana.rpc,
+  },
 ];
+
+/// Solana explorer links need the cluster, every other explorer takes the hash alone.
+export function explorerLink(domain: number, hash: string): string {
+  const link = (explorers[domain] ?? "") + hash;
+  return domain === 5 ? `${link}?cluster=devnet` : link;
+}
+
+/// Circle Gateway is not on every chain. The zero address in config means the chain has no GatewayWallet.
+export function hasGateway(source: SourceSpec): boolean {
+  return source.kind === "evm" && source.gatewayWallet.toLowerCase() !== zeroAddress;
+}
 
 export type ExitableDestinationSpec = DestinationSpec & { exit: DestinationExit };
 

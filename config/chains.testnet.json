@@ -70,6 +70,15 @@
     "gatewayWallet": "0x0000000000000000000000000000000000000000",
     "gatewayMinter": "0x0000000000000000000000000000000000000000"
   },
+  "solanaDevnet": {
+    "cctpDomain": 5,
+    "rpc": "https://api.devnet.solana.com",
+    "explorer": "https://explorer.solana.com/tx/",
+    "cluster": "devnet",
+    "usdc": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+    "tokenMessengerMinterV2": "CCTPV2vPZJS2u2BBsUoscuikbYjnpFmbFsvVuJdgUMQe",
+    "messageTransmitterV2": "CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC"
+  },
   "stellarTestnet": {
     "cctpDomain": 27,
     "network": "Test SDF Network ; September 2015",

@@ -1,4 +1,4 @@
-import type { ExitRecord, IntentRecord, PermitKind, Route } from "@inletkit/sdk";
+import type { ExitRecord, IntentRecord, PermitKind, Route, SourceSpec } from "@inletkit/sdk";
 import type { Address, Hex } from "viem";
 
 export interface Destination {
@@ -36,15 +36,7 @@ export interface PriceHint {
   venue: string;
 }
 
-export interface SourceChain {
-  domain: number;
-  chainId: number;
-  name: string;
-  usdc: Address;
-  tokenMessenger: Address;
-  gatewayWallet: Address;
-  explorer: string;
-}
+export type SourceChain = SourceSpec;
 
 export type RoutePreference = Route | "auto";
 

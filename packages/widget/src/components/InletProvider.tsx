@@ -3,10 +3,10 @@ import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo, type ComponentProps, type ReactNode } from "react";
 import { http } from "viem";
-import { arbitrumSepolia, arcTestnet, baseSepolia } from "viem/chains";
+import { arbitrumSepolia, arcTestnet, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 import { InletContext } from "../context.js";
 
-const chains = [baseSepolia, arbitrumSepolia, arcTestnet] as const;
+const chains = [baseSepolia, arbitrumSepolia, unichainSepolia, sepolia, monadTestnet, arcTestnet] as const;
 
 export interface InletAppearance {
   theme?: "light" | "dark" | `#${string}`;
@@ -41,6 +41,9 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
         transports: {
           [baseSepolia.id]: http(rpc[baseSepolia.id]),
           [arbitrumSepolia.id]: http(rpc[arbitrumSepolia.id]),
+          [unichainSepolia.id]: http(rpc[unichainSepolia.id]),
+          [sepolia.id]: http(rpc[sepolia.id]),
+          [monadTestnet.id]: http(rpc[monadTestnet.id]),
           [arcTestnet.id]: http(rpc[arcTestnet.id] ?? "https://rpc.testnet.arc.io"),
         },
       }),

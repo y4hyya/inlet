@@ -1,4 +1,4 @@
-import { InletRelayerClient, type IntentRecord, type UniswapQuote } from "@inletkit/sdk";
+import { InletRelayerClient, hasGateway, type IntentRecord, type UniswapQuote } from "@inletkit/sdk";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useConnect } from "wagmi";
@@ -49,13 +49,16 @@ export function DepositWidget({
 
   const destination = destinations.find((entry) => entry.id === destinationId) ?? destinations[0];
   const source = sources.find((entry) => entry.domain === sourceDomain) ?? sources[0];
+  const gatewayHere = hasGateway(source);
+  const routes: RoutePreference[] = gatewayHere ? ["auto", "gateway", "cctp"] : ["cctp"];
+  const route = gatewayHere ? preference : "cctp";
   const { state, quote, deposit, fundGateway, reset } = useDeposit({ relayerUrl: url, source, sources, destination });
   const [gatewayTx, setGatewayTx] = useState<string>();
   const [moved, setMoved] = useState<SourceChain | undefined>();
   const chainName = (domain: number) => sources.find((entry) => entry.domain === domain)?.name ?? `domain ${domain}`;
 
   useEffect(() => {
-    const connected = sources.find((entry) => entry.chainId === chainId);
+    const connected = sources.find((entry) => entry.kind === "evm" && entry.chainId === chainId);
     if (connected) setSourceDomain(connected.domain);
   }, [chainId, sources]);
 
@@ -78,7 +81,7 @@ export function DepositWidget({
     if (!signedIn || !address) return;
     const handle = setTimeout(() => {
       if (["creating", "signing", "sending", "tracking", "done"].includes(phase.current)) return;
-      void quote(amount, preference).then((next) => {
+      void quote(amount, route).then((next) => {
         if (!next || next.sourceDomain === source.domain) return;
         const target = sources.find((entry) => entry.domain === next.sourceDomain);
         if (!target) return;
@@ -87,7 +90,7 @@ export function DepositWidget({
       });
     }, 400);
     return () => clearTimeout(handle);
-  }, [amount, preference, signedIn, address, source, sources, destination, quote]);
+  }, [amount, route, signedIn, address, source, sources, destination, quote]);
 
   const [price, setPrice] = useState<{ quote: UniswapQuote; amount: string } | undefined>();
   useEffect(() => {
@@ -171,8 +174,8 @@ export function DepositWidget({
             <input id="inlet-amount" name="amount" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} disabled={busy} />
           </label>
           <div className="inlet-routes">
-            {(["auto", "gateway", "cctp"] as RoutePreference[]).map((option) => (
-              <button key={option} type="button" className={`inlet-chip ${preference === option ? "inlet-chip-on" : ""}`} onClick={() => setPreference(option)} disabled={busy}>
+            {routes.map((option) => (
+              <button key={option} type="button" className={`inlet-chip ${route === option ? "inlet-chip-on" : ""}`} onClick={() => setPreference(option)} disabled={busy}>
                 {option === "auto" ? "Best route" : option === "gateway" ? "Gateway" : "CCTP"}
               </button>
             ))}
@@ -202,7 +205,7 @@ export function DepositWidget({
               </div>
               <div>
                 <dt>Gateway balances</dt>
-                <dd>{sources.map((entry) => `${entry.name} ${usdc(state.quote!.gatewayBalances[entry.domain] ?? 0n)}`).join(", ")}</dd>
+                <dd>{sources.filter(hasGateway).map((entry) => `${entry.name} ${usdc(state.quote!.gatewayBalances[entry.domain] ?? 0n)}`).join(", ")}</dd>
               </div>
               {destination?.price && price ? (
                 <div>
@@ -216,7 +219,7 @@ export function DepositWidget({
             </dl>
           ) : null}
 
-          {moved && preference === "auto" && state.quote?.sourceDomain === moved.domain ? <p className="inlet-note">Switched From to {moved.name}, where your Gateway balance is. Your wallet stays on its current network.</p> : null}
+          {moved && route === "auto" && state.quote?.sourceDomain === moved.domain ? <p className="inlet-note">Switched From to {moved.name}, where your Gateway balance is. Your wallet stays on its current network.</p> : null}
           {state.quote?.blocker ? <p className="inlet-warn">{state.quote.blocker}</p> : null}
           {state.quote?.gatewayElsewhere !== undefined ? (
             <p className="inlet-warn">
@@ -257,14 +260,16 @@ export function DepositWidget({
               >
                 {state.phase === "creating" ? "Registering intent" : state.phase === "signing" ? "Waiting for your wallet" : state.phase === "sending" ? "Sending" : quoting ? "Quoting" : "Deposit"}
               </button>
-              <button
-                className="inlet-secondary"
-                type="button"
-                disabled={busy || state.phase === "quoting"}
-                onClick={() => void fundGateway(amount).then((tx) => tx && setGatewayTx(tx))}
-              >
-                Add {amount || "0"} USDC to my Gateway balance on {source.name}
-              </button>
+              {gatewayHere ? (
+                <button
+                  className="inlet-secondary"
+                  type="button"
+                  disabled={busy || state.phase === "quoting"}
+                  onClick={() => void fundGateway(amount).then((tx) => tx && setGatewayTx(tx))}
+                >
+                  Add {amount || "0"} USDC to my Gateway balance on {source.name}
+                </button>
+              ) : null}
             </>
           )}
         </div>

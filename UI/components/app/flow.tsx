@@ -1,6 +1,6 @@
 "use client";
 
-import { explorers, type IntentState, type Route } from "@inletkit/sdk";
+import { explorerLink, explorers, type IntentState, type Route } from "@inletkit/sdk";
 import { useLayoutEffect, useRef, useState } from "react";
 import { short } from "@/lib/format";
 import type { Actor } from "@/lib/runs";
@@ -43,7 +43,7 @@ const stations: Station[] = [
     actor: "user",
     label: "Registered",
     title: (view) => (view?.route === "gateway" ? "Gateway burn intent signed" : "CCTP burn from the wallet"),
-    hash: (view) => (view.sourceTx ? { href: explorers[view.sourceDomain] + view.sourceTx, text: short(view.sourceTx) } : undefined),
+    hash: (view) => (view.sourceTx ? { href: explorerLink(view.sourceDomain, view.sourceTx), text: short(view.sourceTx) } : undefined),
   },
   {
     key: "funded",
@@ -114,7 +114,7 @@ export function Flow({ view }: { view: FlowView | undefined }) {
   }, [reached]);
 
   const note = view ? notes[view.state] : undefined;
-  const refundLink = view?.refundMintTx ? { href: explorers[view.sourceDomain] + view.refundMintTx, text: short(view.refundMintTx) } : view?.refundTx ? { href: explorers[26] + view.refundTx, text: short(view.refundTx) } : undefined;
+  const refundLink = view?.refundMintTx ? { href: explorerLink(view.sourceDomain, view.refundMintTx), text: short(view.refundMintTx) } : view?.refundTx ? { href: explorers[26] + view.refundTx, text: short(view.refundTx) } : undefined;
 
   return (
     <div className={styles.flow} data-mode={view?.mode ?? "idle"}>
