@@ -78,6 +78,12 @@ export function DepositWidget({
     if (state.record) onRecord?.(state.record);
   }, [state.record, onRecord]);
 
+  // A host may change the default while the form is idle. The button passes its own amount field through it.
+  useEffect(() => {
+    if (["creating", "signing", "sending", "tracking", "done"].includes(phase.current)) return;
+    setAmount(defaultAmount);
+  }, [defaultAmount]);
+
   // The quote, the record, the notices and any error belong to the session that asked for them.
   useEffect(() => {
     if (signedIn) return;
