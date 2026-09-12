@@ -4,6 +4,7 @@ export * from "./exit.js";
 export * from "./circle.js";
 export * from "./gateway.js";
 export * from "./relayerClient.js";
+export * from "./solana.js";
 export * from "./destinations.js";
 export * from "./generated/abi.js";
 export * from "./generated/chains.js";
