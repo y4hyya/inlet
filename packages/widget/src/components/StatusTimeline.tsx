@@ -5,7 +5,7 @@ import type { Destination } from "../types.js";
 
 const order = ["created", "funded", "swept", "attested", "executed"] as const;
 
-const labels: Record<string, string> = {
+export const depositStateLabels: Record<string, string> = {
   created: "Intent registered, deposit address derived on Arc",
   funded: "USDC landed on Arc",
   swept: "Hub swept and burned toward the destination",
@@ -39,7 +39,7 @@ export function StatusTimeline({ record, destination, sourceExplorer }: { record
         return (
           <li key={step} className={`inlet-step ${done ? "inlet-step-done" : active ? "inlet-step-active" : ""}`}>
             <span className="inlet-step-mark" />
-            <span className="inlet-step-label">{step === "executed" ? `${destination.positionLabel} delivered` : labels[step]}</span>
+            <span className="inlet-step-label">{step === "executed" ? `${destination.positionLabel} delivered` : depositStateLabels[step]}</span>
             {link ? (
               <a className="inlet-step-link" href={link.href} target="_blank" rel="noreferrer">
                 {link.label}
@@ -48,7 +48,7 @@ export function StatusTimeline({ record, destination, sourceExplorer }: { record
           </li>
         );
       })}
-      {finished && record.state !== "executed" ? <li className="inlet-step inlet-step-warn">{labels[record.state]}</li> : null}
+      {finished && record.state !== "executed" ? <li className="inlet-step inlet-step-warn">{depositStateLabels[record.state]}</li> : null}
       {record.error ? <li className="inlet-step inlet-step-warn">{record.error}</li> : null}
       {sourceExplorer && record.sourceTx ? (
         <li className="inlet-step inlet-step-note">

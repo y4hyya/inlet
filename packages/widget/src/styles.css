@@ -173,3 +173,26 @@
     .inlet-overlay:not([hidden]) .inlet.inlet-dialog { opacity: 0; transform: translateY(12px); }
   }
 }
+
+.inlet-flight {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 2px 0 10px;
+  border: 1px solid var(--inlet-line); border-radius: 999px; color: var(--inlet-muted);
+  font: inherit; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums;
+}
+.inlet-flight-text { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: none; background: none; font: inherit; color: inherit; cursor: pointer; white-space: nowrap; }
+.inlet-flight-text:focus-visible, .inlet-flight-link:focus-visible, .inlet-flight-dismiss:focus-visible { outline: 2px solid var(--inlet-accent); outline-offset: 2px; }
+.inlet-flight-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--inlet-accent); }
+.inlet-flight-flying .inlet-flight-dot { animation: inlet-pulse 1.2s ease-in-out infinite; }
+.inlet-flight-done .inlet-flight-dot { background: var(--inlet-done); }
+.inlet-flight-warn .inlet-flight-dot { background: var(--inlet-warn); }
+.inlet-flight-link { color: var(--inlet-accent); text-decoration: none; white-space: nowrap; }
+.inlet-flight-dismiss {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; padding: 8px; border: none; border-radius: 999px;
+  background: transparent; color: var(--inlet-muted); cursor: pointer;
+}
+.inlet-flight-dismiss svg { width: 14px; height: 14px; }
+.inlet-flight-dismiss:hover { color: var(--inlet-fg); }
+@media (prefers-reduced-motion: reduce) {
+  .inlet-flight-flying .inlet-flight-dot { animation: none; }
+}
