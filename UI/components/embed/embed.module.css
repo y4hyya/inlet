@@ -26,7 +26,7 @@
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 440px));
+  grid-template-columns: minmax(0, 640px);
   gap: var(--space-6);
 }
 
