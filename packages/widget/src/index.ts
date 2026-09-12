@@ -2,6 +2,7 @@ export { AccountPill } from "./components/AccountPill.js";
 export { DepositWidget, type DepositWidgetProps } from "./components/DepositWidget.js";
 export { ExitTimeline } from "./components/ExitTimeline.js";
 export { ExitWidget, type ExitWidgetProps } from "./components/ExitWidget.js";
+export { InletButton, type InletButtonProps } from "./components/InletButton.js";
 export { InletWidget, type InletMode, type InletWidgetProps } from "./components/InletWidget.js";
 export { StatusTimeline } from "./components/StatusTimeline.js";
 export { InletProvider, type InletAppearance, type InletProviderProps } from "./components/InletProvider.js";

@@ -27,3 +27,14 @@ const vault = erc4626Destination({
   exitContract: "0xfa6000e83B141bDA1aD067a5a5A32912f43F0258",
 });
 ```
+
+The button is the third shell, for a protocol's own deposit or withdraw page. One button beside the native control opens a dialog with the form for that one destination, and a small pill beside the button follows the deposit or withdrawal after the dialog closes, through a reload as well.
+
+```tsx
+import { InletButton } from "@inletkit/widget";
+
+<InletButton action="deposit" destination={vault} amount={amountTheUserTyped} />
+<InletButton action="withdraw" destination={vault} />
+```
+
+The withdraw button needs a destination that carries `exit`, and renders disabled otherwise. Both work inside `InletProvider`, or inside the host's own wagmi provider with `relayerUrl` passed as a prop.
