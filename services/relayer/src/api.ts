@@ -7,6 +7,8 @@ import type { RelayerConfig } from "./config.js";
 import type { ExitStore, IntentStore, StoredExit, StoredIntent } from "./db.js";
 import { UniswapQuoter } from "./uniswap.js";
 
+const solanaDomain = 5;
+
 export async function buildApp(config: RelayerConfig, chains: Record<number, ChainContext>, store: IntentStore, exits: ExitStore) {
   const app = Fastify({ logger: false });
   const origins = (process.env.CORS_ORIGIN ?? "*").split(",").map((entry) => entry.trim());
@@ -49,10 +51,16 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
     return present(store.insert(hash, intent, route, depositAddress, block));
   });
 
-  app.post<{ Params: { hash: Hex }; Body: { sourceTx: Hex } }>("/intents/:hash/source-tx", async (request, reply) => {
+  app.post<{ Params: { hash: Hex }; Body: { sourceTx: string } }>("/intents/:hash/source-tx", async (request, reply) => {
     const record = store.get(request.params.hash);
     if (!record) return reply.code(404).send({ error: "unknown intent" });
-    return present(store.update(record.hash, { source_tx: request.body.sourceTx }));
+    const sourceTx = request.body?.sourceTx;
+    const solana = record.intent.sourceDomain === solanaDomain;
+    const shape = solana ? /^[1-9A-HJ-NP-Za-km-z]{64,90}$/ : /^0x[0-9a-fA-F]{64}$/;
+    if (typeof sourceTx !== "string" || !shape.test(sourceTx)) {
+      return reply.code(400).send({ error: solana ? "sourceTx must be a base58 Solana transaction signature" : "sourceTx must be a 0x prefixed 32 byte transaction hash" });
+    }
+    return present(store.update(record.hash, { source_tx: sourceTx }));
   });
 
   app.post<{ Params: { hash: Hex }; Body: { burnIntent: Record<string, unknown>; signature: Hex } }>("/intents/:hash/gateway", async (request, reply) => {

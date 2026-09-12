@@ -40,7 +40,7 @@ export interface BurnFee {
 export class IrisClient {
   constructor(private readonly baseUrl: string) {}
 
-  async getMessages(sourceDomain: number, transactionHash: Hex): Promise<IrisMessage[]> {
+  async getMessages(sourceDomain: number, transactionHash: string): Promise<IrisMessage[]> {
     const response = await fetch(
       `${this.baseUrl}/v2/messages/${sourceDomain}?transactionHash=${transactionHash}`,
     );

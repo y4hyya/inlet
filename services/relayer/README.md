@@ -27,6 +27,12 @@ States: created, funded, swept, attested, executed, claimable, refunding, refund
 
 An exit is signed once the relayer has the owner's approval, executed once the position has been redeemed and burned on the position chain, attested once Circle has signed every leg, and delivered once every leg has been minted on its chain.
 
+## Solana as a source
+
+Solana Devnet is CCTP domain 5, and a deposit that starts there follows the same road as any other. The client burns USDC on Solana with the CCTP V2 `depositForBurn` toward Arc, naming the deposit address the hub derived for the intent as the mint recipient, then reports the transaction signature through `POST /intents/:hash/source-tx` in base58 rather than as a 0x hash. The relayer asks Iris for the message by domain 5 and that signature, receives it on Arc, and everything after that is unchanged: the hub is swept, Circle attests the burn, and the adapter runs on the destination chain. The relayer never calls Solana for a deposit.
+
+Refunds are the one place the road ends early. The hub burns the USDC back from Arc toward the depositor's USDC token account on Solana and Circle attests that burn as usual, but the relayer holds no Solana signer, so the closing `receiveMessage` on Solana is done by the depositor, or by anyone else willing to carry Circle's attestation. The relayer records such a refund with `refund_mint_tx` set to `manual`, leaves the intent in `refunding`, logs it once, and never retries it.
+
 ## End to end on testnet
 
 `pnpm e2e` burns one USDC on the source chain, routes it through Arc, and deposits it into the chosen destination, printing every transaction hash. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without a source chain wait. Both scripts read `DESTINATION` (one of the keys in `scripts/destinations.ts`, default `demo-vault`), `SOURCE` (a CCTP domain, default 6 for Base Sepolia), `E2E_AMOUNT` in USDC units, `USER_PRIVATE_KEY` for the depositing wallet, and `RELAYER_URL` to use a hosted relayer instead of starting one.

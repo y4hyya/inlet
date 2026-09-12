@@ -42,7 +42,7 @@ export class InletRelayerClient {
     return this.request("POST", "/intents", { intent: serializeIntent(intent), route });
   }
 
-  async reportSourceTransaction(hash: Hex, sourceTx: Hex): Promise<IntentRecord> {
+  async reportSourceTransaction(hash: Hex, sourceTx: string): Promise<IntentRecord> {
     return this.request("POST", `/intents/${hash}/source-tx`, { sourceTx });
   }
 

@@ -35,12 +35,12 @@ export interface IntentRecord {
   route: Route;
   intent: DepositIntent;
   depositAddress: Address;
-  sourceTx?: Hex;
+  sourceTx?: string;
   arcMintTx?: Hex;
   sweepTx?: Hex;
   destinationTx?: Hex;
   refundTx?: Hex;
-  refundMintTx?: Hex;
+  refundMintTx?: string;
   result?: string;
   error?: string;
   createdAt: number;

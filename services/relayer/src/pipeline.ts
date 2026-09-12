@@ -32,7 +32,7 @@ export class Pipeline {
     for (const record of this.store.listByState(["funded"])) await this.guarded(record, () => this.sweep(record));
     for (const record of this.store.listByState(["swept"])) await this.guarded(record, () => this.attest(record));
     for (const record of this.store.listByState(["attested"])) await this.guarded(record, () => this.execute(record));
-    for (const record of this.store.listByState(["refunding"])) await this.guarded(record, () => this.completeRefund(record));
+    for (const record of this.store.listByState(["refunding"])) if (!record.refundMintTx) await this.guarded(record, () => this.completeRefund(record));
     for (const record of this.exits.listByState(["signed"])) await this.guardedExit(record, () => this.redeem(record));
     for (const record of this.exits.listByState(["executed"])) await this.guardedExit(record, () => this.attestExit(record));
     for (const record of this.exits.listByState(["attested"])) await this.guardedExit(record, () => this.deliver(record));
@@ -281,7 +281,11 @@ export class Pipeline {
     if (!ready) return;
 
     const source = this.chains[record.intent.sourceDomain];
-    if (!source) throw new Error(`no client for source domain ${record.intent.sourceDomain}`);
+    if (!source) {
+      log("pipeline", `${record.hash} refund is attested and waits for the depositor to receive it on domain ${record.intent.sourceDomain}`);
+      this.store.update(record.hash, { refund_mint_tx: "manual", error: null });
+      return;
+    }
     const nonce = slice(ready.message, 12, 44);
     const used = await source.publicClient.readContract({
       address: source.messageTransmitter,
