@@ -8,7 +8,9 @@ import {
   GatewayClient,
   InletRelayerClient,
   IrisClient,
+  buildSolanaDepositForBurn,
   burnIntentTypedData,
+  bytes32FromSolanaAddress,
   cometAbi,
   cometAuthorizationTypedData,
   createBurnIntent,
@@ -28,6 +30,7 @@ import {
   serializeBurnIntent,
   serializeExit,
   serializeIntent,
+  solanaUsdcAccount,
   testnetChains,
   testnetDestinations,
   testnetSources,
@@ -155,7 +158,7 @@ server.registerTool(
   },
 );
 
-async function buildIntent(params: { owner: Address; sourceDomain: number; destinationId: string; amountUsdc: string; route: Route; beneficiary?: Address; deadlineMinutes?: number }) {
+async function buildIntent(params: { owner: Address; sourceDomain: number; destinationId: string; amountUsdc: string; route: Route; beneficiary?: Address; deadlineMinutes?: number; refundRecipient?: Hex }) {
   const destination = findDestinationSpec(params.destinationId);
   if (!destination) throw new Error(`unknown destination ${params.destinationId}; call list_destinations`);
   const sendAmount = parseUnits(params.amountUsdc, 6);
@@ -171,7 +174,7 @@ async function buildIntent(params: { owner: Address; sourceDomain: number; desti
     amount: sendAmount - maxFee,
     nonce: BigInt(Date.now()),
     deadline: BigInt(Math.floor(Date.now() / 1000) + (params.deadlineMinutes ?? 120) * 60),
-    refundRecipient: toBytes32(params.owner),
+    refundRecipient: params.refundRecipient ?? toBytes32(params.owner),
     feeBps: 0,
   };
   return { destination, intent, sendAmount, maxFee };
@@ -190,12 +193,34 @@ server.registerTool(
       route: z.enum(["gateway", "cctp"]),
       beneficiary: address.optional(),
       deadlineMinutes: z.number().int().min(5).max(1440).optional(),
+      solanaOwner: z.string().optional().describe("the Solana wallet that pays when the source is Solana Devnet; owner stays the EVM address that receives the position"),
     },
   },
   async (params) => {
     const source = findSourceSpec(params.sourceDomain);
     if (!source) return text(`unknown source domain ${params.sourceDomain}; call list_sources`);
-    if (source.kind !== "evm") return text(`${source.name} is not an EVM chain, so this tool cannot build its transactions yet`);
+    if (source.kind === "solana") {
+      if (!params.solanaOwner) return text(`${source.name} needs solanaOwner, the Solana wallet that pays`);
+      if (params.route !== "cctp") return text(`${source.name} has no Circle Gateway, so this deposit has to use the cctp route`);
+      const usdcAccount = await solanaUsdcAccount(params.solanaOwner, source.usdc);
+      const { intent, sendAmount, maxFee, destination } = await buildIntent({ ...params, owner: params.owner as Address, beneficiary: params.beneficiary as Address | undefined, refundRecipient: bytes32FromSolanaAddress(usdcAccount) });
+      const record = await relayer.createIntent(intent, "cctp");
+      const built = await buildSolanaDepositForBurn({
+        cctp: { rpc: source.rpc, usdcMint: source.usdc, tokenMessengerMinter: source.tokenMessenger, messageTransmitter: source.messageTransmitter },
+        owner: params.solanaOwner,
+        amount: sendAmount,
+        destinationDomain: hubDomain,
+        mintRecipient: record.depositAddress,
+        maxFee,
+        minFinalityThreshold: 1000,
+      });
+      const next = {
+        transactionBase64: Buffer.from(built.transaction).toString("base64"),
+        eventAccount: built.eventAccount,
+        purpose: "sign this partially signed transaction with the Solana wallet as fee payer and send it within a minute, before its blockhash expires, then call report_source_transaction with the signature",
+      };
+      return text({ hash: record.hash, depositAddress: record.depositAddress, destination: destination.name, intent: serializeIntent(intent), next });
+    }
     if (params.route === "gateway" && !hasGateway(source)) return text(`${source.name} has no Circle Gateway, so this deposit has to use the cctp route`);
     const { intent, sendAmount, maxFee, destination } = await buildIntent({ ...params, owner: params.owner as Address, beneficiary: params.beneficiary as Address | undefined });
     const record = await relayer.createIntent(intent, params.route);
@@ -233,8 +258,8 @@ server.registerTool(
 
 server.registerTool(
   "report_source_transaction",
-  { title: "Report the CCTP burn", description: "Tell the relayer which source chain transaction burned the USDC for a CCTP route intent.", inputSchema: { hash: hex, sourceTx: hex } },
-  async ({ hash, sourceTx }) => text(summarize(await relayer.reportSourceTransaction(hash as Hex, sourceTx as Hex))),
+  { title: "Report the CCTP burn", description: "Tell the relayer which source chain transaction burned the USDC for a CCTP route intent: a 0x hash on an EVM chain, a base58 signature on Solana.", inputSchema: { hash: hex, sourceTx: z.string() } },
+  async ({ hash, sourceTx }) => text(summarize(await relayer.reportSourceTransaction(hash as Hex, sourceTx))),
 );
 
 server.registerTool(
