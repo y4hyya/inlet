@@ -123,19 +123,26 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
         </div>
       ) : (
         <div className="inlet-body">
-          <label className="inlet-field">
-            <span>From</span>
-            <select id="inlet-position" name="position" value={destination.id} onChange={(event) => setDestinationId(event.target.value)} disabled={busy}>
-              {withExit.map((entry) => {
-                const held = positions.find((item) => item.destination.id === entry.id);
-                return (
-                  <option key={entry.id} value={entry.id} disabled={held?.balance === 0n}>
-                    {held ? `${entry.name} · ${usdc(held.assets)}` : entry.name}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
+          {withExit.length === 1 ? (
+            <div className="inlet-field">
+              <span>From</span>
+              <p className="inlet-static">{position ? `${destination.name} · ${usdc(position.assets)}` : destination.name}</p>
+            </div>
+          ) : (
+            <label className="inlet-field">
+              <span>From</span>
+              <select id="inlet-position" name="position" value={destination.id} onChange={(event) => setDestinationId(event.target.value)} disabled={busy}>
+                {withExit.map((entry) => {
+                  const held = positions.find((item) => item.destination.id === entry.id);
+                  return (
+                    <option key={entry.id} value={entry.id} disabled={held?.balance === 0n}>
+                      {held ? `${entry.name} · ${usdc(held.assets)}` : entry.name}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          )}
 
           <label className="inlet-field">
             <span>Amount</span>

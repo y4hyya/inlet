@@ -158,16 +158,23 @@ export function DepositWidget({
         </div>
       ) : (
         <div className="inlet-body">
-          <label className="inlet-field">
-            <span>Into</span>
-            <select id="inlet-destination" name="destination" value={destination?.id} onChange={(event) => setDestinationId(event.target.value)} disabled={busy}>
-              {destinations.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {destinations.length === 1 ? (
+            <div className="inlet-field">
+              <span>Into</span>
+              <p className="inlet-static">{destination?.name}</p>
+            </div>
+          ) : (
+            <label className="inlet-field">
+              <span>Into</span>
+              <select id="inlet-destination" name="destination" value={destination?.id} onChange={(event) => setDestinationId(event.target.value)} disabled={busy}>
+                {destinations.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="inlet-field">
             <span>From</span>
             <select id="inlet-source" name="source" value={source?.domain} onChange={(event) => setSourceDomain(Number(event.target.value))} disabled={busy}>
