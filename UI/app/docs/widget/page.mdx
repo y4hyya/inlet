@@ -47,6 +47,43 @@ import { InletProvider, InletWidget, testnetDestinations } from "@inletkit/widge
 
 Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. For Aave V3, Compound III and Uniswap v4 pools with USDC on one side, the presets in `@inletkit/widget` already point at the deployed adapters. Anything else needs [one adapter with one function](/docs/adapters).
 
+## The button
+
+For a protocol's own deposit or withdraw page there is a third shell: one button beside the native control. It opens a dialog that holds the same form, fixed to that one destination, and leaves a small status pill beside itself that outlives the dialog. [See it on a mock page](/embed).
+
+```tsx title="vault-page.tsx"
+import { InletButton, erc4626Destination } from "@inletkit/widget";
+import "@inletkit/widget/styles.css";
+
+const vault = erc4626Destination({
+  id: "my-vault",
+  name: "My USDC Vault",
+  destinationDomain: 6,
+  receiver: "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+  vault: "0xYourVaultOnBaseSepolia",
+  exitContract: "0xfa6000e83B141bDA1aD067a5a5A32912f43F0258",
+});
+
+<InletButton action="deposit" destination={vault} amount={amountTheUserTyped} />
+<InletButton action="withdraw" destination={vault} />
+```
+
+Inside `InletProvider` when the host has no wallet stack, or inside the host's own wagmi provider with `relayerUrl` passed as a prop.
+
+| Prop | Default | Meaning |
+| --- | --- | --- |
+| `action` | required | `"deposit"` or `"withdraw"`, which form the dialog holds |
+| `destination` | required | The host's position. For `withdraw` it must carry `exit`; without it the button renders disabled |
+| `amount` | none | Passed to the form as its default, still editable there. The host reads it from its own amount field |
+| `label` | "Deposit from another chain" or "Withdraw to another chain" | The button text |
+| `relayerUrl` | from `InletProvider` | Required when there is no provider |
+| `sources` | every source in the config | Chains a deposit can start from |
+| `className` | none | Added to the button element for host styling |
+| `onRecord`, `onExit` | none | Forwarded to the form, fired on every change of the record |
+| `onOpen`, `onClose` | none | Dialog lifecycle |
+
+Closing the dialog never unmounts the form, so a deposit signed a second ago keeps moving, and the pill beside the button reads "Deposit in flight" with the seconds until it turns into the outcome with one explorer link. The pill is kept in `sessionStorage` under `inlet:flight:<action>:<destination id>`, so it survives a reload and a navigation within the host, polling the relayer until the record is terminal. The dialog is a portal into `document.body` at `z-index: 1000`, below Privy's login and signing overlays and below any host overlay that uses a larger number.
+
 ## Inside an app that already runs wagmi
 
 `InletProvider` brings Privy login and wagmi for apps that have neither. An app that already runs wagmi renders `InletWidget` or `DepositWidget` inside its own provider and skips `InletProvider`. For EVM sources the widget only uses wagmi hooks and the `relayerUrl` prop, and it falls back to the first wagmi connector for the connect button. Solana Devnet needs `InletProvider`, because Phantom is connected through Privy; without it the From list shows the EVM chains only.
@@ -127,7 +164,7 @@ The widget is styled through CSS custom properties on `.inlet`, so a host app re
 }
 ```
 
-The defaults are a light theme with a dark variant behind `prefers-color-scheme`.
+The defaults are a light theme with a dark variant behind `prefers-color-scheme`. The button and its pill sit outside the form, in `.inlet-shell`, which reads the same properties, so the rule above themes every shell.
 
 ## Following a deposit or a withdrawal outside the widget
 

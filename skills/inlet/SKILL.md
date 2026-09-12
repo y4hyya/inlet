@@ -41,6 +41,8 @@ const vault = erc4626Destination({
 
 `InletWidget` is deposit and withdraw under one header. `DepositWidget` and `ExitWidget` are the two halves on their own. `InletProvider` brings Privy login and wagmi. An app that already runs wagmi renders the widget inside its own provider and skips `InletProvider`; the widget only uses wagmi hooks and the `relayerUrl` prop. A vault that implements EIP 2612 becomes withdrawable by passing `exitContract`, the InletExit on its chain, to `erc4626Destination`.
 
+Reach for `InletButton` instead of the inline widget when the protocol already has a deposit or withdraw page of its own. `<InletButton action="deposit" destination={vault} amount={amount} />` beside the native control opens the same form for that one destination in a dialog, and `action="withdraw"` needs a destination that carries `exit`. The button keeps a status pill beside itself that survives a close and a reload, so the host page needs no state of its own.
+
 ## Deposit without a browser
 
 Use `@inletkit/sdk` and the relayer API. The flow is the same one the widget runs:
