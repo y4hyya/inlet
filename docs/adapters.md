@@ -14,6 +14,17 @@ The receiver approves the adapter for `amount`, calls `deposit`, and clears the 
 
 `beneficiary` is a 32 byte value. On EVM chains it is the left padded address. `data` is adapter specific and travels inside the CCTP hook data from Arc, so keep it small.
 
+## To be a destination
+
+A protocol needs four things, all of them from the chain it lives on and from its own deposit call. The protocol changes nothing and grants nothing. The adapter does the work.
+
+1. **A chain with a receiver.** Any chain with CCTP V2 and native USDC. Today that is Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet. A new chain is a receiver deployment and a hub registration, not protocol work.
+2. **Native USDC as the asset.** The receiver holds nothing else, so the deposit call has to take USDC itself, not a wrapped or bridged form.
+3. **A deposit that credits a third party in one call.** The adapter is a contract acting for a user who never touches the destination chain, so the protocol needs an on behalf of parameter, or has to return a transferable token the adapter can forward. Aave's supply, Compound's supplyTo, an ERC 4626 deposit with a receiver and a Uniswap v4 mint to an owner all qualify.
+4. **An outcome that is measurable right after the call.** Shares, an aToken balance delta, a token id with its liquidity. The adapter compares it with a minimum carried in the intent and reverts on a stale quote, and a revert falls back to claimable USDC.
+
+An ERC 4626 vault over USDC meets all four with no contract work. Anything else is one adapter with one function, registered on the receiver.
+
 ## Writing one
 
 1. Decode `data` into what the protocol call needs. Put anything the user should not be able to fake behind a check: the ERC 4626 adapter checks `vault.asset() == usdc`, the Compound adapter checks `comet.baseToken() == usdc`, the Aave adapter looks the aToken up from the pool instead of trusting the caller.
@@ -55,6 +66,17 @@ interface IInletExitAdapter {
 | `erc4626-exit:v1` | `contracts/src/adapters/ERC4626ExitAdapter.sol` | `abi.encode(address vault)` | EIP 2612 permit on the vault shares |
 | `aave-v3-exit:v1` | `contracts/src/adapters/AaveV3ExitAdapter.sol` | `abi.encode(address pool)` | EIP 2612 permit on the aToken read from the pool |
 | `compound-v3-exit:v1` | `contracts/src/adapters/CompoundV3ExitAdapter.sol` | `abi.encode(address comet)` | `allowBySig` on the Comet, executor as manager |
+
+### To be withdrawable
+
+The bar is higher than for a deposit, because the owner signs once on any chain, pays no gas, and the executor has to finish in one call.
+
+1. **A signature that names a spender.** The position token implements an EIP 2612 permit, or the protocol has its own signed authorization, like `allowBySig` on a Comet. The signature binds to the executor address derived from the intent, which is what makes one signature safe.
+2. **A fungible amount.** aToken units, vault shares or base units the owner can put in the intent.
+3. **A synchronous redemption.** One call from the executor's constructor yields the assets. A withdrawal queue, a cooldown or a request then claim flow, as in ERC 7540, does not fit.
+4. **USDC as the only output.** The executor burns USDC toward each leg and can move nothing else.
+
+Any ERC 4626 vault over USDC that implements EIP 2612 meets all four with the vault adapter and no contract work. Euler's EVK vault fails the first, since it authorizes through the EVC rather than a permit. A Uniswap v4 position fails the fourth. The PositionManager's permit can authorize the executor for a token id, but the position unwinds into ETH and USDC once the price has moved into the range. A v4 exit adapter would decrease the liquidity, swap the ETH side back to USDC inside the same call under a slippage floor in the intent, and then burn. Both stay deposit only for now.
 
 Writing one: check the asset the same way the deposit adapters do, apply the signature with `address(this)` as the spender, pull the position, redeem it to `address(this)`, and return the balance difference. Register it on the `InletExit` of that chain with `setAdapter`. Deploy the rail itself with `script/DeployExit.s.sol` (`USDC`, `TOKEN_MESSENGER`).
 

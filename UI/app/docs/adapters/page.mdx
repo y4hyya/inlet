@@ -18,6 +18,17 @@ The receiver approves the adapter for `amount`, calls `deposit`, and clears the 
 
 `beneficiary` is a 32 byte value, the left padded address on EVM chains. `data` is adapter specific and travels inside the CCTP hook data from Arc, so keep it small.
 
+## To be a destination
+
+A protocol needs four things, all of them from the chain it lives on and from its own deposit call. The protocol changes nothing and grants nothing. The adapter does the work.
+
+1. **A chain with a receiver.** Any chain with CCTP V2 and native USDC. Today that is Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet. A new chain is a receiver deployment and a hub registration, not protocol work.
+2. **Native USDC as the asset.** The receiver holds nothing else, so the deposit call has to take USDC itself, not a wrapped or bridged form.
+3. **A deposit that credits a third party in one call.** The adapter is a contract acting for a user who never touches the destination chain, so the protocol needs an on behalf of parameter, or has to return a transferable token the adapter can forward. Aave's supply, Compound's supplyTo, an ERC 4626 deposit with a receiver and a Uniswap v4 mint to an owner all qualify.
+4. **An outcome that is measurable right after the call.** Shares, an aToken balance delta, a token id with its liquidity. The adapter compares it with a minimum carried in the intent and reverts on a stale quote, and a revert falls back to claimable USDC.
+
+An ERC 4626 vault over USDC meets all four with no contract work. Anything else is one adapter with one function, registered on the receiver.
+
 ## Decide what the protocol needs
 
 - An ERC 4626 vault over USDC on any chain with a receiver, which today means Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet: no contract work. Use `erc4626Destination` with the vault and the receiver for that chain.

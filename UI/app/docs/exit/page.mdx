@@ -50,7 +50,16 @@ Its EIP 712 hash under the InletExit domain is the CREATE2 salt of the executor,
 | Morpho Oneshot vault shares | Base Sepolia | EIP 2612 permit on the vault | `erc4626-exit:v1` |
 | Compound III balance | Base Sepolia | `allowBySig` on the Comet | `compound-v3-exit:v1` |
 
-Any ERC 4626 vault over USDC that implements EIP 2612 works with the vault adapter and no contract work. Euler's EVK vault authorises through the EVC rather than a permit, and a Uniswap v4 position unwinds into two assets, so those two stay deposit only for now.
+## To be withdrawable
+
+The bar is higher than for a deposit, because the owner signs once on any chain, pays no gas, and the executor has to finish in one call.
+
+1. **A signature that names a spender.** The position token implements an EIP 2612 permit, or the protocol has its own signed authorization, like `allowBySig` on a Comet. The signature binds to the executor address derived from the intent, which is what makes one signature safe.
+2. **A fungible amount.** aToken units, vault shares or base units the owner can put in the intent.
+3. **A synchronous redemption.** One call from the executor's constructor yields the assets. A withdrawal queue, a cooldown or a request then claim flow, as in ERC 7540, does not fit.
+4. **USDC as the only output.** The executor burns USDC toward each leg and can move nothing else.
+
+Any ERC 4626 vault over USDC that implements EIP 2612 meets all four with the vault adapter and no contract work. Euler's EVK vault fails the first, since it authorizes through the EVC rather than a permit. A Uniswap v4 position fails the fourth. The PositionManager's permit can authorize the executor for a token id, but the position unwinds into ETH and USDC once the price has moved into the range. A v4 exit adapter would decrease the liquidity, swap the ETH side back to USDC inside the same call under a slippage floor in the intent, and then burn. Both stay deposit only for now.
 
 ## Where it can land
 
