@@ -14,7 +14,7 @@ export interface RecordedRun {
   destinationId: string;
   amount: string;
   seconds: number;
-  sourceTx?: Hex;
+  sourceTx?: string;
   arcMintTx: Hex;
   sweepTx: Hex;
   destinationTx: Hex;
@@ -192,5 +192,23 @@ export const runs: RecordedRun[] = [
     sweepTx: "0x71c3d75c0b74d5690ee3cfb18ab93cf9e1d7d329f41e3d8a9e11dba5c243edc4",
     destinationTx: "0x01327610d541bfd4381d8d087bf0aab318c5e38e9653a37a04f0284df57cc3d5",
     note: "Signed from a Privy email wallet inside the widget",
+  },
+  {
+    id: "solana",
+    protocol: "Compound III",
+    position: "999899 USDC supplied",
+    route: "cctp",
+    sourceDomain: 5,
+    sourceName: "Solana Devnet",
+    destinationDomain: 6,
+    destinationName: "Base Sepolia",
+    destinationId: "compound-v3-base-sepolia",
+    amount: "1 USDC",
+    seconds: 29,
+    sourceTx: "2iL8RNpRveC99CZNTqZ2Zns6VGrHu9UX6ppbEA8gMcArw96myx8Lie4KGpHxcE9z9YGZ3GUyRtQwwMzN1Li733tb",
+    arcMintTx: "0x1574b0544f468695056263d2edec930a45cf97fe76884fab6a36190626a6357a",
+    sweepTx: "0xe63f0e973034e710e1c553d51d00b6dde600e6f2f3a9dc2daf957f8254136b7f",
+    destinationTx: "0xbbc031bfd2ae5aac49de82f973ba7db83079db4615b90b975779c068f83ea3be",
+    note: "One depositForBurn on Circle's Solana program, signed by a devnet wallet. The position lands to the EVM address in the intent.",
   },
 ];
