@@ -41,7 +41,7 @@ Destination chains and receivers come from `config/deployments.testnet.json`. Th
 
 ## End to end scripts
 
-`pnpm e2e` burns one USDC on the source chain, routes it through Arc and deposits it into the chosen destination, printing every transaction hash. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without the source chain wait. Both read `DESTINATION`, `SOURCE`, `E2E_AMOUNT`, `USER_PRIVATE_KEY` and `RELAYER_URL`. `pnpm e2e:solana` does the same from Solana Devnet with a local keypair in `SOLANA_KEYPAIR`, and with `SIMULATE=1` it only simulates the burn for any funded `OWNER`.
+`pnpm e2e` burns one USDC on the source chain, routes it through Arc and deposits it into the chosen destination, printing every transaction hash. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without the source chain wait. Both read `DESTINATION`, `SOURCE`, `E2E_AMOUNT`, `USER_PRIVATE_KEY` and `RELAYER_URL`. `pnpm e2e:solana` does the same from Solana Devnet with a keypair file in `SOLANA_KEYPAIR` or the wallet's exported secret in `SOLANA_PRIVATE_KEY`, and with `SIMULATE=1` it only simulates the burn for any funded `OWNER`.
 
 ## Hosting
 

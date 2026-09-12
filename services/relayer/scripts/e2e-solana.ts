@@ -1,4 +1,4 @@
-import { InletRelayerClient, IrisClient, buildSolanaDepositForBurn, bytes32FromSolanaAddress, findDestinationSpec, sendSolanaTransaction, signSolanaDeposit, simulateSolanaDeposit, solanaDomain, solanaSignatureToBase58, solanaUsdcAccount, solanaUsdcBalance, testnetChains, toBytes32, type DepositIntent, type SolanaCctp } from "@inletkit/sdk";
+import { InletRelayerClient, IrisClient, buildSolanaDepositForBurn, bytes32FromSolanaAddress, findDestinationSpec, sendSolanaTransaction, signSolanaDeposit, simulateSolanaDeposit, solanaDomain, solanaKeypairBytes, solanaSignatureToBase58, solanaUsdcAccount, solanaUsdcBalance, testnetChains, toBytes32, type DepositIntent, type SolanaCctp } from "@inletkit/sdk";
 import { readFileSync } from "node:fs";
 import { formatUnits, parseUnits, type Address, type Hex } from "viem";
 
@@ -27,10 +27,10 @@ const destination = findDestinationSpec(aliases[key] ?? key);
 if (!destination) throw new Error(`DESTINATION must be a destination id or one of ${Object.keys(aliases).join(", ")}`);
 
 const simulate = process.env.SIMULATE === "1";
-const keypair = readKeypair(process.env.SOLANA_KEYPAIR);
+const keypair = readKeypair(process.env.SOLANA_KEYPAIR, process.env.SOLANA_PRIVATE_KEY ?? process.env.TEST_SOL_PRIVATE_KEY ?? rootEnv("TEST_SOL_PRIVATE_KEY"));
 const owner = process.env.OWNER ?? (keypair ? solanaSignatureToBase58(keypair.subarray(32)) : undefined);
-if (!owner) throw new Error("set SOLANA_KEYPAIR to a Solana keypair file, or OWNER together with SIMULATE=1");
-if (!simulate && !keypair) throw new Error("SOLANA_KEYPAIR is required to send the burn; use SIMULATE=1 to only build it");
+if (!owner) throw new Error("set SOLANA_KEYPAIR to a keypair file or SOLANA_PRIVATE_KEY to the wallet's secret, or OWNER together with SIMULATE=1");
+if (!simulate && !keypair) throw new Error("a keypair is required to send the burn; use SIMULATE=1 to only build it");
 
 const beneficiary = (process.env.BENEFICIARY ?? process.env.TEST_PUBLIC_KEY ?? rootEnv("TEST_PUBLIC_KEY")) as Address | undefined;
 if (!beneficiary) throw new Error("set BENEFICIARY to the EVM address that should own the position");
@@ -96,11 +96,9 @@ while (Date.now() < deadline) {
 
 console.log(`${stamp()} solana ${signature}, arc mint ${current.arcMintTx ?? "none"}, sweep ${current.sweepTx ?? "none"}, destination ${current.destinationTx ?? "none"}, refund ${current.refundTx ?? "none"}${current.refundMintTx ? `, refund mint ${current.refundMintTx}` : ""}`);
 
-function readKeypair(path?: string) {
-  if (!path) return undefined;
-  const bytes = Uint8Array.from(JSON.parse(readFileSync(path, "utf8")) as number[]);
-  if (bytes.length !== 64) throw new Error("SOLANA_KEYPAIR must be a JSON array of 64 numbers, the secret key then the public key");
-  return bytes;
+function readKeypair(path?: string, secret?: string) {
+  const raw = path ? readFileSync(path, "utf8") : secret;
+  return raw ? solanaKeypairBytes(raw) : undefined;
 }
 
 function rootEnv(name: string) {

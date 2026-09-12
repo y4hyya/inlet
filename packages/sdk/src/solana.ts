@@ -10,6 +10,7 @@ import {
   getAddressDecoder,
   getAddressEncoder,
   getBase58Decoder,
+  getBase58Encoder,
   getBase64EncodedWireTransaction,
   getProgramDerivedAddress,
   getSignatureFromTransaction,
@@ -79,6 +80,14 @@ export function bytes32FromSolanaAddress(value: string): Hex {
 
 export function solanaSignatureToBase58(bytes: Uint8Array): string {
   return getBase58Decoder().decode(bytes);
+}
+
+/// A secret as a wallet exports it, base58 of the 64 byte keypair, or the JSON array of a CLI keypair file.
+export function solanaKeypairBytes(secret: string): Uint8Array {
+  const trimmed = secret.trim();
+  const bytes = trimmed.startsWith("[") ? Uint8Array.from(JSON.parse(trimmed) as number[]) : new Uint8Array(getBase58Encoder().encode(trimmed));
+  if (bytes.length !== 64) throw new Error("a Solana keypair is 64 bytes, the secret key then the public key");
+  return bytes;
 }
 
 export async function buildSolanaDepositForBurn(params: SolanaDepositForBurnParams): Promise<{ transaction: Uint8Array; eventAccount: string }> {
