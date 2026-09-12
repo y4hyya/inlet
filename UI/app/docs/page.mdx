@@ -8,7 +8,7 @@ Inlet delivers native USDC from any chain a user holds it on into a position on 
 
 ## What you get
 
-- **One signature on the source chain.** A Gateway burn intent from a unified balance, with no gas and no network switch, or a CCTP burn from the wallet.
+- **One signature on the source chain.** A Gateway burn intent from a unified balance, with no gas and no network switch, or a CCTP burn from the wallet, on an EVM chain or on Solana.
 - **Native USDC the whole way.** Nothing wrapped, nothing swapped. Arc is the settlement hub in the middle.
 - **A position, not a balance.** The adapter makes the protocol deposit in the user's name: aTokens, a Compound supply, vault shares, a Uniswap v4 position.
 - **Nothing gets stuck.** The deposit address is derived from the intent, so USDC can only move along the path the intent names or back to the sender after the deadline. If the adapter fails, the USDC waits in the receiver and the user claims it.
@@ -33,6 +33,6 @@ Inlet delivers native USDC from any chain a user holds it on into a position on 
 
 ## Status
 
-Testnet only. Live on Arc testnet with receivers on Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet, and destinations on Aave V3, Compound III, a Morpho vault, a Uniswap v4 pool and Euler. Every recorded run with its transactions is in the [live app](/app), which makes a real deposit or replays one.
+Testnet only. Live on Arc testnet with deposits from Base Sepolia, Arbitrum Sepolia, Unichain Sepolia, Ethereum Sepolia, Monad Testnet and Solana Devnet, receivers on Arbitrum Sepolia, Base Sepolia, Unichain Sepolia, Ethereum Sepolia and Monad Testnet, and destinations on Aave V3, Compound III, a Morpho vault, a Uniswap v4 pool and Euler. Every recorded run with its transactions is in the [live app](/app), which makes a real deposit or replays one.
 
 The full architecture specification lives in the repository at [docs/spec.md](https://github.com/y4hyya/inlet/blob/main/docs/spec.md).

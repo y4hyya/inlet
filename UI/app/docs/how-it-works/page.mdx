@@ -64,7 +64,7 @@ The amount is a floor, not the exact transfer size. Fast CCTP transfers deduct a
 
 **Gateway.** The user holds a unified balance on the source chain, created by one deposit into Circle's GatewayWallet that becomes spendable once the chain reaches finality. The SDK builds a burn intent whose destination is Arc's GatewayMinter and whose recipient is the deposit address, and the user signs it. No gas, no network switch. The relayer checks that the burn intent matches the Inlet intent, submits it to the Gateway API, and calls `gatewayMint` on Arc. USDC lands at the deposit address in well under a second, and the recipient receives the full value.
 
-**CCTP.** The user sends `depositForBurn` on the source chain with Arc as the destination domain and the deposit address as the mint recipient. The relayer submits the mint on Arc. One transaction, no Gateway balance needed.
+**CCTP.** The user sends `depositForBurn` on the source chain with Arc as the destination domain and the deposit address as the mint recipient. The relayer submits the mint on Arc. One transaction, no Gateway balance needed. The source does not have to be an EVM chain: from Solana Devnet the same instruction goes to Circle's TokenMessengerMinterV2 program, the widget reports the transaction signature, and the relayer fetches the attestation by that signature. The refund recipient in the intent is then the depositor's USDC token account on Solana.
 
 Both routes end the same way: USDC at the deposit address, then sweep.
 

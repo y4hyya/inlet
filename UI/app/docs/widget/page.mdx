@@ -49,7 +49,7 @@ Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. 
 
 ## Inside an app that already runs wagmi
 
-`InletProvider` brings Privy login and wagmi for apps that have neither. An app that already runs wagmi renders `InletWidget` or `DepositWidget` inside its own provider and skips `InletProvider`. The widget only uses wagmi hooks and the `relayerUrl` prop, and it falls back to the first wagmi connector for the connect button.
+`InletProvider` brings Privy login and wagmi for apps that have neither. An app that already runs wagmi renders `InletWidget` or `DepositWidget` inside its own provider and skips `InletProvider`. For EVM sources the widget only uses wagmi hooks and the `relayerUrl` prop, and it falls back to the first wagmi connector for the connect button. Solana Devnet needs `InletProvider`, because Phantom is connected through Privy; without it the From list shows the EVM chains only.
 
 ## Props
 
@@ -72,7 +72,7 @@ Any ERC 4626 vault over USDC on a chain with a receiver needs no contract work. 
 | --- | --- | --- |
 | `destinations` | `Destination[]` | The positions a user can deposit into. The first one is selected unless `defaultDestinationId` says otherwise |
 | `relayerUrl` | `string` | Overrides the relayer from `InletProvider` |
-| `sources` | `SourceChain[]` | Chains a deposit can start from. Defaults to Base Sepolia and Arbitrum Sepolia |
+| `sources` | `SourceChain[]` | Chains a deposit can start from. Defaults to every source in the config: Base Sepolia, Arbitrum Sepolia, Unichain Sepolia, Ethereum Sepolia, Monad Testnet and Solana Devnet |
 | `defaultAmount` | `string` | Initial amount in USDC. Defaults to `"1"` |
 | `defaultDestinationId` | `string` | Which destination starts selected |
 | `title` | `string` | The widget heading |
@@ -102,7 +102,7 @@ Every builder also takes `id`, `name`, `destinationDomain`, `receiver` and an `e
 
 ## What the user sees
 
-Before login the form is visible: destination, source chain, amount, and the route. After login the widget quotes the deposit every time the amount changes: the route it picked, what the user sends, what the position receives, Circle's fee at most, the wallet balance and the Gateway balances on every source chain. When a Gateway balance on another chain can pay, the widget moves the source there and says so, without touching the wallet's network. Deposit stays disabled until the route can succeed.
+Before login the form is visible: destination, source chain, amount, and the route. After login the widget quotes the deposit every time the amount changes: the route it picked, what the user sends, what the position receives, Circle's fee at most, the wallet balance and the Gateway balances on every source chain. When a Gateway balance on another chain can pay, the widget moves the source there and says so, without touching the wallet's network. Deposit stays disabled until the route can succeed. From Solana Devnet the widget asks for a Solana wallet through Privy, Phantom for instance, quotes the CCTP route and sends one transaction on Solana; the position still lands to the user's EVM address, and a refund would go back to the Solana USDC account that paid.
 
 After the signature the widget shows the status timeline: intent registered, USDC on Arc, swept, attested, position delivered, each with its explorer link. A user who wants gasless deposits later can fund a Gateway balance from the same widget.
 
