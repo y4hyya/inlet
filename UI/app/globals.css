@@ -362,7 +362,8 @@ body:has([data-wallpaper]) {
   }
 }
 
-.inlet {
+.inlet,
+.inlet-shell {
   --inlet-bg: transparent;
   --inlet-fg: var(--ink);
   --inlet-muted: var(--soft);
@@ -374,6 +375,9 @@ body:has([data-wallpaper]) {
   --inlet-done: var(--relayer);
   --inlet-bad: var(--bad);
   font-family: var(--font-sans);
+}
+
+.inlet {
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
@@ -385,6 +389,10 @@ body:has([data-wallpaper]) {
 .inlet select,
 .inlet input {
   background: rgba(45, 49, 66, 0.25);
+}
+
+.inlet.inlet-dialog {
+  background: var(--glass-bg-strong);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,127 @@
+.page {
+  padding-block: var(--space-12) var(--space-16);
+  display: grid;
+  gap: var(--space-12);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 64ch;
+}
+
+.title {
+  font-size: var(--text-5);
+  letter-spacing: -0.025em;
+}
+
+.sub {
+  color: var(--muted);
+}
+
+.sub a,
+.note a {
+  color: var(--ink);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 440px));
+  gap: var(--space-6);
+}
+
+.card {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius);
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.cardTitle {
+  font-size: var(--text-2);
+}
+
+.cardSub {
+  color: var(--soft);
+  font-size: var(--text-caption);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line-strong);
+  background: rgba(45, 49, 66, 0.25);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-mono);
+}
+
+.unit {
+  color: var(--soft);
+  font-size: var(--text-caption);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.native {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.nativeButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.caption,
+.note {
+  font-size: var(--text-caption);
+  color: var(--soft);
+}
+
+.caption {
+  max-width: 26ch;
+}
