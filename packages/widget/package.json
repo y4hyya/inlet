@@ -22,7 +22,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@inletkit/sdk": "workspace:*"
+    "@inletkit/sdk": "workspace:*",
+    "@solana-program/memo": "^0.13.1",
+    "@solana-program/system": "^0.14.1",
+    "@solana-program/token": "^0.16.1",
+    "@solana/kit": "^8.3.0"
   },
   "peerDependencies": {
     "@privy-io/react-auth": "^3",
