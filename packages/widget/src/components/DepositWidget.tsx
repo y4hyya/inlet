@@ -10,7 +10,7 @@ import type { Destination, RoutePreference, SourceChain } from "../types.js";
 import { useDeposit, type SolanaWallet } from "../useDeposit.js";
 import { useRelayerHealth } from "../useRelayerHealth.js";
 import { AccountPill } from "./AccountPill.js";
-import { SolanaWalletRow } from "./SolanaWalletRow.js";
+import { WalletSection } from "./WalletSection.js";
 import { StatusTimeline } from "./StatusTimeline.js";
 
 export interface DepositWidgetProps {
@@ -178,7 +178,7 @@ export function DepositWidget({
               ))}
             </select>
           </label>
-          {source.kind === "solana" ? <SolanaWalletRow busy={busy} onChange={setSolana} /> : null}
+          <WalletSection source={source} busy={busy} privy={Boolean(inlet.privy)} address={address} chainId={chainId} signedIn={signedIn} onSolana={setSolana} />
           <label className="inlet-field">
             <span>Amount</span>
             <input id="inlet-amount" name="amount" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} disabled={busy} />
