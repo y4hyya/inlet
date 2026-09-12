@@ -111,7 +111,7 @@ const vault = erc4626Destination({
 
 ## For agents
 
-[`apps/mcp`](apps/mcp) is a stdio MCP server over the same SDK and relayer API the widget uses. Tools: `list_destinations`, `list_sources`, `quote_deposit`, `create_intent` (returns the deposit address and the exact transaction or EIP 712 payload to sign), `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`, then the way out, `list_withdrawable`, `create_exit` (returns the derived executor and the exact permit to sign), `submit_exit`, `exit_status`, and, when `INLET_PRIVATE_KEY` is set, `deposit`, `withdraw` and `fund_gateway_balance`, which run the whole flow with that wallet.
+[`apps/mcp`](apps/mcp) is a stdio MCP server over the same SDK and relayer API the widget uses. Tools: `list_destinations`, `list_sources`, `quote_deposit`, `create_intent` (returns the deposit address and the exact transaction or EIP 712 payload to sign), `report_source_transaction`, `submit_gateway_intent`, `deposit_status`, `uniswap_quote`, then the way out, `list_withdrawable`, `create_exit` (returns the derived executor and the exact permit to sign), `submit_exit`, `exit_status`, and, when `INLET_PRIVATE_KEY` is set, `deposit`, `withdraw` and `fund_gateway_balance`, which run the whole flow with that wallet. The two long running tools report each stage through MCP progress notifications, and the probe script in `apps/mcp/scripts` draws them as a timeline.
 
 ```json
 {

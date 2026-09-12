@@ -46,6 +46,8 @@ Set `INLET_PRIVATE_KEY` as well and three more tools appear that run the whole f
 
 Signing stays with the agent. Without a key the server never touches funds, it only prepares the payloads and reports state.
 
+`deposit` and `withdraw` report each stage through MCP progress notifications while they run, from the derived executor to the last leg landing, so a client that asks for progress can draw the road as it fills. The probe in `apps/mcp/scripts` does exactly that in a terminal.
+
 ## Recorded agent runs
 
 One `deposit` tool call moved 1 USDC from a Base Sepolia Gateway balance into Compound III in sixteen seconds against the hosted relayer: [mint on Arc](https://testnet.arcscan.app/tx/0x2180a82f73e121449b52f616883ffa71a26c44b66eaee012edad9887f37e1a31), [sweep](https://testnet.arcscan.app/tx/0x113d8d04186c5082eb9c54dbbd87b92a733d8db03d13ecbaa0c9b6f864fe80c1), [execute on Base Sepolia](https://sepolia.basescan.org/tx/0xdcf11694a8160eec3413e20302a36cbb50a40ff93b7bbcc8508fcf44106e7cad). The [live app](/app) replays it.

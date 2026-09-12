@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
+import type { ServerNotification, ServerRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   GATEWAY_EXPIRY_BLOCKS,
   GatewayClient,
@@ -40,6 +42,7 @@ import { createPublicClient, createWalletClient, encodeFunctionData, erc20Abi, f
 import { privateKeyToAccount } from "viem/accounts";
 import { arbitrumSepolia, baseSepolia, sepolia, unichainSepolia } from "viem/chains";
 import { z } from "zod";
+import { chainName, chainNames, legLabel, short } from "./timeline.js";
 
 const relayerUrl = process.env.INLET_RELAYER_URL ?? "https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io";
 const relayer = new InletRelayerClient(relayerUrl, 20_000);
@@ -50,7 +53,6 @@ const rawKey = process.env.INLET_PRIVATE_KEY?.trim();
 const account = rawKey ? privateKeyToAccount((rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`) as Hex) : undefined;
 const chains: Record<number, Chain> = { 6: baseSepolia, 3: arbitrumSepolia, 10: unichainSepolia, 0: sepolia };
 const rpcs: Record<number, string> = { 6: testnetChains.baseSepolia.rpc, 3: testnetChains.arbitrumSepolia.rpc };
-const chainNames: Record<number, string> = { 0: "Ethereum Sepolia", 3: "Arbitrum Sepolia", 6: "Base Sepolia", 10: "Unichain Sepolia", 15: "Monad Testnet", 26: "Arc Testnet" };
 
 const address = z.string().regex(/^0x[0-9a-fA-F]{40}$/, "an EVM address");
 const hex = z.string().regex(/^0x[0-9a-fA-F]*$/, "hex bytes");
@@ -64,6 +66,23 @@ function text(value: unknown) {
 
 function bigints(_: string, value: unknown) {
   return typeof value === "bigint" ? value.toString() : value;
+}
+
+/// Progress goes out only when the client asked for it, and a lost notification never fails the tool.
+function reporter(extra: RequestHandlerExtra<ServerRequest, ServerNotification>, total: number) {
+  const progressToken = extra._meta?.progressToken;
+  let progress = 0;
+  return async (message: string) => {
+    progress += 1;
+    if (progressToken === undefined) return;
+    await extra.sendNotification({ method: "notifications/progress", params: { progressToken, progress, total, message } }).catch(() => undefined);
+  };
+}
+
+const intentStage: Record<string, number> = { created: 0, funded: 1, swept: 2, attested: 3, executed: 4, claimable: 3, refunding: 1, refunded: 1, expired: 0, failed: 0 };
+
+function onChain(hash?: Hex): string {
+  return hash && hash !== ("external" as string) ? `, ${short(hash)}` : "";
 }
 
 function summarize(record: IntentRecord) {
@@ -248,9 +267,10 @@ if (account) {
       description: "Runs a whole deposit with the wallet in INLET_PRIVATE_KEY: registers the intent, signs the Gateway intent or sends the CCTP burn, then waits for the position. Returns every transaction hash.",
       inputSchema: { sourceDomain: z.number().int(), destinationId: z.string(), amountUsdc: usdcAmount, route: z.enum(["auto", "gateway", "cctp"]).default("auto"), beneficiary: address.optional(), waitSeconds: z.number().int().min(0).max(600).default(120) },
     },
-    async ({ sourceDomain, destinationId, amountUsdc, route, beneficiary, waitSeconds }) => {
+    async ({ sourceDomain, destinationId, amountUsdc, route, beneficiary, waitSeconds }, extra) => {
       const source = findSourceSpec(sourceDomain);
       if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
+      const report = reporter(extra, 6);
       const chain = chains[sourceDomain];
       const transport = http();
       const publicClient = createPublicClient({ chain, transport });
@@ -265,6 +285,7 @@ if (account) {
       const { intent } = await buildIntent({ owner: account.address, sourceDomain, destinationId, amountUsdc, route: chosen, beneficiary: beneficiary as Address | undefined });
       const record = await relayer.createIntent(intent, chosen);
       const steps: Record<string, string> = { hash: record.hash, depositAddress: record.depositAddress, route: chosen };
+      await report(`Intent registered, deposit address derived on Arc, ${short(record.depositAddress)}`);
 
       if (chosen === "gateway") {
         const block = await publicClient.getBlockNumber();
@@ -283,6 +304,7 @@ if (account) {
         const signature = await walletClient.signTypedData(burnIntentTypedData(burnIntent));
         await relayer.submitGateway(record.hash, { burnIntent, signature });
         steps.gatewayBurnIntent = JSON.stringify(serializeBurnIntent(burnIntent));
+        await report(`Burn intent signed on ${chainName(sourceDomain)}, no gas, no network switch`);
       } else {
         const allowance = await publicClient.readContract({ address: source.usdc, abi: erc20Abi, functionName: "allowance", args: [account.address, source.tokenMessenger] });
         if (allowance < sendAmount) {
@@ -306,13 +328,31 @@ if (account) {
         await publicClient.waitForTransactionReceipt({ hash: burn });
         await relayer.reportSourceTransaction(record.hash, burn);
         steps.burnTx = `${source.explorer}${burn}`;
+        await report(`USDC burned on ${chainName(sourceDomain)}, ${short(burn)}`);
       }
+
+      const destination = testnetDestinations.find((entry) => entry.id === destinationId);
+      const reported = new Set<string>();
+      const follow = async (current: IntentRecord) => {
+        const stage = intentStage[current.state] ?? 0;
+        const reach = async (key: string, at: number, message: string) => {
+          if (reported.has(key) || stage < at) return;
+          reported.add(key);
+          await report(message);
+        };
+        await reach("funded", 1, `USDC landed on Arc${onChain(current.arcMintTx)}`);
+        await reach("swept", 2, `Hub swept and burned toward the destination${onChain(current.sweepTx)}`);
+        await reach("attested", 3, "Circle attested the transfer");
+        await reach("executed", 4, `${destination?.positionLabel ?? "Position"} delivered${onChain(current.destinationTx)}`);
+      };
 
       const until = Date.now() + waitSeconds * 1000;
       let latest = await relayer.getIntent(record.hash);
+      await follow(latest);
       while (Date.now() < until && !["executed", "claimable", "refunded", "expired", "failed"].includes(latest.state)) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         latest = await relayer.getIntent(record.hash);
+        await follow(latest);
       }
       return text({ ...steps, ...summarize(latest) });
     },
@@ -495,18 +535,42 @@ if (account) {
       description: "Runs a whole withdrawal with the wallet in INLET_PRIVATE_KEY: builds the exit, signs the permit for the derived executor, submits it, and waits for the USDC to land on every leg. Returns every transaction hash.",
       inputSchema: { destinationId: z.string(), amountUsdc: usdcAmount, legs: legInput, waitSeconds: z.number().int().min(0).max(600).default(180) },
     },
-    async ({ destinationId, amountUsdc, legs, waitSeconds }) => {
+    async ({ destinationId, amountUsdc, legs, waitSeconds }, extra) => {
+      const report = reporter(extra, 5 + legs.length);
       const built = await buildExit({ owner: account.address, destinationId, amountUsdc, legs });
+      await report(`Exit built for the derived executor, ${short(built.executor)}`);
       const signature =
         built.spec.exit.permit === "comet"
           ? await account.signTypedData(built.sign as ReturnType<typeof cometAuthorizationTypedData>)
           : await account.signTypedData(built.sign as ReturnType<typeof permitTypedData>);
+      await report(built.spec.exit.permit === "comet" ? "Authorization signed for the executor" : "Permit signed for the executor");
       const record = await relayer.createExit(built.intent, signature);
+      await report(`Submitted to the relayer, ${short(record.hash)}`);
+
+      const reported = new Set<string>();
+      const follow = async (current: ExitRecord) => {
+        if (!reported.has("executed") && (current.exitTx || current.state !== "signed")) {
+          reported.add("executed");
+          await report(`Redeemed on ${chainName(current.domain)}${onChain(current.exitTx)}`);
+        }
+        if (!reported.has("attested") && (current.state === "attested" || current.state === "delivered")) {
+          reported.add("attested");
+          await report("Circle attested");
+        }
+        for (const [index, leg] of current.legs.entries()) {
+          if (reported.has(`leg${index}`) || !leg.mintTx) continue;
+          reported.add(`leg${index}`);
+          await report(`${legLabel(leg.domain, formatUnits(leg.amount, 6), index + 1 === current.legs.length)}${onChain(leg.mintTx)}`);
+        }
+      };
+
       const until = Date.now() + waitSeconds * 1000;
       let latest = record;
+      await follow(latest);
       while (Date.now() < until && latest.state !== "delivered") {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         latest = await relayer.getExit(record.hash);
+        await follow(latest);
       }
       return text(summarizeExit(latest));
     },
