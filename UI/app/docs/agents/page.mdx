@@ -31,7 +31,7 @@ Set `INLET_PRIVATE_KEY` as well and three more tools appear that run the whole f
 | `list_destinations` | Every live destination and the adapter behind it |
 | `list_sources` | Chains a deposit can start from |
 | `quote_deposit` | Route, timing and the position the user ends up with |
-| `create_intent` | Deposit address plus the exact transaction or EIP 712 payload to sign |
+| `create_intent` | Deposit address plus the exact transaction or EIP 712 payload to sign; with `solanaOwner` it returns the partially signed Solana transaction for the wallet to complete |
 | `report_source_transaction` | Hand the burn hash back to the relayer |
 | `submit_gateway_intent` | Submit the signed Gateway intent |
 | `deposit_status` | Follow a deposit all the way to the position |
