@@ -1,0 +1,34 @@
+name: packages
+
+on:
+  push:
+    paths:
+      - "packages/**"
+      - "config/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/packages.yml"
+  pull_request:
+    paths:
+      - "packages/**"
+      - "config/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build the SDK
+        run: pnpm --filter @inletkit/sdk build
+      - name: Typecheck
+        run: pnpm --filter @inletkit/sdk --filter @inletkit/widget typecheck
+      - name: Test
+        run: pnpm --filter @inletkit/sdk --filter @inletkit/widget test

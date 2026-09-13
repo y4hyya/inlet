@@ -2,7 +2,7 @@
 
 From any chain into any position.
 
-[![contracts](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml/badge.svg)](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml)
+[![contracts](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml/badge.svg)](https://github.com/y4hyya/inlet/actions/workflows/contracts.yml) [![packages](https://github.com/y4hyya/inlet/actions/workflows/packages.yml/badge.svg)](https://github.com/y4hyya/inlet/actions/workflows/packages.yml)
 
 Inlet is a deposit and exit rail for DeFi. A user holding USDC on any supported chain signs once and, about half a minute later, holds the position they asked for on the chain the protocol lives on: an Aave supply, a Compound balance, a vault share, a Uniswap v4 liquidity position. Not USDC sitting in a wallet on the other side. The position itself. One more signature brings it back out, as native USDC on whichever chains the user names.
 
