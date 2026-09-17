@@ -86,7 +86,7 @@ contract InletHubTest is Test {
         assertEq(burn.amount, 100e6);
         assertEq(burn.destinationDomain, ARBITRUM_SEPOLIA);
         assertEq(burn.mintRecipient, CctpMessages.toBytes32(evmReceiver));
-        assertEq(burn.destinationCaller, bytes32(0));
+        assertEq(burn.destinationCaller, CctpMessages.toBytes32(evmReceiver));
         assertEq(burn.maxFee, 0);
         assertEq(burn.minFinalityThreshold, 2000);
         assertTrue(burn.withHook);
@@ -122,6 +122,7 @@ contract InletHubTest is Test {
 
         MockTokenMessengerV2.Burn memory burn = messenger.last();
         assertEq(burn.mintRecipient, stellarForwarder);
+        assertEq(burn.destinationCaller, stellarForwarder);
         bytes memory payload = InletTypes.encodeHookPayload(
             intentHash, intent.adapterId, intent.beneficiary, intent.adapterData
         );

@@ -141,7 +141,7 @@ contract InletHub is Ownable, ReentrancyGuard, EIP712 {
             intent.destinationDomain,
             mintRecipient,
             address(usdc),
-            bytes32(0),
+            mintRecipient,
             maxFee,
             InletTypes.STANDARD_FINALITY,
             hookData
