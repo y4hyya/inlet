@@ -18,6 +18,8 @@ Circle Gateway or CCTP V2 brings native USDC to Arc, the Inlet hub on Arc escrow
 | Relayer API | https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io |
 | Hub on Arc testnet | [0xe202b28D53A26f2145f3995E48aDFBbc5148066f](https://testnet.arcscan.app/address/0xe202b28D53A26f2145f3995E48aDFBbc5148066f) |
 
+The hub and every receiver were redeployed on 2026-09-18 so that only a receiver can consume the hub's message and nothing but a message Circle attested can drive an adapter. Runs recorded before that date point at the previous addresses; the first deposit through the new contracts is in [`services/relayer/README.md`](services/relayer/README.md).
+
 Log in with an email through Privy or connect a wallet, pick a destination, enter an amount, and watch the timeline fill. The Gateway route needs a unified balance on the source chain and no gas. The CCTP route needs USDC and a little ETH there. Deposits start from Base Sepolia, Arbitrum Sepolia, Unichain Sepolia, Ethereum Sepolia, Monad Testnet or Solana Devnet, where Phantom signs one CCTP burn and the same road follows.
 
 <table>
