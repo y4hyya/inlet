@@ -896,19 +896,6 @@ export const inletReceiverAbi = [
   },
   {
     "type": "function",
-    "name": "execute",
-    "inputs": [
-      {
-        "name": "message",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "executed",
     "inputs": [
       {
@@ -1180,11 +1167,6 @@ export const inletReceiverAbi = [
   {
     "type": "error",
     "name": "BadPayload",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "MessageNotReceived",
     "inputs": []
   },
   {

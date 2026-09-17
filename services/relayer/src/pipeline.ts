@@ -222,34 +222,15 @@ export class Pipeline {
       return;
     }
 
-    const nonce = slice(record.message!, 12, 44);
-    const used = await destination.publicClient.readContract({
-      address: destination.messageTransmitter,
-      abi: messageTransmitterV2Abi,
-      functionName: "usedNonces",
-      args: [nonce],
+    const hash = await destination.walletClient.writeContract({
+      address: receiver,
+      abi: inletReceiverAbi,
+      functionName: "receiveAndExecute",
+      args: [record.message!, record.attestation!],
+      account: this.account,
+      chain: destination.chain,
+      gas: destination.fixedGas,
     });
-
-    const hash =
-      used === 1n
-        ? await destination.walletClient.writeContract({
-            address: receiver,
-            abi: inletReceiverAbi,
-            functionName: "execute",
-            args: [record.message!],
-            account: this.account,
-            chain: destination.chain,
-            gas: destination.fixedGas,
-          })
-        : await destination.walletClient.writeContract({
-            address: receiver,
-            abi: inletReceiverAbi,
-            functionName: "receiveAndExecute",
-            args: [record.message!, record.attestation!],
-            account: this.account,
-            chain: destination.chain,
-            gas: destination.fixedGas,
-          });
     const receipt = await destination.publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error(`execute reverted in ${hash}`);
 
