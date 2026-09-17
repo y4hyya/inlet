@@ -35,7 +35,6 @@ contract InletReceiver is Ownable, ReentrancyGuard {
     event Claimed(address indexed account, address indexed to, uint256 amount);
 
     error ReceiveFailed();
-    error MessageNotReceived();
     error WrongRecipient();
     error WrongOrigin();
     error BadPayload();
@@ -65,10 +64,6 @@ contract InletReceiver is Ownable, ReentrancyGuard {
         _execute(message);
     }
 
-    function execute(bytes calldata message) external {
-        _execute(message);
-    }
-
     function claim(address to) external nonReentrant {
         uint256 amount = claimable[msg.sender];
         if (amount == 0) revert NothingToClaim();
@@ -78,10 +73,8 @@ contract InletReceiver is Ownable, ReentrancyGuard {
     }
 
     function _execute(bytes calldata message) internal nonReentrant {
-        // CCTP V2 header offsets: sourceDomain 4, nonce 12, body 148
+        // CCTP V2 header offsets: sourceDomain 4, body 148
         uint32 sourceDomain = uint32(bytes4(message[4:8]));
-        bytes32 nonce = bytes32(message[12:44]);
-        if (messageTransmitter.usedNonces(nonce) != 1) revert MessageNotReceived();
 
         // Burn body offsets: mintRecipient 36, amount 68, messageSender 100, feeExecuted 164, hookData 228
         bytes calldata body = message[148:];

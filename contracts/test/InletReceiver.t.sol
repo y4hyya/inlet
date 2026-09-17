@@ -48,8 +48,24 @@ contract InletReceiverTest is Test {
         bytes32 adapterId,
         bytes memory adapterData
     ) internal view returns (bytes memory) {
+        return _messageFor(
+            beneficiary, nonce, sourceDomain, messageSender, amount, feeExecuted, intentHash, adapterId, adapterData
+        );
+    }
+
+    function _messageFor(
+        address beneficiary_,
+        bytes32 nonce,
+        uint32 sourceDomain,
+        bytes32 messageSender,
+        uint256 amount,
+        uint256 feeExecuted,
+        bytes32 intentHash,
+        bytes32 adapterId,
+        bytes memory adapterData
+    ) internal view returns (bytes memory) {
         bytes memory payload = InletTypes.encodeHookPayload(
-            intentHash, adapterId, CctpMessages.toBytes32(beneficiary), adapterData
+            intentHash, adapterId, CctpMessages.toBytes32(beneficiary_), adapterData
         );
         bytes memory body = CctpMessages.burnBody(
             CctpMessages.toBytes32(address(usdc)),
@@ -97,22 +113,6 @@ contract InletReceiverTest is Test {
         assertEq(usdc.allowance(address(receiver), address(adapter)), 0);
     }
 
-    function test_executeAfterSeparateReceive() public {
-        bytes memory message = _message(
-            keccak256("nonce 2"),
-            ARC,
-            CctpMessages.toBytes32(hub),
-            50e6,
-            0,
-            keccak256("intent 2"),
-            ERC4626_ID,
-            _vaultData(0)
-        );
-        transmitter.receiveMessage(message, "");
-        receiver.execute(message);
-        assertEq(vault.balanceOf(beneficiary), 50e6);
-    }
-
     function test_feeExecutedReducesTheDeposit() public {
         bytes memory message = _message(
             keccak256("nonce 3"),
@@ -128,22 +128,7 @@ contract InletReceiverTest is Test {
         assertEq(vault.balanceOf(beneficiary), 90e6);
     }
 
-    function test_executeRejectsMessageCircleHasNotMinted() public {
-        bytes memory message = _message(
-            keccak256("nonce 4"),
-            ARC,
-            CctpMessages.toBytes32(hub),
-            100e6,
-            0,
-            keccak256("intent 4"),
-            ERC4626_ID,
-            _vaultData(0)
-        );
-        vm.expectRevert(InletReceiver.MessageNotReceived.selector);
-        receiver.execute(message);
-    }
-
-    function test_executeRejectsMessagesNotFromTheHub() public {
+    function test_rejectsMessagesNotFromTheHub() public {
         bytes memory message = _message(
             keccak256("nonce 5"),
             ARC,
@@ -171,20 +156,18 @@ contract InletReceiverTest is Test {
         receiver.receiveAndExecute(message, "");
     }
 
-    function test_executeRejectsDuplicateIntent() public {
-        bytes memory message = _message(
-            keccak256("nonce 7"),
-            ARC,
-            CctpMessages.toBytes32(hub),
-            100e6,
-            0,
-            keccak256("intent 7"),
-            ERC4626_ID,
-            _vaultData(0)
+    function test_rejectsDuplicateIntent() public {
+        bytes32 intentHash = keccak256("intent 7");
+        receiver.receiveAndExecute(
+            _message(keccak256("nonce 7"), ARC, CctpMessages.toBytes32(hub), 100e6, 0, intentHash, ERC4626_ID, _vaultData(0)),
+            ""
         );
-        receiver.receiveAndExecute(message, "");
+        bytes memory again = _message(
+            keccak256("nonce 7 again"), ARC, CctpMessages.toBytes32(hub), 100e6, 0, intentHash, ERC4626_ID, _vaultData(0)
+        );
         vm.expectRevert(InletReceiver.AlreadyExecuted.selector);
-        receiver.execute(message);
+        receiver.receiveAndExecute(again, "");
+        assertEq(vault.balanceOf(beneficiary), 100e6);
     }
 
     function test_failingAdapterMakesFundsClaimable() public {
@@ -245,5 +228,33 @@ contract InletReceiverTest is Test {
     function test_claimRevertsWithNothing() public {
         vm.expectRevert(InletReceiver.NothingToClaim.selector);
         receiver.claim(address(this));
+    }
+
+    function test_forgedMessageCannotClaimTheReceiversBalance() public {
+        bytes32 nonce = keccak256("nonce 11");
+        receiver.receiveAndExecute(
+            _message(nonce, ARC, CctpMessages.toBytes32(hub), 100e6, 0, keccak256("intent 11"), FAILING_ID, ""),
+            ""
+        );
+        assertEq(usdc.balanceOf(address(receiver)), 100e6);
+
+        address attacker = address(0xA77);
+        bytes memory forged = _messageFor(
+            attacker,
+            nonce,
+            ARC,
+            CctpMessages.toBytes32(hub),
+            100e6,
+            0,
+            keccak256("forged intent"),
+            keccak256("missing:v1"),
+            ""
+        );
+        vm.prank(attacker);
+        (bool ok,) = address(receiver).call(abi.encodeWithSignature("execute(bytes)", forged));
+
+        assertFalse(ok);
+        assertEq(receiver.claimable(attacker), 0);
+        assertEq(receiver.claimable(beneficiary), 100e6);
     }
 }

@@ -30,6 +30,4 @@ interface IMessageTransmitterV2 {
     function receiveMessage(bytes calldata message, bytes calldata attestation)
         external
         returns (bool success);
-
-    function usedNonces(bytes32 nonce) external view returns (uint256);
 }
