@@ -82,7 +82,7 @@ contract InletReceiverTest is Test {
             nonce,
             keccak256("token messenger on arc"),
             CctpMessages.toBytes32(address(receiver)),
-            bytes32(0),
+            CctpMessages.toBytes32(address(receiver)),
             body
         );
     }
@@ -228,6 +228,18 @@ contract InletReceiverTest is Test {
     function test_claimRevertsWithNothing() public {
         vm.expectRevert(InletReceiver.NothingToClaim.selector);
         receiver.claim(address(this));
+    }
+
+    function test_onlyTheReceiverCanConsumeItsMessages() public {
+        bytes memory message = _message(
+            keccak256("nonce 12"), ARC, CctpMessages.toBytes32(hub), 100e6, 0, keccak256("intent 12"), ERC4626_ID, _vaultData(0)
+        );
+        vm.expectRevert("Invalid caller for message");
+        transmitter.receiveMessage(message, "");
+
+        vm.prank(address(0x5E1A));
+        receiver.receiveAndExecute(message, "");
+        assertEq(vault.balanceOf(beneficiary), 100e6);
     }
 
     function test_forgedMessageCannotClaimTheReceiversBalance() public {

@@ -113,6 +113,11 @@ contract MockMessageTransmitterV2 is IMessageTransmitterV2 {
     function receiveMessage(bytes calldata message, bytes calldata) external returns (bool) {
         bytes32 nonce = bytes32(message[12:44]);
         require(usedNonces[nonce] == 0, "Nonce already used");
+        bytes32 destinationCaller = bytes32(message[108:140]);
+        require(
+            destinationCaller == bytes32(0) || destinationCaller == bytes32(uint256(uint160(msg.sender))),
+            "Invalid caller for message"
+        );
         usedNonces[nonce] = 1;
         bytes calldata body = message[148:];
         address recipient = address(uint160(uint256(bytes32(body[36:68]))));
