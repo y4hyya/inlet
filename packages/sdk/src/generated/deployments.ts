@@ -1,9 +1,9 @@
 export const testnetDeployments = {
   "arcTestnet": {
-    "inletHub": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B"
+    "inletHub": "0xe202b28D53A26f2145f3995E48aDFBbc5148066f"
   },
   "arbitrumSepolia": {
-    "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
+    "inletReceiver": "0x145083628c9dF6980fe2747B286835e7c637ed22",
     "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9",
     "demoVault": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED",
     "aaveV3Adapter": "0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736",
@@ -13,7 +13,7 @@ export const testnetDeployments = {
     "compoundV3ExitAdapter": "0xeC0bBb2DA7a4c4f8F9c82bbf3AF7912d186D8001"
   },
   "baseSepolia": {
-    "inletReceiver": "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+    "inletReceiver": "0x30695D945039FbBc0C36F595a8B5B54d83a945De",
     "erc4626Adapter": "0x6253A9a287803111eD736c0C234de17bBE7672ED",
     "compoundV3Adapter": "0x77D23de84220E4Dc86b6B8c181Be1E49D6a23f7c",
     "inletExit": "0xfa6000e83B141bDA1aD067a5a5A32912f43F0258",
@@ -22,16 +22,16 @@ export const testnetDeployments = {
     "compoundV3ExitAdapter": "0xC7DA09Fc180062d0b31627686E7f7041E9288F90"
   },
   "unichainSepolia": {
-    "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
+    "inletReceiver": "0x49de71C101F1768C1ad4132AB815C163608A86d9",
     "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9",
     "uniswapV4LpAdapter": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED"
   },
   "ethereumSepolia": {
-    "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
+    "inletReceiver": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED",
     "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9"
   },
   "monadTestnet": {
-    "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
+    "inletReceiver": "0x38B9bCC43A585C80b7f649b9F98d394F9b321c96",
     "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9",
     "demoVault": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED"
   },

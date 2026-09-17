@@ -16,7 +16,7 @@ Circle Gateway or CCTP V2 brings native USDC to Arc, the Inlet hub on Arc escrow
 | Live app | https://inletkit.vercel.app/app |
 | Docs | https://inletkit.vercel.app/docs |
 | Relayer API | https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io |
-| Hub on Arc testnet | [0x84f3433550d1B6FB7f0BE197eA9faA256962408B](https://testnet.arcscan.app/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+| Hub on Arc testnet | [0xe202b28D53A26f2145f3995E48aDFBbc5148066f](https://testnet.arcscan.app/address/0xe202b28D53A26f2145f3995E48aDFBbc5148066f) |
 
 Log in with an email through Privy or connect a wallet, pick a destination, enter an amount, and watch the timeline fill. The Gateway route needs a unified balance on the source chain and no gas. The CCTP route needs USDC and a little ETH there. Deposits start from Base Sepolia, Arbitrum Sepolia, Unichain Sepolia, Ethereum Sepolia, Monad Testnet or Solana Devnet, where Phantom signs one CCTP burn and the same road follows.
 
@@ -98,7 +98,7 @@ const vault = erc4626Destination({
   id: "my-vault",
   name: "My USDC Vault",
   destinationDomain: 6,
-  receiver: "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+  receiver: "0x30695D945039FbBc0C36F595a8B5B54d83a945De",
   vault: "0xYourVaultOnBaseSepolia",
 });
 
@@ -137,7 +137,7 @@ Contracts on Unichain Sepolia:
 
 | Contract | Address |
 | --- | --- |
-| Inlet receiver | [0x84f3433550d1B6FB7f0BE197eA9faA256962408B](https://sepolia.uniscan.xyz/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+| Inlet receiver | [0x49de71C101F1768C1ad4132AB815C163608A86d9](https://sepolia.uniscan.xyz/address/0x49de71C101F1768C1ad4132AB815C163608A86d9) |
 | Uniswap v4 liquidity adapter | [0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED](https://sepolia.uniscan.xyz/address/0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED) |
 | Uniswap PositionManager | 0xf969Aee60879C54bAAed9F3eD26147Db216Fd664 |
 | Uniswap StateView | 0xc199F1072a74D4e905ABa1A84d9a45E2546B6222 |

@@ -22,7 +22,7 @@ const vault = erc4626Destination({
   id: "my-vault",
   name: "My USDC Vault",
   destinationDomain: 6,
-  receiver: "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+  receiver: "0x30695D945039FbBc0C36F595a8B5B54d83a945De",
   vault: "0xYourVaultOnBaseSepolia",
   exitContract: "0xfa6000e83B141bDA1aD067a5a5A32912f43F0258",
 });

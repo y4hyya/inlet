@@ -175,7 +175,7 @@ The relayer also proxies the Uniswap Trading API behind `GET /quotes/uniswap`, s
 ## 12. Demo configuration
 
 - Sources: Base Sepolia (domain 6) and Arbitrum Sepolia (domain 3) in the widget; Unichain Sepolia (10) and Ethereum Sepolia (0) in the SDK.
-- Hub: Arc testnet, chain id 5042002, CCTP and Gateway domain 26, at 0x84f3433550d1B6FB7f0BE197eA9faA256962408B.
+- Hub: Arc testnet, chain id 5042002, CCTP and Gateway domain 26, at 0xe202b28D53A26f2145f3995E48aDFBbc5148066f.
 - EVM destinations: Arbitrum Sepolia (domain 3) with Aave V3 and the demo vault; Base Sepolia (domain 6) with Compound III and the Morpho Oneshot vault; Unichain Sepolia (domain 10) with the Uniswap v4 ETH/USDC pool.
 - Stellar destination: Stellar testnet, CCTP domain 27, Noether vault (in progress).
 - Addresses live in `config/chains.testnet.json` (Circle contracts per chain), `config/deployments.testnet.json` (Inlet contracts) and `config/protocols.testnet.json` (third party protocols), all generated into the SDK.

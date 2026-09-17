@@ -30,7 +30,7 @@ const vault = erc4626Destination({
   id: "my-vault",
   name: "My USDC Vault",
   destinationDomain: 6,
-  receiver: "0x643AD7be131Aa7eE9fADB1596A66E69715F5a594",
+  receiver: "0x30695D945039FbBc0C36F595a8B5B54d83a945De",
   vault: "0xYourVaultOnBaseSepolia",
 });
 
@@ -99,12 +99,12 @@ Everything the relayer does is permissionless: `sweep` and `refund` on the hub, 
 
 | Item | Value |
 | --- | --- |
-| Hub on Arc testnet, chain 5042002, CCTP and Gateway domain 26 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
-| Receiver on Arbitrum Sepolia, domain 3 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
-| Receiver on Base Sepolia, domain 6 | 0x643AD7be131Aa7eE9fADB1596A66E69715F5a594 |
-| Receiver on Unichain Sepolia, domain 10 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
-| Receiver on Ethereum Sepolia, domain 0 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
-| Receiver on Monad Testnet, domain 15 | 0x84f3433550d1B6FB7f0BE197eA9faA256962408B |
+| Hub on Arc testnet, chain 5042002, CCTP and Gateway domain 26 | 0xe202b28D53A26f2145f3995E48aDFBbc5148066f |
+| Receiver on Arbitrum Sepolia, domain 3 | 0x145083628c9dF6980fe2747B286835e7c637ed22 |
+| Receiver on Base Sepolia, domain 6 | 0x30695D945039FbBc0C36F595a8B5B54d83a945De |
+| Receiver on Unichain Sepolia, domain 10 | 0x49de71C101F1768C1ad4132AB815C163608A86d9 |
+| Receiver on Ethereum Sepolia, domain 0 | 0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED |
+| Receiver on Monad Testnet, domain 15 | 0x38B9bCC43A585C80b7f649b9F98d394F9b321c96 |
 | InletExit on Arbitrum Sepolia | 0xBBA8b8f139e27101812340fc750e39f096ECD677 |
 | InletExit on Base Sepolia | 0xfa6000e83B141bDA1aD067a5a5A32912f43F0258 |
 | Adapter ids | `erc4626:v1`, `aave-v3:v1`, `compound-v3:v1`, `uniswap-v4-lp:v1` |
