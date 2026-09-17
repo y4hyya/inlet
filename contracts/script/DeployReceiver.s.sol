@@ -7,7 +7,7 @@ import {InletReceiver} from "../src/InletReceiver.sol";
 import {ERC4626Adapter} from "../src/adapters/ERC4626Adapter.sol";
 import {DemoVault} from "../src/demo/DemoVault.sol";
 
-/// @notice Deploys the receiver, the ERC 4626 adapter, and the demo vault on an EVM destination.
+/// @notice Deploys the receiver on an EVM destination with the ERC 4626 adapter, reusing one when ERC4626_ADAPTER is set, and the demo vault.
 contract DeployReceiver is Script {
     function run() external {
         address usdc = vm.envAddress("USDC");
@@ -19,8 +19,9 @@ contract DeployReceiver is Script {
 
         vm.startBroadcast(key);
         InletReceiver receiver = new InletReceiver(usdc, messageTransmitter, hubDomain, hub, owner);
-        ERC4626Adapter adapter = new ERC4626Adapter();
-        receiver.setAdapter(keccak256("erc4626:v1"), address(adapter));
+        address adapter = vm.envOr("ERC4626_ADAPTER", address(0));
+        if (adapter == address(0)) adapter = address(new ERC4626Adapter());
+        receiver.setAdapter(keccak256("erc4626:v1"), adapter);
         if (vm.envOr("DEPLOY_DEMO_VAULT", true)) {
             DemoVault vault = new DemoVault(IERC20(usdc));
             console.log("DemoVault", address(vault));
@@ -28,6 +29,6 @@ contract DeployReceiver is Script {
         vm.stopBroadcast();
 
         console.log("InletReceiver", address(receiver));
-        console.log("ERC4626Adapter", address(adapter));
+        console.log("ERC4626Adapter", adapter);
     }
 }

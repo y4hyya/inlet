@@ -14,6 +14,7 @@ Deployment scripts live in `script/`. Copy `.env.example` to `.env` and set `PRI
 | Script | Variables |
 | --- | --- |
 | DeployHub | PRIVATE_KEY, optional USDC, TOKEN_MESSENGER, LOCAL_DOMAIN, OWNER |
-| DeployReceiver | PRIVATE_KEY, USDC, MESSAGE_TRANSMITTER, HUB, optional HUB_DOMAIN, OWNER, DEPLOY_DEMO_VAULT |
+| DeployReceiver | PRIVATE_KEY, USDC, MESSAGE_TRANSMITTER, HUB, optional HUB_DOMAIN, OWNER, DEPLOY_DEMO_VAULT, ERC4626_ADAPTER to reuse one |
+| RegisterAdapter | PRIVATE_KEY, RECEIVER, NAME, ADAPTER |
 | ConfigureHub | PRIVATE_KEY, HUB, DOMAIN, KIND (1 evm, 2 stellar forwarder), RECEIVER, optional FORWARDER, STRKEY, MAX_FEE_BPS |
 | DeployExit | PRIVATE_KEY, USDC, TOKEN_MESSENGER, optional OWNER |
