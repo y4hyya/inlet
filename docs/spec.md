@@ -96,11 +96,11 @@ Both routes end the same way: USDC at the deposit address, then sweep.
 
 ### 7.1 EVM receiver
 
-The receiver is the mint recipient for every EVM destination. After the relayer submits receiveMessage on the destination's MessageTransmitter, it calls `execute(message)` on the receiver with the same CCTP message bytes.
+The receiver is the mint recipient and the destination caller for every EVM destination, so only the receiver can consume the hub's message. The relayer calls `receiveAndExecute(message, attestation)` on the receiver, which hands the message to the MessageTransmitter for the mint and executes the same bytes in the same transaction. Nothing else can drive execution.
 
-execute does the following:
+receiveAndExecute does the following:
 
-1. Confirm the message nonce has been consumed on the MessageTransmitter, so only real mints can drive execution.
+1. Submit receiveMessage on the MessageTransmitter, which verifies Circle's attestation and mints the USDC to the receiver. Only attested bytes reach the next step.
 2. Parse the burn message: the source domain must be Arc and the message sender must be the hub, the mint recipient must be this receiver, and the amount received is the burned amount minus the fee Circle executed.
 3. Parse the Inlet frame from the hook data. Reject intents that were already executed.
 4. Approve the adapter and call it with the amount, the beneficiary, and the adapter data.
@@ -144,8 +144,7 @@ A refund has two halves: the hub burns back toward the source chain (refunding),
 Loops:
 
 - Watch the deposit addresses of registered intents on Arc for USDC arrival, then sweep.
-- Poll Circle's attestation API for each swept burn until the attestation is available, then submit receiveMessage on the destination.
-- Execute the receiver and record the result.
+- Poll Circle's attestation API for each swept burn until the attestation is available, then call receiveAndExecute on the receiver and record the result.
 - For the direct CCTP route, poll the source burn and submit the Arc mint.
 - For the Gateway route, submit the signed burn intent to Circle and call gatewayMint on Arc.
 - For refunds, poll the refund burn and submit the mint on the source chain.

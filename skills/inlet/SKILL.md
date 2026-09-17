@@ -93,7 +93,7 @@ cp .env.example .env   # RELAYER_PRIVATE_KEY funded with USDC on Arc and ETH on 
 pnpm dev
 ```
 
-Everything the relayer does is permissionless: `sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter, `execute` and `claim` on the receiver. A protocol can run its own relayer or point the widget at the hosted one.
+Everything the relayer does is permissionless: `sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter on Arc, `receiveAndExecute` and `claim` on the receiver. A protocol can run its own relayer or point the widget at the hosted one.
 
 ## Addresses on testnet
 

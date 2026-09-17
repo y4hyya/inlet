@@ -14,7 +14,7 @@ No. USDC leaves the source chain as native USDC through Gateway or CCTP, lands o
 
 ## What if the relayer goes down?
 
-The deposit slows down, it does not get lost. Every step the relayer takes is a public function: `sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter, `execute` and `claim` on the receiver. Anyone can call them, including the user.
+The deposit slows down, it does not get lost. Every step the relayer takes is a public function: `sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter on Arc, `receiveAndExecute` and `claim` on the receiver. Anyone can call them, including the user.
 
 ## What if the protocol call fails?
 

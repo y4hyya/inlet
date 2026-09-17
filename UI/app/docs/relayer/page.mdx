@@ -8,7 +8,7 @@ The relayer completes deposits. It watches deposit addresses on Arc, mints incom
 
 ## Everything it does is permissionless
 
-`sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter, `execute` and `claim` on the receiver. A relayer makes deposits fast. It cannot redirect one, and it is not needed to finish one. A protocol can run its own relayer, or point the widget at the hosted one at `https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io`.
+`sweep` and `refund` on the hub, `receiveMessage` on Circle's MessageTransmitter on Arc, `receiveAndExecute` and `claim` on the receiver. A relayer makes deposits fast. It cannot redirect one, and it is not needed to finish one. A protocol can run its own relayer, or point the widget at the hosted one at `https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io`.
 
 ## Run it
 
@@ -35,8 +35,8 @@ Destination chains and receivers come from `config/deployments.testnet.json`. Th
 | created | funded | A CCTP mint or a Gateway mint landed at the deposit address on Arc |
 | funded | swept | The relayer called `sweep` on the hub |
 | swept | attested | Circle's Iris API returned the attestation for the hub's burn |
-| attested | executed | The relayer called `receiveMessage` and then `execute` on the receiver |
-| attested | claimable | The adapter reverted inside `execute` and the receiver kept the USDC for the beneficiary |
+| attested | executed | The relayer called `receiveAndExecute` on the receiver |
+| attested | claimable | The adapter reverted inside `receiveAndExecute` and the receiver kept the USDC for the beneficiary |
 | funded or created | refunding, refunded, expired | The deadline passed; `refund` burned the balance back, or nothing was there |
 
 ## End to end scripts

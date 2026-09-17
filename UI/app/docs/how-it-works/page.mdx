@@ -70,9 +70,9 @@ Both routes end the same way: USDC at the deposit address, then sweep.
 
 ## Destination execution
 
-After the relayer submits `receiveMessage` on the destination's MessageTransmitter, it calls `execute(message)` on the receiver with the same CCTP message. The receiver:
+The receiver is the mint recipient and the destination caller of the hub's message, so only the receiver can consume it. The relayer calls `receiveAndExecute(message, attestation)` on the receiver, which mints and executes the same bytes in one transaction. The receiver:
 
-1. Confirms the message nonce was consumed on the MessageTransmitter, so only real mints drive execution.
+1. Hands the message to the MessageTransmitter, which verifies Circle's attestation and mints the USDC. Only attested bytes reach the next step.
 2. Checks the burn message: the source domain is Arc, the sender is the hub, the mint recipient is this receiver. The amount received is the burned amount minus the fee Circle executed.
 3. Parses the Inlet frame from the hook data and rejects intents that already executed.
 4. Approves the adapter and calls it with the amount, the beneficiary, and the adapter data.
