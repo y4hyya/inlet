@@ -35,6 +35,10 @@ export const testnetDeployments = {
     "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9",
     "demoVault": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED"
   },
+  "stellarTestnet": {
+    "inletReceiver": "CAZ2VUUIJMVF5YAQ64NG2OUYSKCINRHB4363QKO7CI74YSHG6PRQQJYH",
+    "mockMarket": "CCR3QLSXZA2V65NJGCUY7XA5ZGXM4SVBEXWKER6IKXZSKIDKT2K4FAUO"
+  },
   "adapters": {
     "erc4626:v1": "keccak256 of the string erc4626:v1",
     "aave-v3:v1": "keccak256 of the string aave-v3:v1",

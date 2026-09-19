@@ -38,7 +38,7 @@ export interface IntentRecord {
   sourceTx?: string;
   arcMintTx?: Hex;
   sweepTx?: Hex;
-  destinationTx?: Hex;
+  destinationTx?: string;
   refundTx?: Hex;
   refundMintTx?: string;
   result?: string;

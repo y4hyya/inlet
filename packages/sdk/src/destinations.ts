@@ -4,6 +4,7 @@ import { testnetChains } from "./generated/chains.js";
 import { testnetDeployments } from "./generated/deployments.js";
 import { testnetProtocols } from "./generated/protocols.js";
 import { aaveV3AdapterData, adapterId, compoundV3AdapterData, erc4626AdapterData, uniswapV4LpAdapterData, type PoolKey } from "./intent.js";
+import { stellarContractToBytes32 } from "./stellar.js";
 import type { PermitKind } from "./types.js";
 
 export const explorers: Record<number, string> = {
@@ -41,6 +42,8 @@ export interface DestinationSpec {
   chain: string;
   chainId: number;
   destinationDomain: number;
+  // Stellar destinations carry the receiver as its 32 byte contract id, and the beneficiary is a G account.
+  family?: "evm" | "stellar";
   receiver: Address;
   adapterName: string;
   adapterId: Hex;
@@ -224,6 +227,22 @@ export const testnetDestinations: DestinationSpec[] = [
     positionLabel: "vault shares",
     positionToken: testnetDeployments.arbitrumSepolia.demoVault as Address,
     explorer: explorers[3],
+  },
+  {
+    id: "noether-cross-margin-stellar-testnet",
+    name: "Noether margin on Stellar Testnet",
+    description: "Credits the trader's cross margin balance on Noether. The balance is internal to the market, so the trader needs no trustline and no XLM to receive it.",
+    protocol: "Noether",
+    chain: "Stellar Testnet",
+    chainId: 0,
+    destinationDomain: 27,
+    family: "stellar",
+    receiver: stellarContractToBytes32(testnetDeployments.stellarTestnet.inletReceiver),
+    adapterName: "noether-cross-margin:v1",
+    adapterId: adapterId("noether-cross-margin:v1"),
+    adapterData: "0x",
+    positionLabel: "Noether margin",
+    explorer: explorers[27],
   },
 ];
 
