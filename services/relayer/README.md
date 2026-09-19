@@ -33,6 +33,12 @@ Solana Devnet is CCTP domain 5, and a deposit that starts there follows the same
 
 Refunds are the one place the road ends early. The hub burns the USDC back from Arc toward the depositor's USDC token account on Solana and Circle attests that burn as usual, but the relayer holds no Solana signer, so the closing `receiveMessage` on Solana is done by the depositor, or by anyone else willing to carry Circle's attestation. The relayer records such a refund with `refund_mint_tx` set to `manual`, leaves the intent in `refunding`, logs it once, and never retries it.
 
+## Stellar as a destination
+
+With `STELLAR_SECRET_KEY` set the relayer serves CCTP domain 27. The key is a funded Stellar account that pays the fee of one transaction per deposit; it has no role in any contract. `STELLAR_RECEIVER` names the receiver contract and defaults to the one in the deployments file, `STELLAR_RPC` the Soroban RPC, and `HUB_ADDRESS` points the whole relayer at another hub, which is how the Stellar hub on Arc testnet runs beside the one behind the live site. The Stellar step is one call, `receive_and_execute(message, attestation)` on the receiver, which mints through Circle and deposits for the beneficiary in the same transaction. The record ends at `executed`, or at `claimable` when the market refused the deposit and the receiver kept the USDC for the beneficiary.
+
+`pnpm e2e:stellar` reads `.env.stellar`, burns from Base Sepolia with `USER_PRIVATE_KEY`, and credits `STELLAR_BENEFICIARY`, a G account. First run on 2026-09-19: 30 seconds from the burn to the credit, Stellar transaction 6e930736dc97daa096b45c9db8070cabfb53f5714f63cfa5d94efab48ce35484.
+
 ## End to end on testnet
 
 `pnpm e2e` burns one USDC on the source chain, routes it through Arc, and deposits it into the chosen destination, printing every transaction hash. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without a source chain wait. Both scripts read `DESTINATION` (one of the keys in `scripts/destinations.ts`, default `demo-vault`), `SOURCE` (a CCTP domain, default 6 for Base Sepolia), `E2E_AMOUNT` in USDC units, `USER_PRIVATE_KEY` for the depositing wallet, and `RELAYER_URL` to use a hosted relayer instead of starting one.

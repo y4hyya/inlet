@@ -1,6 +1,7 @@
 {
   "arcTestnet": {
-    "inletHub": "0xe202b28D53A26f2145f3995E48aDFBbc5148066f"
+    "inletHub": "0xe202b28D53A26f2145f3995E48aDFBbc5148066f",
+    "stellarHub": "0x91D9d762C8D813688dbaE38Effaa6BdaAA7E2E60"
   },
   "arbitrumSepolia": {
     "inletReceiver": "0x145083628c9dF6980fe2747B286835e7c637ed22",
@@ -36,7 +37,7 @@
     "demoVault": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED"
   },
   "stellarTestnet": {
-    "inletReceiver": "CAZ2VUUIJMVF5YAQ64NG2OUYSKCINRHB4363QKO7CI74YSHG6PRQQJYH",
+    "inletReceiver": "CASSQ246LZ44A6HGYHZYMSEHN3YUYPXFXMR4JF52P5HFYVJSIAMQYJDF",
     "mockMarket": "CCR3QLSXZA2V65NJGCUY7XA5ZGXM4SVBEXWKER6IKXZSKIDKT2K4FAUO"
   },
   "adapters": {
