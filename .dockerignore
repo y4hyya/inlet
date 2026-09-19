@@ -12,3 +12,5 @@ contracts/broadcast
 .azure
 **/.env
 **/.env.*
+**/target
+.vercel
