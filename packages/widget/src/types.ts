@@ -7,6 +7,8 @@ export interface Destination {
   description?: string;
   chainId: number;
   destinationDomain: number;
+  // A Stellar destination credits a G account the user names, not the EVM wallet that pays.
+  family?: "evm" | "stellar";
   receiver: Address;
   adapterId: Hex;
   adapterData: (context: { beneficiary: Address; amount: bigint }) => Hex;

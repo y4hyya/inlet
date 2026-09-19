@@ -32,6 +32,8 @@ import type { DepositState, Destination, Quote, RoutePreference, SourceChain } f
 const terminal = new Set(["executed", "claimable", "refunded", "expired", "failed"]);
 
 /// The Solana wallet the host connected, and the one call the deposit needs from it.
+import { intentBeneficiary } from "./beneficiary.js";
+
 export interface SolanaWallet {
   address: string;
   signAndSend: (transaction: Uint8Array) => Promise<Uint8Array>;
@@ -41,8 +43,8 @@ function solanaCctp(source: SolanaSource) {
   return { rpc: source.rpc, usdcMint: source.usdc, tokenMessengerMinter: source.tokenMessenger, messageTransmitter: source.messageTransmitter };
 }
 
-export function useDeposit(params: { relayerUrl: string; source: SourceChain; sources: SourceChain[]; destination: Destination; solana?: SolanaWallet }) {
-  const { relayerUrl, source, sources, destination, solana } = params;
+export function useDeposit(params: { relayerUrl: string; source: SourceChain; sources: SourceChain[]; destination: Destination; solana?: SolanaWallet; stellarAccount?: string }) {
+  const { relayerUrl, source, sources, destination, solana, stellarAccount } = params;
   const config = useConfig();
   const { address, chainId } = useAccount();
   const [state, setState] = useState<DepositState>({ phase: "idle" });
@@ -237,6 +239,8 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   const depositFromSolana = useCallback(
     async (current: Quote, target: SolanaSource) => {
       if (!address || !solana) return;
+      const beneficiary = intentBeneficiary(destination, address, stellarAccount);
+      if (!beneficiary) return setState((previous) => ({ ...previous, phase: "error", error: "The position needs a Stellar account to land in. Enter one that starts with G." }));
       try {
         setState({ phase: "creating", quote: current });
         const cctp = solanaCctp(target);
@@ -246,7 +250,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
           destinationDomain: destination.destinationDomain,
           adapterId: destination.adapterId,
           receiver: toBytes32(destination.receiver),
-          beneficiary: toBytes32(address),
+          beneficiary,
           adapterData: destination.adapterData({ beneficiary: address, amount: current.intentAmount }),
           amount: current.intentAmount,
           nonce: BigInt(Date.now()),
@@ -274,7 +278,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
       }
     },
-    [address, destination, relayer, solana, track],
+    [address, destination, relayer, solana, stellarAccount, track],
   );
 
   const deposit = useCallback(
@@ -282,6 +286,8 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
       if (!address || !current.ready) return;
       const target = chainFor(current.sourceDomain);
       if (target.kind === "solana") return depositFromSolana(current, target);
+      const beneficiary = intentBeneficiary(destination, address, stellarAccount);
+      if (!beneficiary) return setState((previous) => ({ ...previous, phase: "error", error: "The position needs a Stellar account to land in. Enter one that starts with G." }));
       try {
         setState({ phase: "creating", quote: current });
         const intent: DepositIntent = {
@@ -290,7 +296,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
           destinationDomain: destination.destinationDomain,
           adapterId: destination.adapterId,
           receiver: toBytes32(destination.receiver),
-          beneficiary: toBytes32(address),
+          beneficiary,
           adapterData: destination.adapterData({ beneficiary: address, amount: current.intentAmount }),
           amount: current.intentAmount,
           nonce: BigInt(Date.now()),
@@ -343,7 +349,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
       }
     },
-    [address, config, destination, relayer, chainFor, ensureChain, approveIfNeeded, track, depositFromSolana],
+    [address, config, destination, relayer, stellarAccount, chainFor, ensureChain, approveIfNeeded, track, depositFromSolana],
   );
 
   const fundGateway = useCallback(

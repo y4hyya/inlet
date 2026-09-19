@@ -25,6 +25,7 @@ export {
   findDestination,
   fromSpec,
   morphoBaseSepoliaDestination,
+  noetherMarginStellarDestination,
   testnetDestinations,
   uniswapUnichainSepoliaDestination,
   uniswapV4LpDestination,

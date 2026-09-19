@@ -2,6 +2,7 @@ import { InletRelayerClient, hasGateway, type IntentRecord, type UniswapQuote } 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useConnect } from "wagmi";
+import { isStellarAccount } from "@inletkit/sdk";
 import { defaultSources } from "../config.js";
 import { useInlet } from "../context.js";
 import { short, usdc } from "../format.js";
@@ -19,6 +20,8 @@ export interface DepositWidgetProps {
   sources?: SourceChain[];
   defaultAmount?: string;
   defaultDestinationId?: string;
+  // The G account a Stellar destination credits. A host that knows it passes it; otherwise the form asks.
+  beneficiary?: string;
   title?: string;
   // A replacement header, or false for none. The combined widget passes its own.
   header?: ReactNode;
@@ -31,6 +34,7 @@ export function DepositWidget({
   sources: offered = defaultSources,
   defaultAmount = "1",
   defaultDestinationId,
+  beneficiary,
   title = "Deposit from any chain",
   header,
   onRecord,
@@ -48,6 +52,7 @@ export function DepositWidget({
   const [sourceDomain, setSourceDomain] = useState(sources[0]?.domain);
   const [amount, setAmount] = useState(defaultAmount);
   const [preference, setPreference] = useState<RoutePreference>("auto");
+  const [typedAccount, setTypedAccount] = useState("");
 
   const { status: relayerStatus } = useRelayerHealth(url);
 
@@ -56,7 +61,10 @@ export function DepositWidget({
   const gatewayHere = hasGateway(source);
   const routes: RoutePreference[] = gatewayHere ? ["auto", "gateway", "cctp"] : ["cctp"];
   const route = gatewayHere ? preference : "cctp";
-  const { state, quote, deposit, fundGateway, reset } = useDeposit({ relayerUrl: url, source, sources, destination, solana });
+  const onStellar = destination?.family === "stellar";
+  const stellarAccount = (beneficiary ?? typedAccount).trim();
+  const accountMissing = onStellar && !isStellarAccount(stellarAccount);
+  const { state, quote, deposit, fundGateway, reset } = useDeposit({ relayerUrl: url, source, sources, destination, solana, stellarAccount });
   const [gatewayTx, setGatewayTx] = useState<string>();
   const [moved, setMoved] = useState<SourceChain | undefined>();
   const chainName = (domain: number) => sources.find((entry) => entry.domain === domain)?.name ?? `domain ${domain}`;
@@ -168,6 +176,19 @@ export function DepositWidget({
               ))}
             </select>
           </label>
+          {onStellar ? (
+            beneficiary ? (
+              <div className="inlet-field">
+                <span>Credits</span>
+                <p className="inlet-wallet">{short(stellarAccount)} on Stellar</p>
+              </div>
+            ) : (
+              <label className="inlet-field">
+                <span>Stellar account to credit</span>
+                <input id="inlet-beneficiary" name="beneficiary" placeholder="G..." spellCheck={false} autoComplete="off" value={typedAccount} onChange={(event) => setTypedAccount(event.target.value)} disabled={busy} />
+              </label>
+            )
+          ) : null}
           <label className="inlet-field">
             <span>From</span>
             <select id="inlet-source" name="source" value={source?.domain} onChange={(event) => setSourceDomain(Number(event.target.value))} disabled={busy}>
@@ -233,6 +254,7 @@ export function DepositWidget({
 
           {moved && route === "auto" && state.quote?.sourceDomain === moved.domain ? <p className="inlet-note">Switched From to {moved.name}, where your Gateway balance is. Your wallet stays on its current network.</p> : null}
           {state.quote?.blocker ? <p className="inlet-warn">{state.quote.blocker}</p> : null}
+          {accountMissing && stellarAccount ? <p className="inlet-warn">That is not a Stellar account. It starts with G and has 56 characters.</p> : null}
           {state.quote?.gatewayElsewhere !== undefined ? (
             <p className="inlet-warn">
               Your Gateway balance is on {chainName(state.quote.gatewayElsewhere)}.{" "}
@@ -267,7 +289,7 @@ export function DepositWidget({
               <button
                 className="inlet-primary"
                 type="button"
-                disabled={!state.quote || !state.quote.ready || busy || quoting || relayerStatus !== "online"}
+                disabled={!state.quote || !state.quote.ready || busy || quoting || relayerStatus !== "online" || accountMissing}
                 onClick={() => state.quote && void deposit(state.quote)}
               >
                 {state.phase === "creating" ? "Registering intent" : state.phase === "signing" ? "Waiting for your wallet" : state.phase === "sending" ? "Sending" : quoting ? "Quoting" : "Deposit"}

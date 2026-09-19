@@ -12,6 +12,7 @@ export interface InletWidgetProps {
   relayerUrl?: string;
   sources?: SourceChain[];
   defaultDestinationId?: string;
+  beneficiary?: string;
   defaultMode?: InletMode;
   onModeChange?: (mode: InletMode) => void;
   onRecord?: (record: IntentRecord) => void;
@@ -20,7 +21,7 @@ export interface InletWidgetProps {
 
 /// Both directions under one header. The forms stay their own components, so a host that only
 /// wants deposits keeps mounting DepositWidget.
-export function InletWidget({ destinations, relayerUrl, sources, defaultDestinationId, defaultMode = "deposit", onModeChange, onRecord, onExit }: InletWidgetProps) {
+export function InletWidget({ destinations, relayerUrl, sources, defaultDestinationId, beneficiary, defaultMode = "deposit", onModeChange, onRecord, onExit }: InletWidgetProps) {
   const [mode, setMode] = useState<InletMode>(defaultMode);
 
   const change = (next: InletMode) => {
@@ -42,7 +43,7 @@ export function InletWidget({ destinations, relayerUrl, sources, defaultDestinat
   );
 
   return mode === "deposit" ? (
-    <DepositWidget destinations={destinations} relayerUrl={relayerUrl} sources={sources} defaultDestinationId={defaultDestinationId} header={header} onRecord={onRecord} />
+    <DepositWidget destinations={destinations} relayerUrl={relayerUrl} sources={sources} defaultDestinationId={defaultDestinationId} beneficiary={beneficiary} header={header} onRecord={onRecord} />
   ) : (
     <ExitWidget destinations={destinations} relayerUrl={relayerUrl} defaultDestinationId={defaultDestinationId} header={header} onExit={onExit} />
   );

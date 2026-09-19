@@ -201,6 +201,7 @@ export function fromSpec(spec: DestinationSpec): Destination {
     description: spec.description,
     chainId: spec.chainId,
     destinationDomain: spec.destinationDomain,
+    family: spec.family,
     receiver: spec.receiver,
     adapterId: spec.adapterId,
     adapterData: () => spec.adapterData,
@@ -219,6 +220,7 @@ export const compoundBaseSepoliaDestination = preset("compound-v3-base-sepolia")
 export const morphoBaseSepoliaDestination = preset("morpho-oneshot-base-sepolia");
 export const uniswapUnichainSepoliaDestination = preset("uniswap-v4-eth-usdc-unichain-sepolia");
 export const demoVaultDestination = preset("demo-vault");
+export const noetherMarginStellarDestination = preset("noether-cross-margin-stellar-testnet");
 
 export function findDestination(record: Pick<IntentRecord, "intent">, candidates: Destination[] = testnetDestinations): Destination | undefined {
   const sameRoute = candidates.filter(
