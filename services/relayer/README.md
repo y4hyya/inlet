@@ -37,7 +37,11 @@ Refunds are the one place the road ends early. The hub burns the USDC back from 
 
 With `STELLAR_SECRET_KEY` set the relayer serves CCTP domain 27. The key is a funded Stellar account that pays the fee of one transaction per deposit; it has no role in any contract. `STELLAR_RECEIVER` names the receiver contract and defaults to the one in the deployments file, `STELLAR_RPC` the Soroban RPC, and `HUB_ADDRESS` points the whole relayer at another hub, which is how the Stellar hub on Arc testnet runs beside the one behind the live site. The Stellar step is one call, `receive_and_execute(message, attestation)` on the receiver, which mints through Circle and deposits for the beneficiary in the same transaction. The record ends at `executed`, or at `claimable` when the market refused the deposit and the receiver kept the USDC for the beneficiary.
 
-`pnpm e2e:stellar` reads `.env.stellar`, burns from Base Sepolia with `USER_PRIVATE_KEY`, and credits `STELLAR_BENEFICIARY`, a G account. First run on 2026-09-19: 30 seconds from the burn to the credit, Stellar transaction 6e930736dc97daa096b45c9db8070cabfb53f5714f63cfa5d94efab48ce35484.
+`DESTINATIONS` and `EXITS` narrow what a relayer serves, as comma lists of CCTP domains, with `none` for nothing. A relayer on a hub that knows only Stellar runs with `DESTINATIONS=27` and `EXITS=none`, so it refuses deposits its hub cannot sweep.
+
+The Stellar hub has its own hosted relayer, `inlet-relayer-stellar` in the same Container Apps environment, at https://inlet-relayer-stellar.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io. It runs with those two settings, `HUB_ADDRESS` set to the Stellar hub, both keys as Container App secrets, and its database at `/data/stellar.db` on the relayer file share. Its key is not the key of the relayer behind the live site, so the two never compete for a nonce. Do not run a local relayer with the same keys while it is up.
+
+`pnpm e2e:stellar` reads `.env.stellar`, burns from Base Sepolia with `USER_PRIVATE_KEY`, and credits `STELLAR_BENEFICIARY`, a G account. With `RELAYER_URL` set it uses that relayer instead of starting one, and `STELLAR_MARKET` with `STELLAR_BALANCE_FN` point the balance check at another market. First run on 2026-09-19: 30 seconds from the burn to the credit, Stellar transaction 6e930736dc97daa096b45c9db8070cabfb53f5714f63cfa5d94efab48ce35484. Through the hosted Stellar relayer the same evening: 30 seconds again, Stellar transaction 584e2b05f42dea30d3ab9b636578f4c922a6e9ab0165b82051f16cf7fff4cbb5.
 
 ## End to end on testnet
 
