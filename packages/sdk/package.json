@@ -1,6 +1,6 @@
 {
   "name": "@inletkit/sdk",
-  "version": "0.2.0-stellar.0",
+  "version": "0.2.0-stellar.1",
   "description": "Types, hashing, and Circle helpers for Inlet deposits.",
   "license": "MIT",
   "type": "module",
@@ -31,7 +31,7 @@
     "viem": "^2.56.3"
   },
   "peerDependencies": {
-    "@stellar/stellar-sdk": "^17"
+    "@stellar/stellar-sdk": ">=13"
   },
   "peerDependenciesMeta": {
     "@stellar/stellar-sdk": {

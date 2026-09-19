@@ -361,6 +361,7 @@ export class Pipeline {
 
   async attestExit(record: StoredExit) {
     if (this.stellar && record.domain === this.stellar.domain) return this.attestStellarExit(record);
+    if (record.legs.length === 0) throw new Error("this exit has no legs to attest");
     const messages = await this.iris.getMessages(record.domain, record.exitTx!);
     const ready = messages.filter((message) => message.status === "complete" && message.attestation !== "PENDING");
     if (ready.length < record.legs.length) return;
@@ -396,6 +397,8 @@ export class Pipeline {
   }
 
   async deliver(record: StoredExit) {
+    // An exit with no legs would pass the check below without a single mint, so it is an error, not a delivery.
+    if (record.legs.length === 0) throw new Error("this exit reached delivery with no legs, so nothing was minted");
     const messages = await this.iris.getMessages(record.domain, record.exitTx!);
     const legs = record.legs.map((leg) => ({ ...leg }));
     for (const leg of legs) {
