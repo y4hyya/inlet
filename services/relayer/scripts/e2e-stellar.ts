@@ -13,9 +13,6 @@ const userKey = process.env.USER_PRIVATE_KEY;
 if (!userKey) throw new Error("USER_PRIVATE_KEY is not set");
 const user = privateKeyToAccount((userKey.startsWith("0x") ? userKey : `0x${userKey}`) as Hex);
 const trader = process.env.STELLAR_BENEFICIARY ?? Keypair.fromSecret(config.stellar.secret).publicKey();
-const market = process.env.STELLAR_MARKET ?? testnetDeployments.stellarTestnet.mockMarket;
-// The Noether market reads a balance with get_cross_margin_balance, the mock with cross_margin_balance.
-const balanceOf = process.env.STELLAR_BALANCE_FN ?? (process.env.STELLAR_MARKET ? "get_cross_margin_balance" : "cross_margin_balance");
 const destination = findDestinationSpec("noether-cross-margin-stellar-testnet")!;
 const source = pickSource();
 
@@ -24,18 +21,26 @@ const walletClient = createWalletClient({ account: user, chain: source.chain, tr
 const iris = new IrisClient(config.irisApi);
 const stellar = new rpc.Server(config.stellar.rpc);
 
-async function margin(): Promise<bigint> {
-  const account = new Account(trader, "0");
-  const call = new Contract(market).call(balanceOf, nativeToScVal(trader, { type: "address" }));
-  const transaction = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: config.stellar!.passphrase }).addOperation(call).setTimeout(30).build();
+async function read(contract: string, method: string, args: ReturnType<typeof nativeToScVal>[] = []) {
+  const call = new Contract(contract).call(method, ...args);
+  const transaction = new TransactionBuilder(new Account(trader, "0"), { fee: BASE_FEE, networkPassphrase: config.stellar!.passphrase }).addOperation(call).setTimeout(30).build();
   const simulation = await stellar.simulateTransaction(transaction);
-  if (rpc.Api.isSimulationError(simulation) || !simulation.result) throw new Error("the market balance could not be read");
-  return BigInt(scValToNative(simulation.result.retval));
+  if (rpc.Api.isSimulationError(simulation) || !simulation.result) throw new Error(`${method} could not be read on ${contract}`);
+  return scValToNative(simulation.result.retval);
+}
+
+// The receiver says which market it deposits into. The mock reads a balance with cross_margin_balance, Noether with get_cross_margin_balance.
+const market: string = process.env.STELLAR_MARKET ?? (await read(config.stellar.receiver, "config")).market;
+const balanceOf = process.env.STELLAR_BALANCE_FN ?? (market === testnetDeployments.stellarTestnet.mockMarket ? "cross_margin_balance" : "get_cross_margin_balance");
+
+async function margin(): Promise<bigint> {
+  return BigInt(await read(market, balanceOf, [nativeToScVal(trader, { type: "address" })]));
 }
 
 const remote = process.env.RELAYER_URL;
 const relayer = remote ? { url: remote, stop: async () => {} } : await createRelayer(config).start();
 const client = new InletRelayerClient(relayer.url);
+console.log(`market ${market} read with ${balanceOf}`);
 console.log(`relayer ${relayer.url}${remote ? " (remote)" : ""} on hub ${config.hub}, user ${user.address}, ${source.chain.name} into ${destination.name} for ${trader}`);
 const started = Date.now();
 const stamp = () => `${Math.round((Date.now() - started) / 1000)}s`;
