@@ -10,3 +10,5 @@ contracts/out
 contracts/cache
 contracts/broadcast
 .azure
+**/.env
+**/.env.*
