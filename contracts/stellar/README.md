@@ -8,6 +8,21 @@ Adapters in version one: `noether-cross-margin:v1`, which calls `deposit_cross_m
 
 `mock-market` carries the same entrypoint for testnet runs before the Noether stack on Circle's USDC exists.
 
+## The way out
+
+`exit` is the other half: the trader takes USDC out of the position and sends it to any chain Circle serves, with one signature in their own wallet. The trader invokes `execute(trader, legs, max_fee, min_finality)`, so the whole call tree is authorised by the transaction they sign, and no wallet has to support signing authorisation entries on their own.
+
+```
+execute(trader, [{ domain, recipient, amount }], max_fee, min_finality)
+  market.withdraw_cross_margin_to(trader, self, sum(amount) * 10)
+  usdc.approve(self, token messenger, sum(amount) * 10, soon)
+  per leg: token_messenger.deposit_for_burn(self, amount * 10, domain, recipient, usdc, nobody, max_fee, min_finality)
+```
+
+A leg carries the six decimals a CCTP message carries, and Stellar keeps seven, so every amount is multiplied by ten on this side. That also means no leg can leave a seventh decimal behind as dust when Circle burns it. Circle charges nothing from Stellar at the standard threshold and attests in about five seconds. There is no replay map because the trader signs and submits the transaction themselves, and a Stellar transaction cannot be repeated. Nothing is partial: if the market refuses the withdrawal, the whole call reverts and no message is burned.
+
+The relayer hears about the exit by its Stellar transaction hash, reads the messages Circle attested, and mints each leg on its chain.
+
 ## Build and test
 
 ```
@@ -16,7 +31,7 @@ cargo test
 stellar contract build
 ```
 
-Nine tests. The deposit test runs with no mocked authorisation, so it proves the nested transfer the way the network enforces it, and one test reads the message Circle attested for the first direct mint.
+Fifteen tests. The deposit test runs with no mocked authorisation, so it proves the nested transfer the way the network enforces it, and one test reads the message Circle attested for the first direct mint. On the exit side one test asserts the authorisation tree itself: a single entry from the trader, with the market's own call to it hanging underneath, which is what makes it one signature.
 
 ## Deploy
 
@@ -28,7 +43,9 @@ stellar contract deploy --wasm target/wasm32v1-none/release/inlet_stellar_receiv
   --hub_domain 26 --hub <hub address left padded to 32 bytes, hex> --market <market contract>
 ```
 
-The admin can repoint the market with `set_market` and replace the code with `upgrade`. Nothing else is privileged.
+The executor is deployed the same way, with `--admin`, `--usdc`, `--token_messenger` and `--market`.
+
+The admin of either contract can repoint the market with `set_market` and replace the code with `upgrade`. Nothing else is privileged.
 
 ## Recorded on testnet, 2026-09-19
 

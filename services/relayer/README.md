@@ -41,6 +41,12 @@ With `STELLAR_SECRET_KEY` set the relayer serves CCTP domain 27. The key is a fu
 
 The Stellar hub has its own hosted relayer, `inlet-relayer-stellar` in the same Container Apps environment, at https://inlet-relayer-stellar.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io. It runs with those two settings, `HUB_ADDRESS` set to the Stellar hub, both keys as Container App secrets, and its database at `/data/stellar.db` on the relayer file share. Its key is not the key of the relayer behind the live site, so the two never compete for a nonce. Do not run a local relayer with the same keys while it is up.
 
+### The way out
+
+A Stellar exit is signed and submitted by the trader, so the relayer never executes it. `POST /exits/stellar` takes `{ txHash, trader }`, the hash of the Stellar transaction the trader sent, and the relayer reads the messages Circle attested for it, turns each into a leg, and mints it on its chain. `GET /exits/:hash` follows it under `0x` and the Stellar hash. `STELLAR_EXIT` names the executor contract and defaults to the one in the deployments file.
+
+`pnpm e2e:stellar-exit` signs an exit with `STELLAR_TRADER_SECRET`, sends `E2E_AMOUNT` in six decimal units to `E2E_RECIPIENT` on the chain `SOURCE` names, and follows it to the mint. Recorded on 2026-09-20 against the hosted Stellar relayer: five seconds from the signature to the USDC on Base Sepolia.
+
 `pnpm e2e:stellar` reads `.env.stellar`, burns from Base Sepolia with `USER_PRIVATE_KEY`, and credits `STELLAR_BENEFICIARY`, a G account. With `RELAYER_URL` set it uses that relayer instead of starting one, and the balance check reads the market the receiver is configured with, unless `STELLAR_MARKET` and `STELLAR_BALANCE_FN` name another. It burns 1 USDC unless `E2E_AMOUNT` gives another amount in six decimal units. The margin credited is the burn minus Circle's fee, so 1 USDC arrives as 0.99987, just under the 1 USDC minimum collateral the scale market needs to open a trade. `E2E_AMOUNT=2000000` leaves a balance that can trade. First run on 2026-09-19: 30 seconds from the burn to the credit, Stellar transaction 6e930736dc97daa096b45c9db8070cabfb53f5714f63cfa5d94efab48ce35484. Into the Noether market itself on 2026-09-20, through the hosted Stellar relayer: 38 seconds, Stellar transaction e1357193fb6b2d21786678bf0d5650cae1e714177a6a0b0f6f0e86f2826ca5bc. Through the hosted Stellar relayer into the mock the evening before: 30 seconds again, Stellar transaction 584e2b05f42dea30d3ab9b636578f4c922a6e9ab0165b82051f16cf7fff4cbb5.
 
 ## End to end on testnet
