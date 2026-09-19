@@ -7,6 +7,7 @@ export interface StellarSettings {
   passphrase: string;
   secret: string;
   receiver: string;
+  exit: string;
 }
 
 function bytes(value: Hex): xdr.ScVal {
@@ -34,6 +35,11 @@ export class StellarLeg {
 
   get receiver(): string {
     return this.settings.receiver;
+  }
+
+  /// The executor a trader calls to take a position back out. The trader signs and submits it, so the relayer only delivers the legs.
+  get exit(): string {
+    return this.settings.exit;
   }
 
   private async build(method: string, args: xdr.ScVal[]) {

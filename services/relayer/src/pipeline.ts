@@ -9,11 +9,12 @@ import {
   type ExitState,
   type IntentState,
 } from "@inletkit/sdk";
-import { erc20Abi, hexToNumber, parseEventLogs, slice, type Address, type Hex } from "viem";
+import { erc20Abi, hexToBigInt, hexToNumber, parseEventLogs, slice, type Address, type Hex } from "viem";
 import type { PrivateKeyAccount } from "viem/accounts";
 import type { ChainContext } from "./chains.js";
 import type { RelayerConfig } from "./config.js";
 import { serializeExitLegs, type ExitStore, type IntentStore, type StoredExit, type StoredIntent } from "./db.js";
+import type { ExitLegRecord } from "@inletkit/sdk";
 import { log } from "./log.js";
 import type { StellarLeg } from "./stellar.js";
 
@@ -359,6 +360,7 @@ export class Pipeline {
   }
 
   async attestExit(record: StoredExit) {
+    if (this.stellar && record.domain === this.stellar.domain) return this.attestStellarExit(record);
     const messages = await this.iris.getMessages(record.domain, record.exitTx!);
     const ready = messages.filter((message) => message.status === "complete" && message.attestation !== "PENDING");
     if (ready.length < record.legs.length) return;
@@ -375,6 +377,21 @@ export class Pipeline {
       taken.add(index);
       return { ...leg, message: ready[index].message, attested: true };
     });
+    this.transitionExit(record, "attested", { legs_json: serializeExitLegs(legs) });
+  }
+
+  /// A Stellar exit carries no intent the relayer signed, so the legs come from the messages Circle attested.
+  async attestStellarExit(record: StoredExit) {
+    const messages = await this.iris.getMessages(record.domain, record.exitTx!);
+    const ready = messages.filter((message) => message.status === "complete" && message.attestation !== "PENDING");
+    if (ready.length === 0) return;
+    const legs: ExitLegRecord[] = ready.map((message) => ({
+      domain: hexToNumber(slice(message.message, 8, 12)),
+      recipient: slice(message.message, 184, 216),
+      amount: hexToBigInt(slice(message.message, 216, 248)),
+      message: message.message,
+      attested: true,
+    }));
     this.transitionExit(record, "attested", { legs_json: serializeExitLegs(legs) });
   }
 

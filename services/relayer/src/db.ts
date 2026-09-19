@@ -189,6 +189,19 @@ export class ExitStore {
     return this.get(hash)!;
   }
 
+  /// A Stellar exit arrives already executed: the trader signed and submitted it, so the relayer starts at the attestation.
+  insertStellar(hash: Hex, domain: number, executor: string, exitTx: string, trader: string): StoredExit {
+    const now = Date.now();
+    const intent = { owner: trader, adapterId: "0x", adapterData: "0x", amount: "0", minAssets: "0", legs: [], nonce: "0", deadline: "0", maxFeeBps: 0 };
+    this.db
+      .prepare(
+        `insert into exits (hash, state, domain, intent_json, signature, executor, exit_tx, legs_json, created_at, updated_at)
+         values (?, 'executed', ?, ?, '0x', ?, ?, '[]', ?, ?)`,
+      )
+      .run(hash, domain, JSON.stringify(intent), executor, exitTx, now, now);
+    return this.get(hash)!;
+  }
+
   get(hash: Hex): StoredExit | undefined {
     const row = this.db.prepare("select * from exits where hash = ?").get(hash) as unknown as ExitRow | undefined;
     return row ? toExitRecord(row) : undefined;

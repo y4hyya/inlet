@@ -64,6 +64,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig 
           passphrase: testnetChains.stellarTestnet.network,
           secret: env.STELLAR_SECRET_KEY.trim(),
           receiver: env.STELLAR_RECEIVER?.trim() || testnetDeployments.stellarTestnet.inletReceiver,
+          exit: env.STELLAR_EXIT?.trim() || testnetDeployments.stellarTestnet.inletExit,
         }
       : undefined,
     uniswapApiKey: env.UNISWAP_API_KEY?.trim() || undefined,

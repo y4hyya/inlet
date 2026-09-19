@@ -58,6 +58,11 @@ export class InletRelayerClient {
     return this.exitRequest("POST", "/exits", { intent: serializeExit(intent), signature });
   }
 
+  /// Reports an exit the trader already signed and submitted on Stellar, by its transaction hash.
+  async createStellarExit(txHash: string, trader?: string): Promise<ExitRecord> {
+    return this.exitRequest("POST", "/exits/stellar", { txHash, trader });
+  }
+
   async getExit(hash: Hex): Promise<ExitRecord> {
     return this.exitRequest("GET", `/exits/${hash}`);
   }

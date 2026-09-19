@@ -123,6 +123,10 @@ importers:
       viem:
         specifier: ^2.56.3
         version: 2.56.3(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.5.4)
+    devDependencies:
+      '@stellar/stellar-sdk':
+        specifier: ^17.1.0
+        version: 17.1.0
 
   packages/widget:
     dependencies:

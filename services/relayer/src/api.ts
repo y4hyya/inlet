@@ -19,7 +19,7 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
   const relayerAddress = arc.walletClient.account?.address as Address;
   const quoter = config.uniswapApiKey ? new UniswapQuoter(config.uniswapApiKey, relayerAddress) : undefined;
 
-  app.get("/health", async () => ({ ok: true, hub: config.hub, relayer: relayerAddress, destinations: [...Object.keys(config.receivers).map(Number), ...(stellar ? [stellar.domain] : [])], exits: Object.keys(config.exits).map(Number), uniswapQuotes: Boolean(quoter) }));
+  app.get("/health", async () => ({ ok: true, hub: config.hub, relayer: relayerAddress, destinations: [...Object.keys(config.receivers).map(Number), ...(stellar ? [stellar.domain] : [])], exits: [...Object.keys(config.exits).map(Number), ...(stellar ? [stellar.domain] : [])], uniswapQuotes: Boolean(quoter) }));
 
   app.get<{ Querystring: { chainId: string; tokenIn: Address; tokenOut: Address; amount: string } }>("/quotes/uniswap", async (request, reply) => {
     if (!quoter) return reply.code(404).send({ error: "Uniswap quotes are not configured on this relayer" });
@@ -117,6 +117,17 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
 
     const executor = await position.publicClient.readContract({ address: exit, abi: inletExitAbi, functionName: "exitAddress", args: [hash] });
     return presentExit(exits.insert(hash, intent, signature, spec.destinationDomain, executor));
+  });
+
+  /// A Stellar exit is reported after the trader submitted it, so the relayer only has to attest it and mint every leg.
+  app.post<{ Body: { txHash: string; trader?: string } }>("/exits/stellar", async (request, reply) => {
+    if (!stellar) return reply.code(400).send({ error: "this relayer has no Stellar leg" });
+    const txHash = (request.body?.txHash ?? "").trim().toLowerCase();
+    if (!/^[0-9a-f]{64}$/.test(txHash)) return reply.code(400).send({ error: "txHash must be a 64 character Stellar transaction hash" });
+    const hash = `0x${txHash}` as Hex;
+    const existing = exits.get(hash);
+    if (existing) return presentExit(existing);
+    return presentExit(exits.insertStellar(hash, stellar.domain, stellar.exit, txHash, (request.body?.trader ?? "").trim()));
   });
 
   app.get<{ Params: { hash: Hex } }>("/exits/:hash", async (request, reply) => {

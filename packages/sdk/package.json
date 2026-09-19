@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./stellar": {
+      "types": "./dist/stellarExit.d.ts",
+      "import": "./dist/stellarExit.js"
     }
   },
   "files": [
@@ -25,5 +29,16 @@
     "@solana-program/token": "^0.16.1",
     "@solana/kit": "^8.3.0",
     "viem": "^2.56.3"
+  },
+  "peerDependencies": {
+    "@stellar/stellar-sdk": "^17"
+  },
+  "peerDependenciesMeta": {
+    "@stellar/stellar-sdk": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@stellar/stellar-sdk": "^17.1.0"
   }
 }

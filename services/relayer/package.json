@@ -16,7 +16,8 @@
     "e2e:solana": "tsx --env-file=.env scripts/e2e-solana.ts",
     "refund:stuck": "tsx --env-file=.env scripts/refund-stuck.ts",
     "gateway:deposit": "tsx --env-file=.env scripts/gateway-deposit.ts",
-    "e2e:stellar": "tsx --env-file=.env.stellar scripts/e2e-stellar.ts"
+    "e2e:stellar": "tsx --env-file=.env.stellar scripts/e2e-stellar.ts",
+    "e2e:stellar-exit": "tsx --env-file=.env.stellar scripts/e2e-stellar-exit.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",

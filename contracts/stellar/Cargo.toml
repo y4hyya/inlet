@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["receiver", "mock-market"]
+members = ["receiver", "exit", "mock-market"]
 
 [workspace.dependencies]
 soroban-sdk = "27.0.5"
