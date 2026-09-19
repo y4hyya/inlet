@@ -14,6 +14,8 @@ if (!userKey) throw new Error("USER_PRIVATE_KEY is not set");
 const user = privateKeyToAccount((userKey.startsWith("0x") ? userKey : `0x${userKey}`) as Hex);
 const trader = process.env.STELLAR_BENEFICIARY ?? Keypair.fromSecret(config.stellar.secret).publicKey();
 const market = process.env.STELLAR_MARKET ?? testnetDeployments.stellarTestnet.mockMarket;
+// The Noether market reads a balance with get_cross_margin_balance, the mock with cross_margin_balance.
+const balanceOf = process.env.STELLAR_BALANCE_FN ?? (process.env.STELLAR_MARKET ? "get_cross_margin_balance" : "cross_margin_balance");
 const destination = findDestinationSpec("noether-cross-margin-stellar-testnet")!;
 const source = pickSource();
 
@@ -24,7 +26,7 @@ const stellar = new rpc.Server(config.stellar.rpc);
 
 async function margin(): Promise<bigint> {
   const account = new Account(trader, "0");
-  const call = new Contract(market).call("cross_margin_balance", nativeToScVal(trader, { type: "address" }));
+  const call = new Contract(market).call(balanceOf, nativeToScVal(trader, { type: "address" }));
   const transaction = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: config.stellar!.passphrase }).addOperation(call).setTimeout(30).build();
   const simulation = await stellar.simulateTransaction(transaction);
   if (rpc.Api.isSimulationError(simulation) || !simulation.result) throw new Error("the market balance could not be read");
