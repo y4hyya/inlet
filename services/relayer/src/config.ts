@@ -1,6 +1,7 @@
 import { testnetChains, testnetDeployments } from "@inletkit/sdk";
 import type { Address, Hex } from "viem";
 import { exitsByDomain, receiversByDomain } from "./chains.js";
+import type { StellarSettings } from "./stellar.js";
 
 export interface RelayerConfig {
   privateKey: Hex;
@@ -14,6 +15,8 @@ export interface RelayerConfig {
   hubDomain: number;
   receivers: Record<number, Address>;
   exits: Record<number, Address>;
+  // Present when a Stellar key is configured. Without it the relayer refuses intents toward Stellar.
+  stellar?: StellarSettings;
   uniswapApiKey?: string;
 }
 
@@ -36,10 +39,18 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig 
       0: env.ETHEREUM_SEPOLIA_RPC ?? testnetChains.ethereumSepolia.rpc,
       15: env.MONAD_TESTNET_RPC ?? testnetChains.monadTestnet.rpc,
     },
-    hub: testnetDeployments.arcTestnet.inletHub as Address,
+    hub: (env.HUB_ADDRESS?.trim() || testnetDeployments.arcTestnet.inletHub) as Address,
     hubDomain: 26,
     receivers: receiversByDomain(),
     exits: exitsByDomain(),
+    stellar: env.STELLAR_SECRET_KEY?.trim()
+      ? {
+          rpc: env.STELLAR_RPC ?? testnetChains.stellarTestnet.rpc,
+          passphrase: testnetChains.stellarTestnet.network,
+          secret: env.STELLAR_SECRET_KEY.trim(),
+          receiver: env.STELLAR_RECEIVER?.trim() || testnetDeployments.stellarTestnet.inletReceiver,
+        }
+      : undefined,
     uniswapApiKey: env.UNISWAP_API_KEY?.trim() || undefined,
   };
 }

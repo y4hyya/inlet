@@ -1,4 +1,5 @@
 import cors from "@fastify/cors";
+import type { StellarLeg } from "./stellar.js";
 import { exitableDestinations, hashExit, hashIntent, inletExitAbi, inletHubAbi, parseBurnIntent, parseExit, parseIntent, serializeExitRecord, serializeIntent, toBytes32, type Route } from "@inletkit/sdk";
 import Fastify from "fastify";
 import { isAddress, zeroAddress, type Address, type Hex } from "viem";
@@ -9,7 +10,7 @@ import { UniswapQuoter } from "./uniswap.js";
 
 const solanaDomain = 5;
 
-export async function buildApp(config: RelayerConfig, chains: Record<number, ChainContext>, store: IntentStore, exits: ExitStore) {
+export async function buildApp(config: RelayerConfig, chains: Record<number, ChainContext>, store: IntentStore, exits: ExitStore, stellar?: StellarLeg) {
   const app = Fastify({ logger: false });
   const origins = (process.env.CORS_ORIGIN ?? "*").split(",").map((entry) => entry.trim());
   await app.register(cors, { origin: origins.includes("*") ? true : origins });
@@ -18,7 +19,7 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
   const relayerAddress = arc.walletClient.account?.address as Address;
   const quoter = config.uniswapApiKey ? new UniswapQuoter(config.uniswapApiKey, relayerAddress) : undefined;
 
-  app.get("/health", async () => ({ ok: true, hub: config.hub, relayer: relayerAddress, destinations: Object.keys(config.receivers).map(Number), exits: Object.keys(config.exits).map(Number), uniswapQuotes: Boolean(quoter) }));
+  app.get("/health", async () => ({ ok: true, hub: config.hub, relayer: relayerAddress, destinations: [...Object.keys(config.receivers).map(Number), ...(stellar ? [stellar.domain] : [])], exits: Object.keys(config.exits).map(Number), uniswapQuotes: Boolean(quoter) }));
 
   app.get<{ Querystring: { chainId: string; tokenIn: Address; tokenOut: Address; amount: string } }>("/quotes/uniswap", async (request, reply) => {
     if (!quoter) return reply.code(404).send({ error: "Uniswap quotes are not configured on this relayer" });
@@ -38,7 +39,8 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
     if (intent.feeBps !== 0) return reply.code(400).send({ error: "feeBps must be 0" });
     if (intent.amount <= 0n) return reply.code(400).send({ error: "amount must be positive" });
     if (intent.deadline <= BigInt(Math.floor(Date.now() / 1000))) return reply.code(400).send({ error: "deadline is in the past" });
-    const receiver = config.receivers[intent.destinationDomain];
+    const onStellar = stellar && intent.destinationDomain === stellar.domain;
+    const receiver = onStellar ? stellar.receiverBytes32 : config.receivers[intent.destinationDomain];
     if (!receiver) return reply.code(400).send({ error: `unsupported destination domain ${intent.destinationDomain}` });
     if (intent.receiver.toLowerCase() !== toBytes32(receiver).toLowerCase()) return reply.code(400).send({ error: "receiver does not match the registered receiver" });
 

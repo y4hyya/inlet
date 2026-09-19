@@ -15,6 +15,7 @@ import type { ChainContext } from "./chains.js";
 import type { RelayerConfig } from "./config.js";
 import { serializeExitLegs, type ExitStore, type IntentStore, type StoredExit, type StoredIntent } from "./db.js";
 import { log } from "./log.js";
+import type { StellarLeg } from "./stellar.js";
 
 export class Pipeline {
   constructor(
@@ -25,6 +26,7 @@ export class Pipeline {
     private readonly exits: ExitStore,
     private readonly iris: IrisClient,
     private readonly gateway: GatewayClient,
+    private readonly stellar?: StellarLeg,
   ) {}
 
   async tick() {
@@ -198,6 +200,15 @@ export class Pipeline {
     return event.transactionHash;
   }
 
+  async executeOnStellar(record: StoredIntent, stellar: StellarLeg) {
+    if (await stellar.executed(record.hash)) {
+      this.transition(record, "executed", { result: "executed by another party" });
+      return;
+    }
+    const { hash, deposited } = await stellar.receiveAndExecute(record.message!, record.attestation!);
+    this.transition(record, deposited ? "executed" : "claimable", { destination_tx: hash, result: deposited ? "deposited" : "claimable" });
+  }
+
   async attest(record: StoredIntent) {
     const messages = await this.iris.getMessages(this.config.hubDomain, record.sweepTx!);
     const ready = messages.find((message) => message.status === "complete" && message.attestation !== "PENDING");
@@ -207,6 +218,7 @@ export class Pipeline {
 
   async execute(record: StoredIntent) {
     const domain = record.intent.destinationDomain;
+    if (this.stellar && domain === this.stellar.domain) return this.executeOnStellar(record, this.stellar);
     const destination = this.chains[domain];
     const receiver = this.config.receivers[domain];
     if (!destination || !receiver) throw new Error(`no executor for destination domain ${domain}`);

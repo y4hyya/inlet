@@ -44,7 +44,7 @@ export const evmChains = Object.entries(testnetChains).flatMap(([key, entry]) =>
 export function receiversByDomain(): Record<number, Address> {
   const receivers: Record<number, Address> = {};
   for (const { key, config } of evmChains) {
-    const deployment = (testnetDeployments as Record<string, { inletReceiver?: Address }>)[key];
+    const deployment = (testnetDeployments as unknown as Record<string, { inletReceiver?: Address }>)[key];
     if (deployment?.inletReceiver) receivers[config.cctpDomain] = deployment.inletReceiver;
   }
   return receivers;
