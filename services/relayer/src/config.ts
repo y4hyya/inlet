@@ -20,10 +20,25 @@ export interface RelayerConfig {
   uniswapApiKey?: string;
 }
 
+function domainList(value: string | undefined): Set<number> | undefined {
+  const text = value?.trim();
+  if (!text) return undefined;
+  if (text === "none") return new Set();
+  return new Set(text.split(",").map((entry) => Number(entry.trim())).filter((entry) => Number.isInteger(entry)));
+}
+
+function only<T>(entries: Record<number, T>, allowed?: Set<number>): Record<number, T> {
+  if (!allowed) return entries;
+  return Object.fromEntries(Object.entries(entries).filter(([domain]) => allowed.has(Number(domain)))) as Record<number, T>;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig {
   const raw = (env.RELAYER_PRIVATE_KEY ?? env.PRIVATE_KEY ?? "").trim();
   if (!raw) throw new Error("RELAYER_PRIVATE_KEY is not set");
   const privateKey = (raw.startsWith("0x") ? raw : `0x${raw}`) as Hex;
+  // DESTINATIONS and EXITS narrow what this relayer serves, for a hub that knows only some of the chains.
+  const served = domainList(env.DESTINATIONS);
+  const exiting = domainList(env.EXITS);
   return {
     privateKey,
     port: Number(env.PORT ?? 8787),
@@ -41,9 +56,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig 
     },
     hub: (env.HUB_ADDRESS?.trim() || testnetDeployments.arcTestnet.inletHub) as Address,
     hubDomain: 26,
-    receivers: receiversByDomain(),
-    exits: exitsByDomain(),
-    stellar: env.STELLAR_SECRET_KEY?.trim()
+    receivers: only(receiversByDomain(), served),
+    exits: only(exitsByDomain(), exiting),
+    stellar: env.STELLAR_SECRET_KEY?.trim() && (!served || served.has(testnetChains.stellarTestnet.cctpDomain))
       ? {
           rpc: env.STELLAR_RPC ?? testnetChains.stellarTestnet.rpc,
           passphrase: testnetChains.stellarTestnet.network,

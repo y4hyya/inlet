@@ -33,9 +33,10 @@ async function margin(): Promise<bigint> {
   return BigInt(scValToNative(simulation.result.retval));
 }
 
-const relayer = await createRelayer(config).start();
+const remote = process.env.RELAYER_URL;
+const relayer = remote ? { url: remote, stop: async () => {} } : await createRelayer(config).start();
 const client = new InletRelayerClient(relayer.url);
-console.log(`relayer ${relayer.url} on hub ${config.hub}, user ${user.address}, ${source.chain.name} into ${destination.name} for ${trader}`);
+console.log(`relayer ${relayer.url}${remote ? " (remote)" : ""} on hub ${config.hub}, user ${user.address}, ${source.chain.name} into ${destination.name} for ${trader}`);
 const started = Date.now();
 const stamp = () => `${Math.round((Date.now() - started) / 1000)}s`;
 
