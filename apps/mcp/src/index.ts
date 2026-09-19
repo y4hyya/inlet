@@ -91,7 +91,7 @@ function reporter(extra: RequestHandlerExtra<ServerRequest, ServerNotification>,
 
 const intentStage: Record<string, number> = { created: 0, funded: 1, swept: 2, attested: 3, executed: 4, claimable: 3, refunding: 1, refunded: 1, expired: 0, failed: 0 };
 
-function onChain(hash?: Hex): string {
+function onChain(hash?: string): string {
   return hash && hash !== ("external" as string) ? `, ${short(hash)}` : "";
 }
 

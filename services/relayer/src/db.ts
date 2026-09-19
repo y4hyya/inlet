@@ -122,7 +122,7 @@ function toRecord(row: Row): StoredIntent {
     sweepTx: (row.sweep_tx ?? undefined) as Hex | undefined,
     message: (row.message ?? undefined) as Hex | undefined,
     attestation: (row.attestation ?? undefined) as Hex | undefined,
-    destinationTx: (row.destination_tx ?? undefined) as Hex | undefined,
+    destinationTx: row.destination_tx ?? undefined,
     refundTx: (row.refund_tx ?? undefined) as Hex | undefined,
     refundMintTx: row.refund_mint_tx ?? undefined,
     gatewayRequest: row.gateway_json ? parseGatewayRequest(JSON.parse(row.gateway_json)) : undefined,
