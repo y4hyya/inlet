@@ -4,6 +4,7 @@ export { ExitTimeline } from "./components/ExitTimeline.js";
 export { ExitWidget, type ExitWidgetProps } from "./components/ExitWidget.js";
 export { InletWidget, type InletMode, type InletWidgetProps } from "./components/InletWidget.js";
 export { StatusTimeline } from "./components/StatusTimeline.js";
+export { StellarExitWidget, type StellarExitWidgetProps, type StellarWallet } from "./components/StellarExitWidget.js";
 export { InletProvider, type InletAppearance, type InletProviderProps } from "./components/InletProvider.js";
 export { InletContext, useInlet } from "./context.js";
 export { useDeposit } from "./useDeposit.js";

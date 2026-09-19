@@ -65,6 +65,21 @@ export async function buildStellarExit(params: StellarExitParams): Promise<strin
   return (await server.prepareTransaction(built)).toXDR();
 }
 
+/// What the trader can still take out, in the seven decimals the market keeps. Reads the market from the executor, so it follows a set_market.
+export async function readStellarMargin(params: { rpc: string; passphrase: string; exit: string; trader: string }): Promise<bigint> {
+  const { Account, BASE_FEE, Contract, TransactionBuilder, nativeToScVal, rpc, scValToNative } = await stellar();
+  const server = new rpc.Server(params.rpc);
+  const read = async (contract: string, method: string, args: ReturnType<typeof nativeToScVal>[] = []) => {
+    const call = new Contract(contract).call(method, ...args);
+    const built = new TransactionBuilder(new Account(params.trader, "0"), { fee: BASE_FEE, networkPassphrase: params.passphrase }).addOperation(call).setTimeout(30).build();
+    const simulation = await server.simulateTransaction(built);
+    if (rpc.Api.isSimulationError(simulation) || !simulation.result) throw new Error(`${method} could not be read on ${contract}`);
+    return scValToNative(simulation.result.retval);
+  };
+  const market: string = (await read(params.exit, "config")).market;
+  return BigInt(await read(market, "get_cross_margin_balance", [nativeToScVal(params.trader, { type: "address" })]));
+}
+
 /// Sends a signed exit and waits for the ledger to close, returning the transaction hash.
 export async function sendStellarExit(params: { rpc: string; passphrase: string; signedXdr: string }): Promise<string> {
   const { TransactionBuilder, rpc } = await stellar();

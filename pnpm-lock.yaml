@@ -152,6 +152,9 @@ importers:
       '@privy-io/wagmi':
         specifier: ^4.0.17
         version: 4.0.17(1a4867eff1a84286d7bc8653e6eaa5f1)
+      '@stellar/stellar-sdk':
+        specifier: ^17.1.0
+        version: 17.1.0
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.8)

@@ -31,6 +31,7 @@
   "peerDependencies": {
     "@privy-io/react-auth": "^3",
     "@privy-io/wagmi": "^4",
+    "@stellar/stellar-sdk": "^17",
     "@tanstack/react-query": "^5",
     "react": ">=18",
     "react-dom": ">=18",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@privy-io/react-auth": "^3.40.0",
     "@privy-io/wagmi": "^4.0.17",
+    "@stellar/stellar-sdk": "^17.1.0",
     "@tanstack/react-query": "^5.102.8",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
@@ -47,5 +49,10 @@
     "react-dom": "^19.2.8",
     "viem": "^2.56.3",
     "wagmi": "^3.7.7"
+  },
+  "peerDependenciesMeta": {
+    "@stellar/stellar-sdk": {
+      "optional": true
+    }
   }
 }
