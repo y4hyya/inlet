@@ -1,6 +1,8 @@
 import {
   GatewayClient,
   IrisClient,
+  IrisUnavailableError,
+  flattenBody,
   gatewayMinterAbi,
   inletExitAbi,
   inletHubAbi,
@@ -46,15 +48,20 @@ export class Pipeline {
     return this.attempt(record, step, (error) => this.exits.update(record.hash, { error }));
   }
 
-  private async attempt(record: { hash: Hex; state: string; error?: string; updatedAt: number }, step: () => Promise<void>, fail: (error: string) => void) {
+  private async attempt(record: { hash: Hex; state: string; error?: string; updatedAt: number }, step: () => Promise<void>, save: (error: string | null) => void) {
     const backoff = record.error && /nonce/i.test(record.error) ? 5_000 : 30_000;
     if (record.error && Date.now() - record.updatedAt < backoff) return;
     try {
       await step();
+      // A step that worked but had nothing to move on yet still clears what the last failure wrote,
+      // so a service that recovered stops being reported as a failure.
+      if (record.error) save(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      log("pipeline", `${record.state} step failed for ${record.hash}: ${message.slice(0, 300)}`);
-      fail(message.slice(0, 1000));
+      // Circle's error page belongs in this log and nowhere else, so only the sentence is recorded.
+      const detail = error instanceof IrisUnavailableError ? `${message}: HTTP ${error.status}, ${flattenBody(error.body, 200)}` : message.slice(0, 300);
+      log("pipeline", `${record.state} step failed for ${record.hash}: ${detail}`);
+      save(message.slice(0, 1000));
     }
   }
 
