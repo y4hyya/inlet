@@ -31,8 +31,7 @@ async function stellar() {
   return import("@stellar/stellar-sdk");
 }
 
-/// Builds the one transaction a trader signs to take USDC out of a Stellar position: the withdrawal and every burn, prepared and ready to sign.
-export async function buildStellarExit(params: StellarExitParams): Promise<string> {
+async function assemble(params: StellarExitParams) {
   const { Address, BASE_FEE, Contract, TransactionBuilder, nativeToScVal, rpc, xdr } = await stellar();
   if (params.legs.length === 0) throw new Error("an exit needs at least one leg");
   stellarAccountToBytes32(params.trader);
@@ -61,12 +60,50 @@ export async function buildStellarExit(params: StellarExitParams): Promise<strin
     .addOperation(call)
     .setTimeout(120)
     .build();
-  // Preparing fills in the authorisation tree and the footprint, so the trader's one signature covers the market call too.
-  return (await server.prepareTransaction(built)).toXDR();
+  return { server, built };
 }
 
-/// What the trader can still take out, in the seven decimals the market keeps. Reads the market from the executor, so it follows a set_market.
-export async function readStellarMargin(params: { rpc: string; passphrase: string; exit: string; trader: string }): Promise<bigint> {
+const refusals: Record<string, string> = {
+  "76": "That is more than this account holds.",
+  "77": "That is more than the position can release while a trade is open.",
+  "90": "The market is paused, so nothing can be taken out right now.",
+  "2": "Enter an amount above zero.",
+};
+
+function readRefusal(error: unknown): string {
+  const text = error instanceof Error ? error.message : String(error);
+  const code = text.match(/Error\(Contract, #(\d+)\)/)?.[1];
+  if (code && refusals[code]) return refusals[code];
+  return code ? `The market refused this withdrawal, error ${code}.` : text.split("\n")[0].slice(0, 200);
+}
+
+/// Asks the network whether this exact exit would work, without sending anything and without asking the wallet.
+export async function simulateStellarExit(params: StellarExitParams): Promise<{ ok: boolean; error?: string }> {
+  const { rpc } = await stellar();
+  try {
+    const { server, built } = await assemble(params);
+    const simulation = await server.simulateTransaction(built);
+    if (rpc.Api.isSimulationError(simulation)) return { ok: false, error: readRefusal(new Error(simulation.error)) };
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: readRefusal(error) };
+  }
+}
+
+/// Builds the one transaction a trader signs: the withdrawal and every burn, prepared and ready to sign.
+export async function buildStellarExit(params: StellarExitParams): Promise<string> {
+  const { server, built } = await assemble(params);
+  try {
+    // Preparing fills in the authorisation tree and the footprint, so the trader's one signature covers the market call too.
+    return (await server.prepareTransaction(built)).toXDR();
+  } catch (error) {
+    throw new Error(readRefusal(error));
+  }
+}
+
+/// What the trader can take out. The market's free margin view is the honest ceiling; without it the balance view is
+/// all there is, and that one counts an open position's collateral and profit, so it is only an upper bound.
+export async function readStellarMargin(params: { rpc: string; passphrase: string; exit: string; trader: string }): Promise<{ amount: bigint; exact: boolean }> {
   const { Account, BASE_FEE, Contract, TransactionBuilder, nativeToScVal, rpc, scValToNative } = await stellar();
   const server = new rpc.Server(params.rpc);
   const read = async (contract: string, method: string, args: ReturnType<typeof nativeToScVal>[] = []) => {
@@ -77,7 +114,12 @@ export async function readStellarMargin(params: { rpc: string; passphrase: strin
     return scValToNative(simulation.result.retval);
   };
   const market: string = (await read(params.exit, "config")).market;
-  return BigInt(await read(market, "get_cross_margin_balance", [nativeToScVal(params.trader, { type: "address" })]));
+  const trader = [nativeToScVal(params.trader, { type: "address" })];
+  try {
+    return { amount: BigInt(await read(market, "get_cross_free_margin", trader)), exact: true };
+  } catch {
+    return { amount: BigInt(await read(market, "get_cross_margin_balance", trader)), exact: false };
+  }
 }
 
 /// Sends a signed exit and waits for the ledger to close, returning the transaction hash.

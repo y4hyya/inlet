@@ -36,9 +36,11 @@ export function StellarExitWidget({ destination, stellar, recipient, relayerUrl,
   const [amount, setAmount] = useState(defaultAmount);
   const [domain, setDomain] = useState(evmDomains[0] ?? 6);
   const [to, setTo] = useState<string>(recipient ?? "");
-  const [margin, setMargin] = useState<bigint>();
+  const [margin, setMargin] = useState<{ amount: bigint; exact: boolean }>();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string>();
+  const [refusal, setRefusal] = useState<string>();
+  const [checking, setChecking] = useState(false);
   const [record, setRecord] = useState<ExitRecord>();
   const poller = useRef<ReturnType<typeof setInterval>>(undefined);
 
@@ -62,15 +64,44 @@ export function StellarExitWidget({ destination, stellar, recipient, relayerUrl,
 
   const units = parseUsdc(amount);
   // The market keeps seven decimals and a leg carries six, so a whole leg is ten of the market's units.
+  const ceiling = margin?.exact ? margin.amount : undefined;
   const blocker = !isStellarAccount(stellar.address)
     ? "Connect a Stellar wallet to withdraw."
     : !isAddress(to)
       ? "Enter the address that receives the USDC."
       : !units
         ? "Enter an amount."
-        : margin !== undefined && units * 10n > margin
-          ? `That is more than the ${usdc(margin / 10n)} you can take out.`
-          : undefined;
+        : ceiling !== undefined && units * 10n > ceiling
+          ? `That is more than the ${usdc(ceiling / 10n)} you can take out.`
+          : refusal;
+
+  // The balance the market reports counts an open position, so the only honest test is to ask the network itself.
+  useEffect(() => {
+    if (!units || !isAddress(to) || !isStellarAccount(stellar.address) || phase === "signing" || phase === "sending") return;
+    let dropped = false;
+    setChecking(true);
+    const handle = setTimeout(async () => {
+      try {
+        const { simulateStellarExit } = await import("@inletkit/sdk/stellar");
+        const outcome = await simulateStellarExit({
+          rpc: network.rpc,
+          passphrase: network.network,
+          exit: exitContract,
+          trader: stellar.address,
+          legs: [{ domain, recipient: toBytes32(to as Address), amount: units }],
+        });
+        if (!dropped) setRefusal(outcome.ok ? undefined : outcome.error);
+      } catch (cause) {
+        if (!dropped) setRefusal(cause instanceof Error ? cause.message : String(cause));
+      } finally {
+        if (!dropped) setChecking(false);
+      }
+    }, 500);
+    return () => {
+      dropped = true;
+      clearTimeout(handle);
+    };
+  }, [units, to, domain, stellar.address, phase]);
 
   const track = useCallback(
     (hash: `0x${string}`) => {
@@ -163,14 +194,14 @@ export function StellarExitWidget({ destination, stellar, recipient, relayerUrl,
             <span>From</span>
             <p className="inlet-static">
               {destination.name}
-              {margin === undefined ? "" : ` · ${usdc(margin / 10n)}`}
+              {margin === undefined ? "" : margin.exact ? ` · ${usdc(margin.amount / 10n)} free` : ` · ${usdc(margin.amount / 10n)} in the account`}
             </p>
           </div>
           <label className="inlet-field">
             <span>Amount</span>
             <div className="inlet-row">
               <input id="inlet-stellar-amount" name="amount" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} disabled={busy} />
-              <button type="button" className="inlet-chip" onClick={() => margin !== undefined && setAmount(formatUnits(margin / 10n, 6))} disabled={busy || margin === undefined}>
+              <button type="button" className="inlet-chip" onClick={() => ceiling !== undefined && setAmount(formatUnits(ceiling / 10n, 6))} disabled={busy || ceiling === undefined} title={ceiling === undefined ? "The market does not report free margin yet, so enter an amount" : undefined}>
                 Max
               </button>
             </div>
@@ -193,8 +224,8 @@ export function StellarExitWidget({ destination, stellar, recipient, relayerUrl,
           {blocker ? <p className="inlet-warn">{blocker}</p> : null}
           {error ? <p className="inlet-warn">{error}</p> : null}
 
-          <button className="inlet-primary" type="button" disabled={Boolean(blocker) || busy} onClick={() => void withdraw()}>
-            {phase === "signing" ? "Waiting for your wallet" : phase === "sending" ? "Sending" : "Withdraw"}
+          <button className="inlet-primary" type="button" disabled={Boolean(blocker) || busy || checking} onClick={() => void withdraw()}>
+            {phase === "signing" ? "Waiting for your wallet" : phase === "sending" ? "Sending" : checking ? "Checking" : "Withdraw"}
           </button>
           <p className="inlet-hint">One signature in your Stellar wallet takes it out of the position and sends it, and no gas is needed on the far side.</p>
         </div>
