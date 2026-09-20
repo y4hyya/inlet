@@ -37,6 +37,33 @@ export interface BurnFee {
   minimumFee: number;
 }
 
+/// Circle answers an outage with an HTML error page, so a failed call carries a sentence a caller
+/// can show and keeps the body aside for the log. A 5xx or a 429 is the service having a moment,
+/// never a verdict on the transfer: the burn is already on chain and the attestation will exist.
+export class IrisUnavailableError extends Error {
+  constructor(
+    readonly status: number,
+    readonly body: string,
+  ) {
+    super("Circle's attestation service is unavailable, retrying");
+    this.name = "IrisUnavailableError";
+  }
+}
+
+export function flattenBody(body: string, limit = 160): string {
+  const flat = body
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return flat.length > limit ? `${flat.slice(0, limit)}…` : flat;
+}
+
+async function irisFailure(response: Response): Promise<Error> {
+  const body = await response.text();
+  if (response.status === 429 || response.status >= 500) return new IrisUnavailableError(response.status, body);
+  return new Error(`Iris ${response.status}: ${flattenBody(body)}`);
+}
+
 export class IrisClient {
   constructor(private readonly baseUrl: string) {}
 
@@ -45,7 +72,7 @@ export class IrisClient {
       `${this.baseUrl}/v2/messages/${sourceDomain}?transactionHash=${transactionHash}`,
     );
     if (response.status === 404) return [];
-    if (!response.ok) throw new Error(`Iris ${response.status}: ${await response.text()}`);
+    if (!response.ok) throw await irisFailure(response);
     const body = (await response.json()) as { messages?: IrisMessage[] };
     return body.messages ?? [];
   }
@@ -54,7 +81,7 @@ export class IrisClient {
     const response = await fetch(
       `${this.baseUrl}/v2/burn/USDC/fees/${sourceDomain}/${destinationDomain}`,
     );
-    if (!response.ok) throw new Error(`Iris ${response.status}: ${await response.text()}`);
+    if (!response.ok) throw await irisFailure(response);
     return (await response.json()) as BurnFee[];
   }
 
