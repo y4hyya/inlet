@@ -26,6 +26,7 @@ import { useAccount, useConfig } from "wagmi";
 import { getBalance, getBlockNumber, readContract, signTypedData, switchChain, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { arcGatewayMinter, arcUsdc, gatewayApi, hubDomain, irisApi } from "./config.js";
 import { errorMessage } from "./format.js";
+import { forgetDeposit, recallDeposit, rememberDeposit } from "./pending.js";
 import { planRoute } from "./route.js";
 import type { DepositState, Destination, Quote, RoutePreference, SourceChain } from "./types.js";
 
@@ -47,6 +48,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   const { address, chainId } = useAccount();
   const [state, setState] = useState<DepositState>({ phase: "idle" });
   const poller = useRef<ReturnType<typeof setInterval>>(undefined);
+  const started = useRef(false);
 
   const relayer = useMemo(() => new InletRelayerClient(relayerUrl), [relayerUrl]);
   const iris = useMemo(() => new IrisClient(irisApi), []);
@@ -194,14 +196,41 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         try {
           const record = await relayer.getIntent(hash);
           setState((previous) => ({ ...previous, phase: terminal.has(record.state) ? "done" : "tracking", record }));
-          if (terminal.has(record.state)) clearInterval(poller.current);
+          if (terminal.has(record.state)) {
+            clearInterval(poller.current);
+            forgetDeposit(destination.id);
+          }
         } catch (error) {
           setState((previous) => ({ ...previous, error: errorMessage(error) }));
         }
       }, 2000);
     },
-    [relayer],
+    [relayer, destination.id],
   );
+
+  /// A burn that happened but has not been delivered is the one thing a reload must not lose, so a
+  /// remembered intent is read back from the relayer and followed again unless a deposit is already running.
+  useEffect(() => {
+    const hash = recallDeposit(destination.id);
+    if (!hash || started.current) return;
+    let cancelled = false;
+    void relayer
+      .getIntent(hash as Hex)
+      .then((record) => {
+        if (cancelled || started.current) return;
+        if (terminal.has(record.state)) {
+          forgetDeposit(destination.id);
+          setState({ phase: "done", record });
+          return;
+        }
+        setState({ phase: "tracking", record });
+        track(record.hash);
+      })
+      .catch(() => forgetDeposit(destination.id));
+    return () => {
+      cancelled = true;
+    };
+  }, [destination.id, relayer, track]);
 
   const ensureChain = useCallback(
     async (target: EvmSource) => {
@@ -237,6 +266,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   const depositFromSolana = useCallback(
     async (current: Quote, target: SolanaSource) => {
       if (!address || !solana) return;
+      started.current = true;
       try {
         setState({ phase: "creating", quote: current });
         const cctp = solanaCctp(target);
@@ -255,6 +285,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
           feeBps: 0,
         };
         const record: IntentRecord = await relayer.createIntent(intent, "cctp");
+        rememberDeposit(destination.id, record.hash);
         setState({ phase: "signing", quote: current, record });
         const { transaction } = await buildSolanaDepositForBurn({
           cctp,
@@ -280,6 +311,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   const deposit = useCallback(
     async (current: Quote) => {
       if (!address || !current.ready) return;
+      started.current = true;
       const target = chainFor(current.sourceDomain);
       if (target.kind === "solana") return depositFromSolana(current, target);
       try {
@@ -299,6 +331,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
           feeBps: 0,
         };
         const record: IntentRecord = await relayer.createIntent(intent, current.route);
+        rememberDeposit(destination.id, record.hash);
         setState({ phase: "signing", quote: current, record });
 
         if (current.route === "gateway") {
@@ -376,8 +409,10 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
 
   const reset = useCallback(() => {
     clearInterval(poller.current);
+    started.current = false;
+    forgetDeposit(destination.id);
     setState({ phase: "idle" });
-  }, []);
+  }, [destination.id]);
 
   return { state, quote, deposit, fundGateway, reset, address, chainId, connectedToSource: source.kind === "evm" && chainId === source.chainId };
 }
