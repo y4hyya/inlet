@@ -1,6 +1,6 @@
 import type { ExitRecord, ExitState } from "@inletkit/sdk";
 import { chainNameForDomain, explorers } from "../config.js";
-import { short } from "../format.js";
+import { note, short } from "../format.js";
 
 const order: ExitState[] = ["signed", "executed", "attested", "delivered"];
 
@@ -41,7 +41,7 @@ export function ExitTimeline({ record }: { record: ExitRecord }) {
           </li>
         );
       })}
-      {record.error ? <li className="inlet-step inlet-step-warn">{record.error}</li> : null}
+      {record.error ? <li className="inlet-step inlet-step-warn">{note(record.error)}</li> : null}
     </ol>
   );
 }

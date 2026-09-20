@@ -4,7 +4,7 @@ import { formatUnits, parseUnits } from "viem";
 import { useAccount, useConnect } from "wagmi";
 import { defaultSources } from "../config.js";
 import { useInlet } from "../context.js";
-import { short, usdc } from "../format.js";
+import { note, short, usdc } from "../format.js";
 import { isSignedIn } from "../session.js";
 import type { Destination, RoutePreference, SourceChain } from "../types.js";
 import { useDeposit, type SolanaWallet } from "../useDeposit.js";
@@ -251,7 +251,7 @@ export function DepositWidget({
             </p>
           ) : null}
           {relayerStatus === "offline" ? <p className="inlet-warn">The relayer at {url} is not answering, so nothing can be submitted right now.</p> : null}
-          {state.error ? <p className="inlet-warn">{state.error}</p> : null}
+          {state.error ? <p className="inlet-warn">{note(state.error)}</p> : null}
 
           {!signedIn ? (
             <button

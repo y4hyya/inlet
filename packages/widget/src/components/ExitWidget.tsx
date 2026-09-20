@@ -4,7 +4,7 @@ import { formatUnits } from "viem";
 import { useAccount, useConnect } from "wagmi";
 import { chainNameForDomain, defaultSources, exitable, explorers } from "../config.js";
 import { useInlet } from "../context.js";
-import { parseUsdc, tokens, usdc } from "../format.js";
+import { note, parseUsdc, tokens, usdc } from "../format.js";
 import { isSignedIn } from "../session.js";
 import type { Destination } from "../types.js";
 import { useExit } from "../useExit.js";
@@ -209,7 +209,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
 
           {relayerStatus === "offline" && !state.quote?.blocker ? <p className="inlet-warn">The relayer at {url} is not answering, so nothing can be submitted right now.</p> : null}
           {state.quote?.blocker ? <p className="inlet-warn">{state.quote.blocker}</p> : null}
-          {state.error ? <p className="inlet-warn">{state.error}</p> : null}
+          {state.error ? <p className="inlet-warn">{note(state.error)}</p> : null}
 
           {!signedIn ? (
             <button

@@ -1,6 +1,6 @@
 import { explorerLink, type IntentRecord } from "@inletkit/sdk";
 import { explorers } from "../config.js";
-import { short } from "../format.js";
+import { note, short } from "../format.js";
 import type { Destination } from "../types.js";
 
 const order = ["created", "funded", "swept", "attested", "executed"] as const;
@@ -49,7 +49,7 @@ export function StatusTimeline({ record, destination, sourceExplorer }: { record
         );
       })}
       {finished && record.state !== "executed" ? <li className="inlet-step inlet-step-warn">{labels[record.state]}</li> : null}
-      {record.error ? <li className="inlet-step inlet-step-warn">{record.error}</li> : null}
+      {record.error ? <li className="inlet-step inlet-step-warn">{note(record.error)}</li> : null}
       {sourceExplorer && record.sourceTx ? (
         <li className="inlet-step inlet-step-note">
           Source burn{" "}

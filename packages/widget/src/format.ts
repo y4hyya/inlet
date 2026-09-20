@@ -25,3 +25,14 @@ export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message.split("\n")[0].slice(0, 240);
   return String(error).slice(0, 240);
 }
+
+/// A note the relayer recorded may quote a service that answered with an HTML page, so it is
+/// flattened before it reaches the page and Circle being down is said in words instead.
+export function note(message: string): string {
+  const flat = message
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (/iris|attestation service|temporarily unavailable|lockout|bad gateway/i.test(flat)) return "Circle's attestation service is unavailable. The burn is done, so this keeps retrying until Circle answers.";
+  return flat.length > 160 ? `${flat.slice(0, 160)}…` : flat;
+}
