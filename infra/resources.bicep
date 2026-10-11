@@ -112,10 +112,10 @@ resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       ingress: { external: true, targetPort: 8787, transport: 'http' }
       registries: [{ server: registry.properties.loginServer, identity: identity.id }]
-      secrets: [
-        { name: 'relayer-private-key', value: relayerPrivateKey }
-        { name: 'uniswap-api-key', value: uniswapApiKey }
-      ]
+      secrets: concat(
+        [{ name: 'relayer-private-key', value: relayerPrivateKey }],
+        empty(uniswapApiKey) ? [] : [{ name: 'uniswap-api-key', value: uniswapApiKey }]
+      )
     }
     template: {
       containers: [
@@ -123,7 +123,7 @@ resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'relayer'
           image: !empty(relayerImage) ? relayerImage : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           resources: { cpu: json('0.5'), memory: '1Gi' }
-          env: [
+          env: concat([
             { name: 'RELAYER_PRIVATE_KEY', secretRef: 'relayer-private-key' }
             { name: 'PORT', value: '8787' }
             { name: 'DB_PATH', value: '/data/inlet.db' }
@@ -137,8 +137,7 @@ resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'ETHEREUM_SEPOLIA_RPC', value: ethereumSepoliaRpc }
             { name: 'MONAD_TESTNET_RPC', value: monadTestnetRpc }
             { name: 'CORS_ORIGIN', value: corsOrigin }
-            { name: 'UNISWAP_API_KEY', secretRef: 'uniswap-api-key' }
-          ]
+          ], empty(uniswapApiKey) ? [] : [{ name: 'UNISWAP_API_KEY', secretRef: 'uniswap-api-key' }])
           volumeMounts: [{ volumeName: 'data', mountPath: '/data' }]
           probes: [
             { type: 'Liveness', httpGet: { path: '/health', port: 8787 }, initialDelaySeconds: 10, periodSeconds: 30 }
