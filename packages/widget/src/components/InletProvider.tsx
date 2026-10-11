@@ -2,12 +2,20 @@ import { PrivyProvider, useModalStatus, usePrivy, type ConnectedWallet } from "@
 import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { arcMainnet, type Network } from "@inletkit/sdk";
 import { useMemo, type ComponentProps, type ReactNode } from "react";
-import { http } from "viem";
-import { arbitrumSepolia, arcTestnet, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
+import { http, type Chain } from "viem";
+import { arbitrum, arbitrumSepolia, arcTestnet, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 import { InletContext } from "../context.js";
 
-const chains = [baseSepolia, arbitrumSepolia, unichainSepolia, sepolia, monadTestnet, arcTestnet] as const;
+type Chains = readonly [Chain, ...Chain[]];
+
+const testnetChains: Chains = [baseSepolia, arbitrumSepolia, unichainSepolia, sepolia, monadTestnet, arcTestnet];
+const mainnetChains: Chains = [arbitrum, arcMainnet];
+
+function chainsFor(network: Network): { chains: Chains; defaultChain: Chain } {
+  return network === "mainnet" ? { chains: mainnetChains, defaultChain: arbitrum } : { chains: testnetChains, defaultChain: baseSepolia };
+}
 
 export interface InletAppearance {
   theme?: "light" | "dark" | `#${string}`;
@@ -28,27 +36,23 @@ function preferConnectedWallet({ wallets }: { wallets: ConnectedWallet[] }): Con
 export interface InletProviderProps {
   privyAppId: string;
   relayerUrl: string;
+  // Testnet unless told otherwise. Mainnet puts Arbitrum One and Arc in the wallet and points every widget at Circle's mainnet hosts.
+  network?: Network;
   rpc?: Partial<Record<number, string>>;
   appearance?: InletAppearance;
   children: ReactNode;
 }
 
-export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance = noAppearance, children }: InletProviderProps) {
+export function InletProvider({ privyAppId, relayerUrl, network = "testnet", rpc = noRpc, appearance = noAppearance, children }: InletProviderProps) {
   const queryClient = useMemo(() => new QueryClient(), []);
+  const { chains, defaultChain } = chainsFor(network);
   const wagmiConfig = useMemo(
     () =>
       createConfig({
         chains,
-        transports: {
-          [baseSepolia.id]: http(rpc[baseSepolia.id]),
-          [arbitrumSepolia.id]: http(rpc[arbitrumSepolia.id]),
-          [unichainSepolia.id]: http(rpc[unichainSepolia.id]),
-          [sepolia.id]: http(rpc[sepolia.id]),
-          [monadTestnet.id]: http(rpc[monadTestnet.id]),
-          [arcTestnet.id]: http(rpc[arcTestnet.id] ?? "https://rpc.testnet.arc.io"),
-        },
+        transports: Object.fromEntries(chains.map((chain) => [chain.id, http(rpc[chain.id] ?? chain.rpcUrls.default.http[0])])),
       }),
-    [rpc],
+    [chains, rpc],
   );
 
   const privyConfig = useMemo(
@@ -57,7 +61,7 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
         loginMethods: ["email", "wallet"],
         embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" }, solana: { createOnLogin: "off" } },
         externalWallets: { solana: { connectors: toSolanaWalletConnectors() } },
-        defaultChain: baseSepolia,
+        defaultChain,
         supportedChains: [...chains],
         appearance: {
           theme: appearance.theme ?? "light",
@@ -67,26 +71,28 @@ export function InletProvider({ privyAppId, relayerUrl, rpc = noRpc, appearance 
           walletList: ["metamask", "detected_ethereum_wallets", "rainbow", "phantom", "uniswap", "wallet_connect_qr"],
         },
       }) satisfies ComponentProps<typeof PrivyProvider>["config"],
-    [appearance.theme, appearance.accentColor, appearance.logo],
+    [chains, defaultChain, appearance.theme, appearance.accentColor, appearance.logo],
   );
 
   return (
     <PrivyProvider appId={privyAppId} config={privyConfig}>
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig} setActiveWalletForWagmi={preferConnectedWallet}>
-          <Bridge relayerUrl={relayerUrl}>{children}</Bridge>
+          <Bridge relayerUrl={relayerUrl} network={network}>
+            {children}
+          </Bridge>
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
   );
 }
 
-function Bridge({ relayerUrl, children }: { relayerUrl: string; children: ReactNode }) {
+function Bridge({ relayerUrl, network, children }: { relayerUrl: string; network: Network; children: ReactNode }) {
   const { login, logout, ready, authenticated } = usePrivy();
   const { isOpen } = useModalStatus();
   const value = useMemo(
-    () => ({ relayerUrl, login, logout, ready, authenticated, connecting: isOpen, privy: true }),
-    [relayerUrl, login, logout, ready, authenticated, isOpen],
+    () => ({ relayerUrl, network, login, logout, ready, authenticated, connecting: isOpen, privy: true }),
+    [relayerUrl, network, login, logout, ready, authenticated, isOpen],
   );
   return <InletContext.Provider value={value}>{children}</InletContext.Provider>;
 }

@@ -2,7 +2,7 @@ import { InletRelayerClient, hasGateway, type IntentRecord, type UniswapQuote } 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useConnect } from "wagmi";
-import { defaultSources } from "../config.js";
+import { sourcesFor } from "../config.js";
 import { useInlet } from "../context.js";
 import { note, short, usdc } from "../format.js";
 import { isSignedIn } from "../session.js";
@@ -28,7 +28,7 @@ export interface DepositWidgetProps {
 export function DepositWidget({
   destinations,
   relayerUrl,
-  sources: offered = defaultSources,
+  sources: sourcesProp,
   defaultAmount = "1",
   defaultDestinationId,
   title = "Deposit from any chain",
@@ -37,6 +37,7 @@ export function DepositWidget({
 }: DepositWidgetProps) {
   const inlet = useInlet();
   const url = relayerUrl ?? inlet.relayerUrl;
+  const offered = sourcesProp ?? sourcesFor(inlet.network);
   const { address, chainId, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
   const signedIn = isSignedIn({ address, authenticated: inlet.authenticated, isConnected });

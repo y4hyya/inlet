@@ -6,33 +6,58 @@ import {
   erc4626ExitData,
   exitAdapterIds,
   explorers as sdkExplorers,
+  explorersFor as sdkExplorersFor,
   fromBytes32,
+  hubFor,
+  mainnetDestinations as mainnetCatalog,
+  networks,
   testnetChains,
   testnetDestinations as catalog,
   testnetSources,
   uniswapV4LpAdapterData,
   type DestinationSpec,
   type IntentRecord,
+  type Network,
   type PoolKey,
 } from "@inletkit/sdk";
 import type { Address, Hex } from "viem";
 import type { Destination, DestinationExit, PriceHint, SourceChain } from "./types.js";
 
+/// The testnet explorers, kept under this name for hosts that import it. explorersFor answers for either network.
 export const explorers = sdkExplorers;
 
-const chainIds: Record<number, number> = {};
-for (const chain of Object.values(testnetChains)) if ("chainId" in chain && "cctpDomain" in chain) chainIds[chain.cctpDomain] = chain.chainId;
-
-const chainNames: Record<number, string> = { 26: "Arc Testnet" };
-for (const entry of testnetSources) chainNames[entry.domain] = entry.name;
-for (const entry of catalog) chainNames[entry.destinationDomain] ??= entry.chain;
-
-export function chainIdForDomain(domain: number): number {
-  return chainIds[domain] ?? 0;
+export function explorersFor(network: Network = "testnet"): Record<number, string> {
+  return sdkExplorersFor(network);
 }
 
-export function chainNameForDomain(domain: number): string {
-  return chainNames[domain] ?? `domain ${domain}`;
+interface DomainTable {
+  ids: Record<number, number>;
+  names: Record<number, string>;
+}
+
+const tables: Partial<Record<Network, DomainTable>> = {};
+
+function tableFor(network: Network): DomainTable {
+  let table = tables[network];
+  if (!table) {
+    const spec = networks[network];
+    const ids: Record<number, number> = {};
+    for (const chain of spec.evmChains) ids[chain.cctpDomain] = chain.chainId;
+    const names: Record<number, string> = { 26: network === "mainnet" ? "Arc" : "Arc Testnet" };
+    for (const entry of spec.sources) names[entry.domain] = entry.name;
+    for (const entry of spec.destinations) names[entry.destinationDomain] ??= entry.chain;
+    table = { ids, names };
+    tables[network] = table;
+  }
+  return table;
+}
+
+export function chainIdForDomain(domain: number, network: Network = "testnet"): number {
+  return tableFor(network).ids[domain] ?? 0;
+}
+
+export function chainNameForDomain(domain: number, network: Network = "testnet"): string {
+  return tableFor(network).names[domain] ?? `domain ${domain}`;
 }
 
 export type ExitKind = "vault" | "aave" | "comet";
@@ -55,7 +80,21 @@ export const hubDomain = 26;
 export const arcGatewayMinter = testnetChains.arcTestnet.gatewayMinter as Address;
 export const arcUsdc = testnetChains.arcTestnet.usdc as Address;
 
+export function circleFor(network: Network = "testnet"): { irisApi: string; gatewayApi: string } {
+  return networks[network].circle;
+}
+
+/// What a Gateway burn intent names on Arc. The minter is the zero address where the route is off.
+export function arcFor(network: Network = "testnet"): { gatewayMinter: Address; usdc: Address } {
+  const hub = hubFor(network);
+  return { gatewayMinter: hub.gatewayMinter, usdc: hub.usdc };
+}
+
 export const defaultSources: SourceChain[] = testnetSources;
+
+export function sourcesFor(network: Network = "testnet"): SourceChain[] {
+  return networks[network].sources;
+}
 
 /// A vault that implements EIP 2612 becomes withdrawable by naming the InletExit on its chain.
 export function erc4626Destination(params: {
@@ -69,19 +108,20 @@ export function erc4626Destination(params: {
   positionLabel?: string;
   exitContract?: Address;
   positionDecimals?: number;
+  network?: Network;
 }): Destination {
   const positionLabel = params.positionLabel ?? "vault shares";
   return {
     id: params.id,
     name: params.name,
     description: params.description,
-    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain, params.network),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("erc4626:v1"),
     adapterData: () => erc4626AdapterData(params.vault, 0n),
     positionLabel,
-    explorer: explorers[params.destinationDomain] ?? "",
+    explorer: explorersFor(params.network)[params.destinationDomain] ?? "",
     exit: params.exitContract
       ? {
           adapterId: exitAdapterIds["erc4626-exit:v1"],
@@ -105,18 +145,19 @@ export function aaveV3Destination(params: {
   receiver: Address;
   pool: Address;
   positionLabel?: string;
+  network?: Network;
 }): Destination {
   return {
     id: params.id,
     name: params.name,
     description: params.description,
-    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain, params.network),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("aave-v3:v1"),
     adapterData: () => aaveV3AdapterData(params.pool, 0n),
     positionLabel: params.positionLabel ?? "aTokens",
-    explorer: explorers[params.destinationDomain] ?? "",
+    explorer: explorersFor(params.network)[params.destinationDomain] ?? "",
   };
 }
 
@@ -129,18 +170,19 @@ export function compoundV3Destination(params: {
   receiver: Address;
   comet: Address;
   positionLabel?: string;
+  network?: Network;
 }): Destination {
   return {
     id: params.id,
     name: params.name,
     description: params.description,
-    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain, params.network),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("compound-v3:v1"),
     adapterData: () => compoundV3AdapterData(params.comet, 0n),
     positionLabel: params.positionLabel ?? "supply balance",
-    explorer: explorers[params.destinationDomain] ?? "",
+    explorer: explorersFor(params.network)[params.destinationDomain] ?? "",
   };
 }
 
@@ -155,18 +197,19 @@ export function uniswapV4LpDestination(params: {
   rangeTicks?: number;
   positionLabel?: string;
   price?: PriceHint;
+  network?: Network;
 }): Destination {
   return {
     id: params.id,
     name: params.name,
     description: params.description,
-    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain),
+    chainId: params.chainId ?? chainIdForDomain(params.destinationDomain, params.network),
     destinationDomain: params.destinationDomain,
     receiver: params.receiver,
     adapterId: adapterId("uniswap-v4-lp:v1"),
     adapterData: () => uniswapV4LpAdapterData(params.pool, params.rangeTicks ?? 1200, 1n),
     positionLabel: params.positionLabel ?? "liquidity position",
-    explorer: explorers[params.destinationDomain] ?? "",
+    explorer: explorersFor(params.network)[params.destinationDomain] ?? "",
     price: params.price,
   };
 }
@@ -212,6 +255,11 @@ export function fromSpec(spec: DestinationSpec): Destination {
 }
 
 export const testnetDestinations: Destination[] = catalog.map(fromSpec);
+export const mainnetDestinations: Destination[] = mainnetCatalog.map(fromSpec);
+
+export function destinationsFor(network: Network = "testnet"): Destination[] {
+  return network === "mainnet" ? mainnetDestinations : testnetDestinations;
+}
 
 const preset = (id: string) => testnetDestinations.find((entry) => entry.id === id)!;
 export const aaveArbitrumSepoliaDestination = preset("aave-v3-arbitrum-sepolia");

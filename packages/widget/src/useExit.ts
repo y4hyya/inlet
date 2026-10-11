@@ -14,7 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseUnits, type Hex } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { readContract, signTypedData, switchChain } from "wagmi/actions";
-import { chainNameForDomain, exitKind, exitable, irisApi } from "./config.js";
+import { chainNameForDomain, circleFor, exitKind, exitable } from "./config.js";
+import { useInlet } from "./context.js";
 import { errorMessage, usdc } from "./format.js";
 import type { Destination, ExitLegInput, ExitPosition, ExitQuote, ExitQuoteLeg, ExitWidgetState } from "./types.js";
 import { useRelayerHealth } from "./useRelayerHealth.js";
@@ -34,8 +35,9 @@ export function useExit(params: { relayerUrl: string; destinations: Destination[
   const [positions, setPositions] = useState<ExitPosition[]>([]);
   const poller = useRef<ReturnType<typeof setInterval>>(undefined);
 
+  const { network } = useInlet();
   const relayer = useMemo(() => new InletRelayerClient(relayerUrl), [relayerUrl]);
-  const iris = useMemo(() => new IrisClient(irisApi), []);
+  const iris = useMemo(() => new IrisClient(circleFor(network).irisApi), [network]);
   const { status } = useRelayerHealth(relayerUrl);
   const withExit = useMemo(() => exitable(destinations), [destinations]);
 
@@ -102,7 +104,7 @@ export function useExit(params: { relayerUrl: string; destinations: Destination[
           return { domain: leg.domain, amount: value, fee, lands: value > fee ? value - fee : 0n, last };
         });
 
-        const chain = chainNameForDomain(destination.destinationDomain);
+        const chain = chainNameForDomain(destination.destinationDomain, network);
         const blocker =
           balance === 0n
             ? `This wallet holds no ${exit.positionLabel} on ${chain}.`
@@ -111,7 +113,7 @@ export function useExit(params: { relayerUrl: string; destinations: Destination[
               : legs.slice(0, -1).some((leg) => !leg.amount)
                 ? "Every chain but the last one needs an amount."
                 : fixed >= amount
-                  ? `The fixed legs take the whole amount, so nothing is left for ${chainNameForDomain(rows[rows.length - 1].domain)}.`
+                  ? `The fixed legs take the whole amount, so nothing is left for ${chainNameForDomain(rows[rows.length - 1].domain, network)}.`
                   : status !== "online"
                     ? "The relayer is not answering, so the withdrawal cannot be submitted yet."
                     : undefined;
@@ -124,7 +126,7 @@ export function useExit(params: { relayerUrl: string; destinations: Destination[
         return undefined;
       }
     },
-    [address, config, destination, iris, status],
+    [address, config, destination, iris, network, status],
   );
 
   const track = useCallback(

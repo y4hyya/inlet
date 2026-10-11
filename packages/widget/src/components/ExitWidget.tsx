@@ -2,7 +2,7 @@ import type { ExitRecord } from "@inletkit/sdk";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatUnits } from "viem";
 import { useAccount, useConnect } from "wagmi";
-import { chainNameForDomain, defaultSources, exitable, explorers } from "../config.js";
+import { chainNameForDomain, exitable, explorersFor, sourcesFor } from "../config.js";
 import { useInlet } from "../context.js";
 import { note, parseUsdc, tokens, usdc } from "../format.js";
 import { isSignedIn } from "../session.js";
@@ -27,6 +27,7 @@ export interface ExitWidgetProps {
 export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, title = "Withdraw to any chain", header, onExit }: ExitWidgetProps) {
   const inlet = useInlet();
   const url = relayerUrl ?? inlet.relayerUrl;
+  const sources = sourcesFor(inlet.network);
   const { address, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
   const signedIn = isSignedIn({ address, authenticated: inlet.authenticated, isConnected });
@@ -36,7 +37,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
   const [destinationId, setDestinationId] = useState(withExit.find((entry) => entry.id === defaultDestinationId)?.id ?? withExit[0]?.id);
   const destination = withExit.find((entry) => entry.id === destinationId) ?? withExit[0];
   const [amount, setAmount] = useState("");
-  const [legs, setLegs] = useState([{ domain: defaultSources[0]?.domain ?? 6, amount: "" }]);
+  const [legs, setLegs] = useState([{ domain: sources[0]?.domain ?? 6, amount: "" }]);
 
   const { state, positions, quote, exit, reset } = useExit({ relayerUrl: url, destinations, destination });
   const position = positions.find((entry) => entry.destination.id === destination?.id);
@@ -44,10 +45,11 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
   /// Legs can land on any chain the relayer serves, which is what its health says, except the
   /// chain the position is on, because CCTP cannot burn toward its own domain.
   const legDomains = useMemo(() => {
+    const explorers = explorersFor(inlet.network);
     const served = new Set<number>([...(health?.exits ?? []), ...(health?.destinations ?? []), 26]);
     const known = [...served].filter((domain) => explorers[domain] && domain !== destination?.destinationDomain).sort((left, right) => left - right);
-    return known.length > 0 ? known : defaultSources.filter((entry) => entry.kind === "evm").map((entry) => entry.domain).filter((domain) => domain !== destination?.destinationDomain);
-  }, [health, destination?.destinationDomain]);
+    return known.length > 0 ? known : sources.filter((entry) => entry.kind === "evm").map((entry) => entry.domain).filter((domain) => domain !== destination?.destinationDomain);
+  }, [health, destination?.destinationDomain, inlet.network, sources]);
 
   useEffect(() => {
     setLegs((current) => (current.every((leg) => legDomains.includes(leg.domain)) ? current : current.map((leg) => (legDomains.includes(leg.domain) ? leg : { ...leg, domain: legDomains[0] }))));
@@ -156,7 +158,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
                   <select name={`leg-${index}`} value={leg.domain} onChange={(event) => setLeg(index, { domain: Number(event.target.value) })} disabled={busy}>
                     {legDomains.map((domain) => (
                       <option key={domain} value={domain}>
-                        {chainNameForDomain(domain)}
+                        {chainNameForDomain(domain, inlet.network)}
                       </option>
                     ))}
                   </select>
@@ -166,7 +168,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
                     <input name={`leg-amount-${index}`} inputMode="decimal" placeholder="0" value={leg.amount} onChange={(event) => setLeg(index, { amount: event.target.value })} disabled={busy} />
                   )}
                   {last ? null : (
-                    <button type="button" className="inlet-icon" onClick={() => setLegs((current) => current.filter((_, at) => at !== index))} disabled={busy} aria-label={`Remove ${chainNameForDomain(leg.domain)}`}>
+                    <button type="button" className="inlet-icon" onClick={() => setLegs((current) => current.filter((_, at) => at !== index))} disabled={busy} aria-label={`Remove ${chainNameForDomain(leg.domain, inlet.network)}`}>
                       <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
                         <path d="M4.5 4.5l7 7m0-7l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
@@ -200,7 +202,7 @@ export function ExitWidget({ destinations, relayerUrl, defaultDestinationId, tit
               </div>
               {state.quote.legs.map((leg, index) => (
                 <div key={`${leg.domain}-${index}`}>
-                  <dt>Lands on {chainNameForDomain(leg.domain)}</dt>
+                  <dt>Lands on {chainNameForDomain(leg.domain, inlet.network)}</dt>
                   <dd>{usdc(leg.lands)}</dd>
                 </div>
               ))}

@@ -1,7 +1,10 @@
+import type { Network } from "@inletkit/sdk";
 import { createContext, useContext } from "react";
 
 export interface InletContextValue {
   relayerUrl: string;
+  // Which Circle hosts, chains and explorers the widgets talk to. Testnet unless the provider says mainnet.
+  network: Network;
   login?: () => void;
   logout?: () => Promise<void> | void;
   ready: boolean;
@@ -14,7 +17,7 @@ export interface InletContextValue {
   privy?: boolean;
 }
 
-export const InletContext = createContext<InletContextValue>({ relayerUrl: "", ready: true });
+export const InletContext = createContext<InletContextValue>({ relayerUrl: "", ready: true, network: "testnet" });
 
 export function useInlet() {
   return useContext(InletContext);

@@ -1,5 +1,6 @@
 import { explorerLink, type IntentRecord } from "@inletkit/sdk";
-import { explorers } from "../config.js";
+import { explorersFor } from "../config.js";
+import { useInlet } from "../context.js";
 import { note, short } from "../format.js";
 import type { Destination } from "../types.js";
 
@@ -19,6 +20,8 @@ const labels: Record<string, string> = {
 };
 
 export function StatusTimeline({ record, destination, sourceExplorer }: { record: IntentRecord; destination: Destination; sourceExplorer?: string }) {
+  const { network } = useInlet();
+  const explorers = explorersFor(network);
   const reached = order.indexOf(record.state as (typeof order)[number]);
   const finished = ["executed", "claimable", "refunded", "expired", "failed"].includes(record.state);
 
@@ -53,7 +56,7 @@ export function StatusTimeline({ record, destination, sourceExplorer }: { record
       {sourceExplorer && record.sourceTx ? (
         <li className="inlet-step inlet-step-note">
           Source burn{" "}
-          <a className="inlet-step-link" href={explorerLink(record.intent.sourceDomain, record.sourceTx)} target="_blank" rel="noreferrer">
+          <a className="inlet-step-link" href={explorerLink(record.intent.sourceDomain, record.sourceTx, network)} target="_blank" rel="noreferrer">
             {short(record.sourceTx)}
           </a>
         </li>

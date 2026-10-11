@@ -1,12 +1,15 @@
 import type { ExitRecord, ExitState } from "@inletkit/sdk";
-import { chainNameForDomain, explorers } from "../config.js";
+import { chainNameForDomain, explorersFor } from "../config.js";
+import { useInlet } from "../context.js";
 import { note, short } from "../format.js";
 
 const order: ExitState[] = ["signed", "executed", "attested", "delivered"];
 
 export function ExitTimeline({ record }: { record: ExitRecord }) {
+  const { network } = useInlet();
+  const explorers = explorersFor(network);
   const reached = order.indexOf(record.state);
-  const chain = chainNameForDomain(record.domain);
+  const chain = chainNameForDomain(record.domain, network);
   const steps = [
     { key: "signed", label: "Signed", link: undefined },
     { key: "executed", label: `Redeemed on ${chain}`, link: record.exitTx ? { href: explorers[record.domain] + record.exitTx, text: short(record.exitTx) } : undefined },
@@ -32,7 +35,7 @@ export function ExitTimeline({ record }: { record: ExitRecord }) {
         return (
           <li key={`${leg.domain}-${index}`} className={`inlet-step ${landed ? "inlet-step-done" : reached >= 2 ? "inlet-step-active" : ""}`}>
             <span className="inlet-step-mark" />
-            <span className="inlet-step-label">Landed on {chainNameForDomain(leg.domain)}</span>
+            <span className="inlet-step-label">Landed on {chainNameForDomain(leg.domain, network)}</span>
             {onChain ? (
               <a className="inlet-step-link" href={explorers[leg.domain] + leg.mintTx} target="_blank" rel="noreferrer">
                 {short(leg.mintTx!)}

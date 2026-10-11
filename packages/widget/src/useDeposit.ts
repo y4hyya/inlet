@@ -24,7 +24,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { erc20Abi, parseUnits, type Address, type Hex } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { getBalance, getBlockNumber, readContract, signTypedData, switchChain, waitForTransactionReceipt, writeContract } from "wagmi/actions";
-import { arcGatewayMinter, arcUsdc, gatewayApi, hubDomain, irisApi } from "./config.js";
+import { arcFor, circleFor, hubDomain } from "./config.js";
+import { useInlet } from "./context.js";
 import { errorMessage } from "./format.js";
 import { forgetDeposit, recallDeposit, rememberDeposit } from "./pending.js";
 import { planRoute } from "./route.js";
@@ -50,9 +51,11 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
   const poller = useRef<ReturnType<typeof setInterval>>(undefined);
   const started = useRef(false);
 
+  const { network } = useInlet();
   const relayer = useMemo(() => new InletRelayerClient(relayerUrl), [relayerUrl]);
-  const iris = useMemo(() => new IrisClient(irisApi), []);
-  const gateway = useMemo(() => new GatewayClient(gatewayApi), []);
+  const iris = useMemo(() => new IrisClient(circleFor(network).irisApi), [network]);
+  const gateway = useMemo(() => new GatewayClient(circleFor(network).gatewayApi), [network]);
+  const arc = useMemo(() => arcFor(network), [network]);
 
   useEffect(() => () => clearInterval(poller.current), []);
 
@@ -340,9 +343,9 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
             sourceDomain: target.domain,
             destinationDomain: hubDomain,
             sourceWallet: target.gatewayWallet,
-            destinationMinter: arcGatewayMinter,
+            destinationMinter: arc.gatewayMinter,
             sourceToken: target.usdc,
-            destinationToken: arcUsdc,
+            destinationToken: arc.usdc,
             depositor: address,
             recipient: record.depositAddress,
             value: current.sendAmount,
@@ -376,7 +379,7 @@ export function useDeposit(params: { relayerUrl: string; source: SourceChain; so
         setState((previous) => ({ ...previous, phase: "error", error: errorMessage(error) }));
       }
     },
-    [address, config, destination, relayer, chainFor, ensureChain, approveIfNeeded, track, depositFromSolana],
+    [address, config, destination, relayer, arc, chainFor, ensureChain, approveIfNeeded, track, depositFromSolana],
   );
 
   const fundGateway = useCallback(
