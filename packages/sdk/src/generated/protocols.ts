@@ -23,3 +23,10 @@ export const testnetProtocols = {
     "eulerEUsdc4": "0xF4FDA4026E5C012c96557E4f2412C566a8fcbd76"
   }
 } as const;
+
+export const mainnetProtocols = {
+  "arbitrum": {
+    "aaveV3Pool": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+    "aaveV3AUsdc": "0x724dc807b04555b71ed48a6896b6F41593b8C637"
+  }
+} as const;

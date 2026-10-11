@@ -45,3 +45,18 @@ export const testnetDeployments = {
     "compound-v3-exit:v1": "keccak256 of the string compound-v3-exit:v1"
   }
 } as const;
+
+export const mainnetDeployments = {
+  "_note": "Mainnet deployment addresses, same schema as deployments.testnet.json. Every address fills as the scripts run, in the order given in docs/mainnet.md section 4. A chain with no inletReceiver is not served and a missing inletHub means the relayer refuses to start on mainnet, so nothing here is ever a placeholder.",
+  "arcMainnet": {},
+  "arbitrum": {},
+  "adapters": {
+    "erc4626:v1": "keccak256 of the string erc4626:v1",
+    "aave-v3:v1": "keccak256 of the string aave-v3:v1",
+    "compound-v3:v1": "keccak256 of the string compound-v3:v1",
+    "uniswap-v4-lp:v1": "keccak256 of the string uniswap-v4-lp:v1",
+    "erc4626-exit:v1": "keccak256 of the string erc4626-exit:v1",
+    "aave-v3-exit:v1": "keccak256 of the string aave-v3-exit:v1",
+    "compound-v3-exit:v1": "keccak256 of the string compound-v3-exit:v1"
+  }
+} as const;

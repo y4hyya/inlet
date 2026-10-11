@@ -94,3 +94,33 @@ export const testnetChains = {
     "gatewayApi": "https://gateway-api-testnet.circle.com"
   }
 } as const;
+
+export const mainnetChains = {
+  "_note": "Mainnet chain configuration, same schema as chains.testnet.json. Arc mainnet launched 2026-09-16 with chain id 5042; USDC is the native gas token and the ERC 20 view of it sits at the same address as on testnet. The CCTP domain is 26, confirmed by calling localDomain() on the MessageTransmitter. Circle publishes Gateway on Arc mainnet (GatewayWallet 0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE, GatewayMinter 0x2222222d7164433c4C09B0b0D809a9b52C04C205) but the Gateway route stays switched off here, so every mainnet chain carries the zero address for the wallet and the minter and Inlet runs CCTP only. Ethereum, Base and Unichain join this file when they get a receiver; their addresses are in docs/mainnet.md.",
+  "arcMainnet": {
+    "chainId": 5042,
+    "cctpDomain": 26,
+    "rpc": "https://rpc.mainnet.arc.io",
+    "explorer": "https://explorer.arc.io",
+    "usdc": "0x3600000000000000000000000000000000000000",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayWallet": "0x0000000000000000000000000000000000000000",
+    "gatewayMinter": "0x0000000000000000000000000000000000000000"
+  },
+  "arbitrum": {
+    "chainId": 42161,
+    "cctpDomain": 3,
+    "rpc": "https://arb1.arbitrum.io/rpc",
+    "explorer": "https://arbiscan.io",
+    "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "gatewayWallet": "0x0000000000000000000000000000000000000000",
+    "gatewayMinter": "0x0000000000000000000000000000000000000000"
+  },
+  "circle": {
+    "irisApi": "https://iris-api.circle.com",
+    "gatewayApi": "https://gateway-api.circle.com"
+  }
+} as const;

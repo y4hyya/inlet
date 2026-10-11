@@ -16,13 +16,14 @@ for (const name of contracts) {
 }
 writeFileSync(join(out, "abi.ts"), abi);
 
-const chains = readFileSync(join(repo, "config", "chains.testnet.json"), "utf8");
-writeFileSync(join(out, "chains.ts"), `export const testnetChains = ${chains.trim()} as const;\n`);
+const networks = ["testnet", "mainnet"];
+for (const file of ["chains", "deployments", "protocols"]) {
+  let source = "";
+  for (const network of networks) {
+    const json = readFileSync(join(repo, "config", `${file}.${network}.json`), "utf8");
+    source += `export const ${network}${file[0].toUpperCase()}${file.slice(1)} = ${json.trim()} as const;\n\n`;
+  }
+  writeFileSync(join(out, `${file}.ts`), source.trimEnd() + "\n");
+}
 
-const deployments = readFileSync(join(repo, "config", "deployments.testnet.json"), "utf8");
-writeFileSync(join(out, "deployments.ts"), `export const testnetDeployments = ${deployments.trim()} as const;\n`);
-
-const protocols = readFileSync(join(repo, "config", "protocols.testnet.json"), "utf8");
-writeFileSync(join(out, "protocols.ts"), `export const testnetProtocols = ${protocols.trim()} as const;\n`);
-
-console.log("generated abi, chains, deployments, protocols");
+console.log("generated abi, chains, deployments, protocols for testnet and mainnet");
