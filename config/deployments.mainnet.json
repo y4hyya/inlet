@@ -1,7 +1,17 @@
 {
   "_note": "Mainnet deployment addresses, same schema as deployments.testnet.json. Every address fills as the scripts run, in the order given in docs/mainnet.md section 4. A chain with no inletReceiver is not served and a missing inletHub means the relayer refuses to start on mainnet, so nothing here is ever a placeholder.",
-  "arcMainnet": {},
-  "arbitrum": {},
+  "arcMainnet": {
+    "inletHub": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B"
+  },
+  "arbitrum": {
+    "inletReceiver": "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
+    "erc4626Adapter": "0x912c690f95a381e72F63a378fd906C6294412Fc9",
+    "aaveV3Adapter": "0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED",
+    "inletExit": "0x49de71C101F1768C1ad4132AB815C163608A86d9",
+    "erc4626ExitAdapter": "0x3f2Fea5C6dE03b4A2B3771321E5545314B1f4E26",
+    "aaveV3ExitAdapter": "0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736",
+    "compoundV3ExitAdapter": "0x66eE772967c04A03C23466d4497a968b982f369e"
+  },
   "adapters": {
     "erc4626:v1": "keccak256 of the string erc4626:v1",
     "aave-v3:v1": "keccak256 of the string aave-v3:v1",

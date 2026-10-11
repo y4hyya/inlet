@@ -30,8 +30,9 @@ describe("loadConfig", () => {
     expect(config.exits).toEqual({});
   });
 
-  it("refuses to start on mainnet before the hub is deployed", () => {
-    expect(() => loadConfig({ NETWORK: "mainnet", RELAYER_PRIVATE_KEY: key }, networks.mainnet)).toThrow(/not deployed on mainnet/);
+  it("refuses to start on mainnet when the deployment file has no hub", () => {
+    const unset = { ...networks.mainnet, hub: { ...networks.mainnet.hub, address: undefined }, deployments: { arcMainnet: {}, arbitrum: {} } };
+    expect(() => loadConfig({ NETWORK: "mainnet", RELAYER_PRIVATE_KEY: key }, unset)).toThrow(/not deployed on mainnet/);
   });
 
   it("refuses a network it does not know", () => {
