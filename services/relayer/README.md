@@ -33,9 +33,17 @@ Solana Devnet is CCTP domain 5, and a deposit that starts there follows the same
 
 Refunds are the one place the road ends early. The hub burns the USDC back from Arc toward the depositor's USDC token account on Solana and Circle attests that burn as usual, but the relayer holds no Solana signer, so the closing `receiveMessage` on Solana is done by the depositor, or by anyone else willing to carry Circle's attestation. The relayer records such a refund with `refund_mint_tx` set to `manual`, leaves the intent in `refunding`, logs it once, and never retries it.
 
-## End to end on testnet
+## End to end
 
-`pnpm e2e` burns one USDC on the source chain, routes it through Arc, and deposits it into the chosen destination, printing every transaction hash. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without a source chain wait. Both scripts read `DESTINATION` (one of the keys in `scripts/destinations.ts`, default `demo-vault`), `SOURCE` (a CCTP domain, default 6 for Base Sepolia), `E2E_AMOUNT` in USDC units, `USER_PRIVATE_KEY` for the depositing wallet, and `RELAYER_URL` to use a hosted relayer instead of starting one.
+`pnpm e2e` burns one USDC on the source chain, routes it through Arc, and deposits it into the chosen destination, printing every transaction hash. It runs on testnet unless `NETWORK=mainnet` is set, in which case the defaults become Arbitrum One (`SOURCE=3`) into Aave V3 on Arbitrum One (`DESTINATION=aave-v3-arbitrum`, alias `aave`) and `ARC_RPC` and `ARBITRUM_RPC` override the public mainnet endpoints. `pnpm gateway:deposit` funds a Gateway balance once, and `pnpm e2e:gateway` runs the same deposit from that balance without a source chain wait. Both scripts read `DESTINATION` (one of the keys in `scripts/destinations.ts`, default `demo-vault`), `SOURCE` (a CCTP domain, default 6 for Base Sepolia), `E2E_AMOUNT` in USDC units, `USER_PRIVATE_KEY` for the depositing wallet, and `RELAYER_URL` to use a hosted relayer instead of starting one.
+
+## Recorded mainnet runs
+
+| Route | Burn | Arc mint | Sweep on Arc | Execute on the destination | Time to position |
+| --- | --- | --- | --- | --- | --- |
+| Direct CCTP, fast transfer from Arbitrum One into Aave V3 on Arbitrum One through the hub on Arc mainnet, 1 USDC from the test wallet, local relayer, 999964 aArbUSDCn delivered, 2026-10-12 | [0xef19a21292c7a71820d935af66f57362236dc41f7f31714e8baa3b681a01f741](https://arbiscan.io/tx/0xef19a21292c7a71820d935af66f57362236dc41f7f31714e8baa3b681a01f741) | [0x3f1826da0b001f1f1e3ec842e99fc9b46c9e2439947321ac23996c6834c75df5](https://explorer.arc.io/tx/0x3f1826da0b001f1f1e3ec842e99fc9b46c9e2439947321ac23996c6834c75df5) | [0x6fa832898dfe3e75249f435fa7f3ac7ab5a8e57d9c81329b7a53958c4b363528](https://explorer.arc.io/tx/0x6fa832898dfe3e75249f435fa7f3ac7ab5a8e57d9c81329b7a53958c4b363528) | [0x68cd4835bafb82867b8568dbc44b6d69d56da03991f6a774272a72d86bb0f37b](https://arbiscan.io/tx/0x68cd4835bafb82867b8568dbc44b6d69d56da03991f6a774272a72d86bb0f37b) | 33 seconds |
+
+The intent was 0x0f7c3351173849f9af6ddee14592d005a13985fea3219cb5ca17eab271d1839a with deposit address 0x2AA423913E5dc52116d9e982dC5Da44BF8F2fd68 on Arc. Circle's fast transfer fee from Arbitrum One to Arc was 36 units on 1000000, the hop from Arc to Arbitrum One was free, and the hub swept at standard finality.
 
 ## Recorded testnet runs
 

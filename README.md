@@ -195,7 +195,7 @@ Three env files, each with an `.env.example` next to it: `contracts/.env` holds 
 
 ## Status
 
-Built during ETHGlobal ETHOnline 2026 on Arc testnet. Zero fees. Not audited. Testnet only. The path to Arc mainnet, the addresses to deploy against, the order of operations and the risks, is written in [`docs/mainnet.md`](docs/mainnet.md); [`config/chains.mainnet.json`](config/chains.mainnet.json) and [`config/deployments.mainnet.json`](config/deployments.mainnet.json) are the files that fill on launch day.
+Built during ETHGlobal ETHOnline 2026 on Arc testnet, and live on Arc mainnet since 2026-10-12 with Arbitrum One as the first mainnet destination, Aave V3 and the exit rail included. Zero fees. Not audited. The mainnet addresses are in [`config/deployments.mainnet.json`](config/deployments.mainnet.json), the record of the deployment and the path for the remaining chains, which is configuration rather than new contracts, is in [`docs/mainnet.md`](docs/mainnet.md). The testnet deployment keeps running at [testnet-inletkit.vercel.app](https://testnet-inletkit.vercel.app) from the `testnet` branch.
 
 ## License
 

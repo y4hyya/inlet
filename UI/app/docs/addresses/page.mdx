@@ -1,12 +1,43 @@
-export const metadata = { title: "Addresses", description: "Every contract Inlet touches on testnet: the hub, the receivers, the adapters, Circle's contracts, and the protocols behind the presets." };
+export const metadata = { title: "Addresses", description: "Every contract Inlet touches on mainnet and on testnet: the hub, the receivers, the adapters, the exit rail, Circle's contracts, and the protocols behind the presets." };
 
 <p className="eyebrow">Reference</p>
 
-# Addresses on testnet
+# Addresses
 
-Every address here is exported by the SDK as `testnetChains`, `testnetDeployments` and `testnetProtocols`, generated from the config files in the repository.
+Every address here is exported by the SDK, as `mainnetChains`, `mainnetDeployments` and `mainnetProtocols` for mainnet and as `testnetChains`, `testnetDeployments` and `testnetProtocols` for testnet, generated from the config files in the repository.
 
-## Inlet
+## Mainnet
+
+Live since 2026-10-12. The hub sits on Arc mainnet and Arbitrum One is the first destination, with Aave V3 and the exit rail. Every contract is owned by the deployer key `0x31b1610Ec633Ed09Ce15dfDf697DD631daa3Bd02`. The hub and the receiver share an address because each was that key's first transaction on its chain; they are different contracts on different chains.
+
+| Item | Address |
+| --- | --- |
+| Hub on Arc mainnet, chain 5042, CCTP domain 26 | [`0x84f3433550d1B6FB7f0BE197eA9faA256962408B`](https://explorer.arc.io/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+| Receiver on Arbitrum One, chain 42161, domain 3 | [`0x84f3433550d1B6FB7f0BE197eA9faA256962408B`](https://arbiscan.io/address/0x84f3433550d1B6FB7f0BE197eA9faA256962408B) |
+| InletExit on Arbitrum One | [`0x49de71C101F1768C1ad4132AB815C163608A86d9`](https://arbiscan.io/address/0x49de71C101F1768C1ad4132AB815C163608A86d9) |
+
+| Chain | Adapter | Address |
+| --- | --- | --- |
+| Arbitrum One | ERC 4626 `erc4626:v1` | `0x912c690f95a381e72F63a378fd906C6294412Fc9` |
+| Arbitrum One | Aave V3 `aave-v3:v1` | `0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED` |
+| Arbitrum One | ERC 4626 exit `erc4626-exit:v1` | `0x3f2Fea5C6dE03b4A2B3771321E5545314B1f4E26` |
+| Arbitrum One | Aave V3 exit `aave-v3-exit:v1` | `0x9eD3b40bFd249Eb133Ae10b0006afae5d5947736` |
+| Arbitrum One | Compound III exit `compound-v3-exit:v1` | `0x66eE772967c04A03C23466d4497a968b982f369e` |
+
+| Protocol | Chain | Address |
+| --- | --- | --- |
+| Aave V3 pool | Arbitrum One | `0x794a61358D6845594F94dc1DB02A252b5b4814aD` |
+| Aave aArbUSDCn | Arbitrum One | `0x724dc807b04555b71ed48a6896b6F41593b8C637` |
+| USDC | Arbitrum One | `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` |
+| USDC, the ERC 20 view of the gas token | Arc mainnet | `0x3600000000000000000000000000000000000000` |
+
+Circle's mainnet contracts are the same on Arc and on Arbitrum One: TokenMessengerV2 `0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d` and MessageTransmitterV2 `0x81D40F21F12A8F0E3252Bccb954D722d4c464B64`. Gateway is live on Arc mainnet (GatewayWallet `0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE`, GatewayMinter `0x2222222d7164433c4C09B0b0D809a9b52C04C205`) but Inlet runs CCTP only there, so the mainnet config carries the zero address for both.
+
+## Testnet
+
+Every address below is exported as `testnetChains`, `testnetDeployments` and `testnetProtocols`.
+
+### Inlet
 
 | Item | Address |
 | --- | --- |
@@ -17,7 +48,7 @@ Every address here is exported by the SDK as `testnetChains`, `testnetDeployment
 | Receiver on Ethereum Sepolia, domain 0 | [`0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED`](https://sepolia.etherscan.io/address/0x55da7c3B5e99816A7a9cD9dc47e24bfd7B19D6ED) |
 | Receiver on Monad Testnet, domain 15 | [`0x38B9bCC43A585C80b7f649b9F98d394F9b321c96`](https://testnet.monadexplorer.com/address/0x38B9bCC43A585C80b7f649b9F98d394F9b321c96) |
 
-## Adapters
+### Adapters
 
 | Chain | Adapter | Address |
 | --- | --- | --- |
@@ -34,7 +65,7 @@ Every address here is exported by the SDK as `testnetChains`, `testnetDeployment
 
 Adapter ids are `keccak256` of the name: `erc4626:v1`, `aave-v3:v1`, `compound-v3:v1`, `uniswap-v4-lp:v1`.
 
-## Exit rail
+### Exit rail
 
 | Item | Address |
 | --- | --- |
@@ -52,7 +83,7 @@ Adapter ids are `keccak256` of the name: `erc4626:v1`, `aave-v3:v1`, `compound-v
 
 Every exit executor is a CREATE2 child of the InletExit on its chain, at `exitAddress(hash)` for the intent's hash.
 
-## Protocols behind the presets
+### Protocols behind the presets
 
 | Protocol | Chain | Address |
 | --- | --- | --- |
@@ -70,7 +101,7 @@ Every exit executor is a CREATE2 child of the InletExit on its chain, at `exitAd
 
 The ETH/USDC pool on Unichain Sepolia has a fee of 3000 and a tick spacing of 60.
 
-## Circle
+### Circle
 
 The same addresses on every EVM testnet.
 
@@ -91,7 +122,7 @@ Solana Devnet is a source chain. Deposits from it burn through Circle's Solana p
 | MessageTransmitterV2 | [`CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC`](https://explorer.solana.com/address/CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC?cluster=devnet) |
 | USDC mint | [`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`](https://explorer.solana.com/address/4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU?cluster=devnet) |
 
-## Services
+### Services
 
 | Service | URL |
 | --- | --- |
