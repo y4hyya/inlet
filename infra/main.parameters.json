@@ -2,11 +2,38 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "environmentName": { "value": "${AZURE_ENV_NAME}" },
-    "location": { "value": "${AZURE_LOCATION}" },
-    "relayerPrivateKey": { "value": "${RELAYER_PRIVATE_KEY}" },
-    "corsOrigin": { "value": "${CORS_ORIGIN=*}" },
-    "uniswapApiKey": { "value": "${UNISWAP_API_KEY=}" },
-    "relayerImage": { "value": "${SERVICE_RELAYER_IMAGE_NAME=}" }
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP=inlet}"
+    },
+    "relayerPrivateKey": {
+      "value": "${RELAYER_PRIVATE_KEY}"
+    },
+    "network": {
+      "value": "${NETWORK=testnet}"
+    },
+    "relayerName": {
+      "value": "${RELAYER_NAME=inlet-relayer}"
+    },
+    "arcRpc": {
+      "value": "${ARC_RPC=https://rpc.testnet.arc.io}"
+    },
+    "arbitrumRpc": {
+      "value": "${ARBITRUM_RPC=https://arb1.arbitrum.io/rpc}"
+    },
+    "corsOrigin": {
+      "value": "${CORS_ORIGIN=*}"
+    },
+    "uniswapApiKey": {
+      "value": "${UNISWAP_API_KEY=}"
+    },
+    "relayerImage": {
+      "value": "${SERVICE_RELAYER_IMAGE_NAME=}"
+    }
   }
 }

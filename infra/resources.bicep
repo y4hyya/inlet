@@ -2,7 +2,10 @@ param location string
 param environmentName string
 @secure()
 param relayerPrivateKey string
+param network string
+param relayerName string
 param arcRpc string
+param arbitrumRpc string
 param baseSepoliaRpc string
 param arbitrumSepoliaRpc string
 param unichainSepoliaRpc string
@@ -96,7 +99,7 @@ resource environmentStorage 'Microsoft.App/managedEnvironments/storages@2024-03-
 }
 
 resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'inlet-relayer'
+  name: relayerName
   location: location
   tags: union(tags, { 'azd-service-name': 'relayer' })
   identity: {
@@ -125,7 +128,9 @@ resource relayer 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'PORT', value: '8787' }
             { name: 'DB_PATH', value: '/data/inlet.db' }
             { name: 'POLL_INTERVAL_MS', value: '3000' }
+            { name: 'NETWORK', value: network }
             { name: 'ARC_RPC', value: arcRpc }
+            { name: 'ARBITRUM_RPC', value: arbitrumRpc }
             { name: 'BASE_SEPOLIA_RPC', value: baseSepoliaRpc }
             { name: 'ARBITRUM_SEPOLIA_RPC', value: arbitrumSepoliaRpc }
             { name: 'UNICHAIN_SEPOLIA_RPC', value: unichainSepoliaRpc }

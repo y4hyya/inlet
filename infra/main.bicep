@@ -13,7 +13,14 @@ param resourceGroupName string = 'inlet'
 @description('Private key the relayer signs with.')
 param relayerPrivateKey string
 
+@description('testnet or mainnet. Picks the chains, the hub and the Circle hosts the relayer serves.')
+param network string = 'testnet'
+
+@description('Name of the relayer container app. A second environment needs its own name and resource group.')
+param relayerName string = 'inlet-relayer'
+
 param arcRpc string = 'https://rpc.testnet.arc.io'
+param arbitrumRpc string = 'https://arb1.arbitrum.io/rpc'
 param baseSepoliaRpc string = 'https://sepolia.base.org'
 param arbitrumSepoliaRpc string = 'https://sepolia-rollup.arbitrum.io/rpc'
 param unichainSepoliaRpc string = 'https://sepolia.unichain.org'
@@ -41,7 +48,10 @@ module resources './resources.bicep' = {
     location: location
     environmentName: environmentName
     relayerPrivateKey: relayerPrivateKey
+    network: network
+    relayerName: relayerName
     arcRpc: arcRpc
+    arbitrumRpc: arbitrumRpc
     baseSepoliaRpc: baseSepoliaRpc
     arbitrumSepoliaRpc: arbitrumSepoliaRpc
     unichainSepoliaRpc: unichainSepoliaRpc
