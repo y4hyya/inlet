@@ -1,7 +1,7 @@
 "use client";
 
-import { InletRelayerClient, testnetSources, toBytes32, type ExitRecord, type ExitState, type IntentRecord } from "@inletkit/sdk";
-import { ExitTimeline, InletWidget, StatusTimeline, findDestination, testnetDestinations, type InletMode } from "@inletkit/widget";
+import { InletRelayerClient, sourcesFor, toBytes32, type ExitRecord, type ExitState, type IntentRecord } from "@inletkit/sdk";
+import { ExitTimeline, InletWidget, StatusTimeline, destinationsFor, findDestination, type InletMode } from "@inletkit/widget";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { short } from "@/lib/format";
@@ -12,10 +12,13 @@ import { Flow, finals, order, type FlowView } from "./flow";
 import { lastStepFor, Replay, type ReplayState } from "./replay";
 import styles from "./app.module.css";
 
+const destinations = destinationsFor(site.network);
+const sources = sourcesFor(site.network);
+
 const stepMs = 1500;
 
 function sourceName(domain: number) {
-  return testnetSources.find((entry) => entry.domain === domain)?.name ?? `domain ${domain}`;
+  return sources.find((entry) => entry.domain === domain)?.name ?? `domain ${domain}`;
 }
 
 function viewFromRecord(record: IntentRecord, mode: "live" | "follow"): FlowView {
@@ -191,7 +194,7 @@ export function AppView() {
     router.push(`/app?hash=${value}`);
   };
 
-  const followedDestination = followed ? findDestination(followed) ?? testnetDestinations[0] : undefined;
+  const followedDestination = followed ? findDestination(followed, destinations) ?? destinations[0] : undefined;
   const shownExit = mode === "withdraw" && exit ? exit : !live && followedExit ? followedExit : undefined;
   const replayExit = focus === "replay" ? exitFromReplay(replay) : undefined;
   const liveExit = focus === "replay" ? undefined : shownExit;
@@ -226,7 +229,7 @@ export function AppView() {
 
       <div className={styles.grid}>
         <div className={styles.left}>
-          <InletWidget destinations={testnetDestinations} defaultDestinationId={destinationParam} onModeChange={setMode} onRecord={onRecord} onExit={onExit} />
+          <InletWidget destinations={destinations} defaultDestinationId={destinationParam} onModeChange={setMode} onRecord={onRecord} onExit={onExit} />
           <p className={styles.caption}>The same widget a protocol mounts. Wallet agnostic, runs on wagmi, Privy only for the login here.</p>
         </div>
         <div className={styles.right}>
@@ -255,7 +258,7 @@ export function AppView() {
             <code className={styles.recordHash}>{short(followed.hash, 10, 8)}</code>
             <span className={styles.recordState}>{followed.state}</span>
           </p>
-          <StatusTimeline record={followed} destination={followedDestination} sourceExplorer={testnetSources.find((entry) => entry.domain === followed.intent.sourceDomain)?.explorer} />
+          <StatusTimeline record={followed} destination={followedDestination} sourceExplorer={sources.find((entry) => entry.domain === followed.intent.sourceDomain)?.explorer} />
         </div>
       ) : followedExit ? (
         <div className={styles.record}>

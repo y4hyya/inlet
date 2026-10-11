@@ -1,12 +1,18 @@
+import { hubFor, parseNetwork } from "@inletkit/sdk";
+
+const network = parseNetwork(process.env.NEXT_PUBLIC_NETWORK);
+const hub = hubFor(network);
+
 export const site = {
   name: "Inlet",
+  network,
   tagline: "From any chain into any position",
   description: "A deposit and exit rail for DeFi. One signature on the chain where the USDC sits, the position itself on the chain where the protocol lives, and one signature to bring it back out. Built on Circle Gateway, CCTP V2 and Arc.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://inletkit.vercel.app",
   repo: "https://github.com/y4hyya/inlet",
   relayerUrl: process.env.NEXT_PUBLIC_RELAYER_URL ?? "http://localhost:8787",
-  hub: "0x84f3433550d1B6FB7f0BE197eA9faA256962408B",
-  arcscan: "https://testnet.arcscan.app",
+  hub: hub.address ?? "",
+  arcscan: hub.explorer,
 };
 
 export const links = {

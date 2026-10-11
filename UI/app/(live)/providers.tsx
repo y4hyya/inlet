@@ -16,7 +16,7 @@ export function Providers({ children }: { children: ReactNode }) {
     );
   }
   return (
-    <InletProvider privyAppId={appId} relayerUrl={site.relayerUrl} appearance={appearance}>
+    <InletProvider privyAppId={appId} relayerUrl={site.relayerUrl} network={site.network} appearance={appearance}>
       {children}
     </InletProvider>
   );
