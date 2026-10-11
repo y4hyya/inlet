@@ -1,5 +1,5 @@
 import cors from "@fastify/cors";
-import { exitableDestinations, hashExit, hashIntent, inletExitAbi, inletHubAbi, parseBurnIntent, parseExit, parseIntent, serializeExitRecord, serializeIntent, toBytes32, type Route } from "@inletkit/sdk";
+import { destinationsFor, exitableOf, hashExit, hashIntent, inletExitAbi, inletHubAbi, parseBurnIntent, parseExit, parseIntent, serializeExitRecord, serializeIntent, toBytes32, type Route } from "@inletkit/sdk";
 import Fastify from "fastify";
 import { isAddress, zeroAddress, type Address, type Hex } from "viem";
 import type { ChainContext } from "./chains.js";
@@ -14,6 +14,7 @@ export async function buildApp(config: RelayerConfig, chains: Record<number, Cha
   const origins = (process.env.CORS_ORIGIN ?? "*").split(",").map((entry) => entry.trim());
   await app.register(cors, { origin: origins.includes("*") ? true : origins });
   const arc = chains[config.hubDomain];
+  const exitableDestinations = exitableOf(destinationsFor(config.network));
 
   const relayerAddress = arc.walletClient.account?.address as Address;
   const quoter = config.uniswapApiKey ? new UniswapQuoter(config.uniswapApiKey, relayerAddress) : undefined;

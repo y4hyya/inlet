@@ -1,6 +1,6 @@
-import { demoVaultAbi, testnetChains, testnetDeployments, testnetDestinations as catalog, testnetProtocols, toBytes32 } from "@inletkit/sdk";
+import { arcMainnet, chainsFor, destinationsFor, parseNetwork, toBytes32, type Network } from "@inletkit/sdk";
 import { createPublicClient, erc20Abi, http, type Address, type Chain, type Hex, type PublicClient } from "viem";
-import { arbitrumSepolia, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
+import { arbitrum, arbitrumSepolia, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 
 export interface E2eDestination {
   name: string;
@@ -13,75 +13,85 @@ export interface E2eDestination {
   position(user: Address): Promise<bigint>;
 }
 
-const rpc = (key: keyof typeof testnetChains) => (testnetChains[key] as { rpc: string }).rpc;
+export const network: Network = parseNetwork(process.env.NETWORK);
 
-const arbitrum = createPublicClient({ chain: arbitrumSepolia, transport: http(rpc("arbitrumSepolia")) }) as PublicClient;
-const base = createPublicClient({ chain: baseSepolia, transport: http(rpc("baseSepolia")) }) as PublicClient;
-const unichain = createPublicClient({ chain: unichainSepolia, transport: http(rpc("unichainSepolia")) }) as PublicClient;
-const ethereum = createPublicClient({ chain: sepolia, transport: http(rpc("ethereumSepolia")) }) as PublicClient;
-const monad = createPublicClient({ chain: monadTestnet, transport: http(rpc("monadTestnet")) }) as PublicClient;
+const viemChains: Record<number, Chain> = {
+  [sepolia.id]: sepolia,
+  [arbitrumSepolia.id]: arbitrumSepolia,
+  [baseSepolia.id]: baseSepolia,
+  [unichainSepolia.id]: unichainSepolia,
+  [monadTestnet.id]: monadTestnet,
+  [arbitrum.id]: arbitrum,
+  [arcMainnet.id]: arcMainnet,
+};
 
-function balanceReader(client: PublicClient, token: Address) {
-  return (user: Address) => client.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [user] });
+const evmChains = chainsFor(network);
+
+function chainFor(chainId: number): Chain {
+  const chain = viemChains[chainId];
+  if (!chain) throw new Error(`no viem chain for chain id ${chainId}`);
+  return chain;
 }
 
-const readers: Record<string, (user: Address) => Promise<bigint>> = {
-  "demo-vault": (user) => arbitrum.readContract({ address: testnetDeployments.arbitrumSepolia.demoVault as Address, abi: demoVaultAbi, functionName: "balanceOf", args: [user] }),
-  "aave-v3-arbitrum-sepolia": balanceReader(arbitrum, testnetProtocols.arbitrumSepolia.aaveV3AUsdc as Address),
-  "compound-v3-base-sepolia": balanceReader(base, testnetProtocols.baseSepolia.compoundV3Comet as Address),
-  "morpho-oneshot-base-sepolia": balanceReader(base, testnetProtocols.baseSepolia.morphoOneshotVault as Address),
-  "uniswap-v4-eth-usdc-unichain-sepolia": balanceReader(unichain, testnetProtocols.unichainSepolia.uniswapV4PositionManager as Address),
-  "euler-ethereum-sepolia": balanceReader(ethereum, testnetProtocols.ethereumSepolia.eulerEUsdc4 as Address),
-  "demo-vault-monad-testnet": (user) => monad.readContract({ address: testnetDeployments.monadTestnet.demoVault as Address, abi: demoVaultAbi, functionName: "balanceOf", args: [user] }),
-};
+const clients = new Map<number, PublicClient>();
 
-const aliases: Record<string, string> = {
-  aave: "aave-v3-arbitrum-sepolia",
-  compound: "compound-v3-base-sepolia",
-  morpho: "morpho-oneshot-base-sepolia",
-  uniswap: "uniswap-v4-eth-usdc-unichain-sepolia",
-  euler: "euler-ethereum-sepolia",
-  monad: "demo-vault-monad-testnet",
-};
+function clientFor(chainId: number): PublicClient {
+  let client = clients.get(chainId);
+  if (!client) {
+    const entry = evmChains.find((chain) => chain.chainId === chainId);
+    if (!entry) throw new Error(`chain id ${chainId} is not in the ${network} config`);
+    client = createPublicClient({ chain: chainFor(chainId), transport: http(entry.rpc) }) as PublicClient;
+    clients.set(chainId, client);
+  }
+  return client;
+}
 
-const chains: Record<number, Chain> = { 0: sepolia, 3: arbitrumSepolia, 6: baseSepolia, 10: unichainSepolia, 15: monadTestnet };
-
+/// Every catalog entry names its position token, and each one answers balanceOf, so the reader is the same everywhere.
 export const destinations: Record<string, E2eDestination> = Object.fromEntries(
-  catalog.map((spec) => [
+  destinationsFor(network).map((spec) => [
     spec.id,
     {
       name: spec.name,
       domain: spec.destinationDomain,
-      chain: chains[spec.destinationDomain],
+      chain: chainFor(spec.chainId),
       receiver: spec.receiver,
       adapterId: spec.adapterId,
       adapterData: spec.adapterData,
-      positionLabel: spec.id === "uniswap-v4-eth-usdc-unichain-sepolia" ? "Uniswap v4 positions owned" : spec.positionLabel,
-      position: readers[spec.id],
+      positionLabel: spec.adapterName === "uniswap-v4-lp:v1" ? "Uniswap v4 positions owned" : spec.positionLabel,
+      position: (user: Address) => clientFor(spec.chainId).readContract({ address: spec.positionToken as Address, abi: erc20Abi, functionName: "balanceOf", args: [user] }),
     },
   ]),
 );
 
+const aliases: Record<Network, Record<string, string>> = {
+  testnet: {
+    aave: "aave-v3-arbitrum-sepolia",
+    compound: "compound-v3-base-sepolia",
+    morpho: "morpho-oneshot-base-sepolia",
+    uniswap: "uniswap-v4-eth-usdc-unichain-sepolia",
+    euler: "euler-ethereum-sepolia",
+    monad: "demo-vault-monad-testnet",
+  },
+  mainnet: { aave: "aave-v3-arbitrum" },
+};
+
+const defaultDestination: Record<Network, string> = { testnet: "demo-vault", mainnet: "aave-v3-arbitrum" };
+
 export function pickDestination(): E2eDestination {
-  const key = process.env.DESTINATION ?? "demo-vault";
-  const destination = destinations[aliases[key] ?? key];
+  const key = process.env.DESTINATION ?? defaultDestination[network];
+  const destination = destinations[aliases[network][key] ?? key];
   if (!destination) throw new Error(`DESTINATION must be one of ${Object.keys(destinations).join(", ")}`);
   return destination;
 }
 
-export const sourceChains: Record<number, { key: keyof typeof testnetChains; chain: Chain }> = {
-  6: { key: "baseSepolia", chain: baseSepolia },
-  3: { key: "arbitrumSepolia", chain: arbitrumSepolia },
-  10: { key: "unichainSepolia", chain: unichainSepolia },
-  0: { key: "ethereumSepolia", chain: sepolia },
-};
+const defaultSource: Record<Network, number> = { testnet: 6, mainnet: 3 };
 
 export function pickSource() {
-  const domain = Number(process.env.SOURCE ?? 6);
-  const source = sourceChains[domain];
-  if (!source) throw new Error(`SOURCE must be one of ${Object.keys(sourceChains).join(", ")}`);
-  const config = testnetChains[source.key] as { rpc: string; usdc: Address; tokenMessengerV2: Address; gatewayWallet: Address };
-  return { domain, chain: source.chain, ...config };
+  const domain = Number(process.env.SOURCE ?? defaultSource[network]);
+  const source = evmChains.find((chain) => chain.cctpDomain === domain && chain.cctpDomain !== 26);
+  if (!source) throw new Error(`SOURCE must be one of ${evmChains.filter((chain) => chain.cctpDomain !== 26).map((chain) => chain.cctpDomain).join(", ")}`);
+  const { key, chainId, ...config } = source;
+  return { domain, chain: chainFor(chainId), ...config };
 }
 
 export function intentReceiver(destination: E2eDestination) {

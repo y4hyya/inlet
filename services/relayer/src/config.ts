@@ -1,8 +1,9 @@
-import { testnetChains, testnetDeployments } from "@inletkit/sdk";
+import { networks, parseNetwork, type Network, type NetworkSpec } from "@inletkit/sdk";
 import type { Address, Hex } from "viem";
 import { exitsByDomain, receiversByDomain } from "./chains.js";
 
 export interface RelayerConfig {
+  network: Network;
   privateKey: Hex;
   port: number;
   dbPath: string;
@@ -17,29 +18,33 @@ export interface RelayerConfig {
   uniswapApiKey?: string;
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): RelayerConfig {
+/// The RPC variable of a chain is its config key in capitals, so Arc is ARC_RPC on both networks,
+/// Base Sepolia is BASE_SEPOLIA_RPC and Arbitrum One is ARBITRUM_RPC.
+export function rpcVariable(key: string): string {
+  const plain = key.replace(/^arc(Testnet|Mainnet)$/, "arc");
+  return `${plain.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase()}_RPC`;
+}
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env, spec: NetworkSpec = networks[parseNetwork(env.NETWORK)]): RelayerConfig {
   const raw = (env.RELAYER_PRIVATE_KEY ?? env.PRIVATE_KEY ?? "").trim();
   if (!raw) throw new Error("RELAYER_PRIVATE_KEY is not set");
   const privateKey = (raw.startsWith("0x") ? raw : `0x${raw}`) as Hex;
+  if (!spec.hub.address) throw new Error(`the hub is not deployed on ${spec.network} yet, config/deployments.${spec.network}.json has no inletHub`);
+  const rpc: Record<number, string> = {};
+  for (const chain of spec.evmChains) rpc[chain.cctpDomain] = env[rpcVariable(chain.key)] ?? chain.rpc;
   return {
+    network: spec.network,
     privateKey,
     port: Number(env.PORT ?? 8787),
     dbPath: env.DB_PATH ?? "data/inlet.db",
     pollIntervalMs: Number(env.POLL_INTERVAL_MS ?? 3000),
-    irisApi: env.IRIS_API ?? testnetChains.circle.irisApi,
-    gatewayApi: env.GATEWAY_API ?? testnetChains.circle.gatewayApi,
-    rpc: {
-      26: env.ARC_RPC ?? testnetChains.arcTestnet.rpc,
-      6: env.BASE_SEPOLIA_RPC ?? testnetChains.baseSepolia.rpc,
-      3: env.ARBITRUM_SEPOLIA_RPC ?? testnetChains.arbitrumSepolia.rpc,
-      10: env.UNICHAIN_SEPOLIA_RPC ?? testnetChains.unichainSepolia.rpc,
-      0: env.ETHEREUM_SEPOLIA_RPC ?? testnetChains.ethereumSepolia.rpc,
-      15: env.MONAD_TESTNET_RPC ?? testnetChains.monadTestnet.rpc,
-    },
-    hub: testnetDeployments.arcTestnet.inletHub as Address,
-    hubDomain: 26,
-    receivers: receiversByDomain(),
-    exits: exitsByDomain(),
+    irisApi: env.IRIS_API ?? spec.circle.irisApi,
+    gatewayApi: env.GATEWAY_API ?? spec.circle.gatewayApi,
+    rpc,
+    hub: spec.hub.address,
+    hubDomain: spec.hub.cctpDomain,
+    receivers: receiversByDomain(spec),
+    exits: exitsByDomain(spec),
     uniswapApiKey: env.UNISWAP_API_KEY?.trim() || undefined,
   };
 }

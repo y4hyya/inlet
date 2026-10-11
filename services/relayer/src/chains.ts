@@ -1,7 +1,7 @@
-import { testnetChains, testnetDeployments } from "@inletkit/sdk";
+import { arcMainnet, networks, type NetworkSpec } from "@inletkit/sdk";
 import { createPublicClient, createWalletClient, http, nonceManager, type Address, type Chain, type PublicClient, type WalletClient } from "viem";
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
-import { arbitrumSepolia, arcTestnet, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
+import { arbitrum, arbitrumSepolia, arcTestnet, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 import type { RelayerConfig } from "./config.js";
 
 export interface ChainContext {
@@ -17,45 +17,31 @@ export interface ChainContext {
   fixedGas?: bigint;
 }
 
-interface EvmChainConfig {
-  chainId: number;
-  cctpDomain: number;
-  rpc: string;
-  usdc: Address;
-  tokenMessengerV2: Address;
-  messageTransmitterV2: Address;
-  gatewayWallet: Address;
-  gatewayMinter: Address;
-}
-
-const viemChains: Record<number, Chain> = {
+export const viemChains: Record<number, Chain> = {
   [arcTestnet.id]: arcTestnet,
   [baseSepolia.id]: baseSepolia,
   [arbitrumSepolia.id]: arbitrumSepolia,
   [unichainSepolia.id]: unichainSepolia,
   [sepolia.id]: sepolia,
   [monadTestnet.id]: monadTestnet,
+  [arcMainnet.id]: arcMainnet,
+  [arbitrum.id]: arbitrum,
 };
 
-export const evmChains = Object.entries(testnetChains).flatMap(([key, entry]) =>
-  "chainId" in entry ? [{ key: key as keyof typeof testnetChains, config: entry as EvmChainConfig }] : [],
-);
-
-export function receiversByDomain(): Record<number, Address> {
+export function receiversByDomain(spec: NetworkSpec): Record<number, Address> {
   const receivers: Record<number, Address> = {};
-  for (const { key, config } of evmChains) {
-    const deployment = (testnetDeployments as Record<string, { inletReceiver?: Address }>)[key];
-    if (deployment?.inletReceiver) receivers[config.cctpDomain] = deployment.inletReceiver;
+  for (const chain of spec.evmChains) {
+    const inletReceiver = spec.deployments[chain.key]?.inletReceiver;
+    if (inletReceiver) receivers[chain.cctpDomain] = inletReceiver as Address;
   }
   return receivers;
 }
 
-export function exitsByDomain(): Record<number, Address> {
-  const deployments = testnetDeployments as unknown as Record<string, Record<string, string | undefined>>;
+export function exitsByDomain(spec: NetworkSpec): Record<number, Address> {
   const exits: Record<number, Address> = {};
-  for (const { key, config } of evmChains) {
-    const inletExit = deployments[key]?.inletExit;
-    if (inletExit) exits[config.cctpDomain] = inletExit as Address;
+  for (const chain of spec.evmChains) {
+    const inletExit = spec.deployments[chain.key]?.inletExit;
+    if (inletExit) exits[chain.cctpDomain] = inletExit as Address;
   }
   return exits;
 }
@@ -63,7 +49,7 @@ export function exitsByDomain(): Record<number, Address> {
 export function buildChains(config: RelayerConfig): { account: PrivateKeyAccount; byDomain: Record<number, ChainContext> } {
   const account = privateKeyToAccount(config.privateKey, { nonceManager });
   const byDomain: Record<number, ChainContext> = {};
-  for (const { config: entry } of evmChains) {
+  for (const entry of networks[config.network].evmChains) {
     const chain = viemChains[entry.chainId];
     if (!chain) continue;
     const domain = entry.cctpDomain;
