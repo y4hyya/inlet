@@ -13,9 +13,8 @@ import {
   bytes32FromSolanaAddress,
   cometAbi,
   cometAuthorizationTypedData,
+  arcMainnet,
   createBurnIntent,
-  exitableDestinations,
-  explorers,
   findDestinationSpec,
   findSourceSpec,
   gatewayMaxFee,
@@ -30,10 +29,9 @@ import {
   serializeBurnIntent,
   serializeExit,
   serializeIntent,
+  networks,
   solanaUsdcAccount,
   testnetChains,
-  testnetDestinations,
-  testnetSources,
   toBytes32,
   tokenMessengerV2Abi,
   type DepositIntent,
@@ -44,25 +42,40 @@ import {
 } from "@inletkit/sdk";
 import { createPublicClient, createWalletClient, encodeFunctionData, erc20Abi, formatUnits, http, parseUnits, type Address, type Chain, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { arbitrumSepolia, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
+import { arbitrum, arbitrumSepolia, baseSepolia, monadTestnet, sepolia, unichainSepolia } from "viem/chains";
 import { z } from "zod";
-import { chainName, chainNames, legLabel, short } from "./timeline.js";
+import { chainName, chainNames, destinations, exitableDestinations, legLabel, network, short } from "./timeline.js";
 
-const relayerUrl = process.env.INLET_RELAYER_URL ?? "https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io";
+const spec = networks[network];
+const hostedRelayer: Partial<Record<typeof network, string>> = { testnet: "https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io" };
+const relayerUrl = process.env.INLET_RELAYER_URL ?? hostedRelayer[network];
+if (!relayerUrl) throw new Error(`INLET_RELAYER_URL must name the ${network} relayer`);
 const relayer = new InletRelayerClient(relayerUrl, 20_000);
-const iris = new IrisClient(testnetChains.circle.irisApi);
-const gateway = new GatewayClient(testnetChains.circle.gatewayApi);
+const iris = new IrisClient(spec.circle.irisApi);
+const gateway = new GatewayClient(spec.circle.gatewayApi);
 const hubDomain = 26;
+const arc = spec.hub;
+const sources = spec.sources;
+const explorers = spec.explorers;
 const rawKey = process.env.INLET_PRIVATE_KEY?.trim();
 const account = rawKey ? privateKeyToAccount((rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`) as Hex) : undefined;
-const chains: Record<number, Chain> = { 0: sepolia, 3: arbitrumSepolia, 6: baseSepolia, 10: unichainSepolia, 15: monadTestnet };
-const rpcs: Record<number, string> = {
-  0: testnetChains.ethereumSepolia.rpc,
-  3: testnetChains.arbitrumSepolia.rpc,
-  6: testnetChains.baseSepolia.rpc,
-  10: testnetChains.unichainSepolia.rpc,
-  15: testnetChains.monadTestnet.rpc,
+const viemChains: Record<number, Chain> = {
+  [sepolia.id]: sepolia,
+  [arbitrumSepolia.id]: arbitrumSepolia,
+  [baseSepolia.id]: baseSepolia,
+  [unichainSepolia.id]: unichainSepolia,
+  [monadTestnet.id]: monadTestnet,
+  [arbitrum.id]: arbitrum,
+  [arcMainnet.id]: arcMainnet,
 };
+const chains: Record<number, Chain> = {};
+const rpcs: Record<number, string> = {};
+for (const entry of spec.evmChains) {
+  const chain = viemChains[entry.chainId];
+  if (!chain || entry.cctpDomain === hubDomain) continue;
+  chains[entry.cctpDomain] = chain;
+  rpcs[entry.cctpDomain] = entry.rpc;
+}
 
 const address = z.string().regex(/^0x[0-9a-fA-F]{40}$/, "an EVM address");
 const hex = z.string().regex(/^0x[0-9a-fA-F]*$/, "hex bytes");
@@ -96,7 +109,7 @@ function onChain(hash?: Hex): string {
 }
 
 function summarize(record: IntentRecord) {
-  const destination = testnetDestinations.find((entry) => entry.destinationDomain === record.intent.destinationDomain && entry.adapterId.toLowerCase() === record.intent.adapterId.toLowerCase());
+  const destination = destinations.find((entry) => entry.destinationDomain === record.intent.destinationDomain && entry.adapterId.toLowerCase() === record.intent.adapterId.toLowerCase());
   const link = (domain: number, hash?: string) => (hash && hash !== "external" ? `${explorers[domain] ?? ""}${hash}` : undefined);
   return {
     hash: record.hash,
@@ -118,14 +131,14 @@ function summarize(record: IntentRecord) {
 
 server.registerTool(
   "list_destinations",
-  { title: "List Inlet destinations", description: "Positions Inlet can deliver on testnet, with their chain, receiver, adapter id and adapter data." },
-  async () => text(testnetDestinations),
+  { title: "List Inlet destinations", description: `Positions Inlet can deliver on ${network}, with their chain, receiver, adapter id and adapter data.` },
+  async () => text(destinations),
 );
 
 server.registerTool(
   "list_sources",
   { title: "List source chains", description: "Chains a deposit can start from, with USDC, TokenMessengerV2 and GatewayWallet addresses." },
-  async () => text({ sources: testnetSources, hub: { chain: "Arc testnet", chainId: testnetChains.arcTestnet.chainId, domain: hubDomain }, relayer: relayerUrl, signer: account?.address }),
+  async () => text({ network, sources, hub: { chain: chainName(hubDomain), chainId: arc.chainId, domain: hubDomain, address: arc.address }, relayer: relayerUrl, signer: account?.address }),
 );
 
 server.registerTool(
@@ -136,7 +149,7 @@ server.registerTool(
     inputSchema: { sourceDomain: z.number().int(), amountUsdc: usdcAmount, depositor: address.optional(), route: z.enum(["auto", "gateway", "cctp"]).default("auto") },
   },
   async ({ sourceDomain, amountUsdc, depositor, route }) => {
-    const source = findSourceSpec(sourceDomain);
+    const source = findSourceSpec(sourceDomain, network);
     if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
     const sendAmount = parseUnits(amountUsdc, 6);
     const who = (depositor ?? account?.address) as Address | undefined;
@@ -159,7 +172,7 @@ server.registerTool(
 );
 
 async function buildIntent(params: { owner: Address; sourceDomain: number; destinationId: string; amountUsdc: string; route: Route; beneficiary?: Address; deadlineMinutes?: number; refundRecipient?: Hex }) {
-  const destination = findDestinationSpec(params.destinationId);
+  const destination = findDestinationSpec(params.destinationId, network);
   if (!destination) throw new Error(`unknown destination ${params.destinationId}; call list_destinations`);
   const sendAmount = parseUnits(params.amountUsdc, 6);
   const maxFee = params.route === "cctp" ? await iris.fastTransferMaxFee(params.sourceDomain, hubDomain, sendAmount) : 0n;
@@ -197,7 +210,7 @@ server.registerTool(
     },
   },
   async (params) => {
-    const source = findSourceSpec(params.sourceDomain);
+    const source = findSourceSpec(params.sourceDomain, network);
     if (!source) return text(`unknown source domain ${params.sourceDomain}; call list_sources`);
     if (source.kind === "solana") {
       if (!params.solanaOwner) return text(`${source.name} needs solanaOwner, the Solana wallet that pays`);
@@ -241,9 +254,9 @@ server.registerTool(
                 sourceDomain: source.domain,
                 destinationDomain: hubDomain,
                 sourceWallet: source.gatewayWallet,
-                destinationMinter: testnetChains.arcTestnet.gatewayMinter as Address,
+                destinationMinter: arc.gatewayMinter,
                 sourceToken: source.usdc,
-                destinationToken: testnetChains.arcTestnet.usdc as Address,
+                destinationToken: arc.usdc,
                 depositor: params.owner as Address,
                 recipient: record.depositAddress,
                 value: sendAmount,
@@ -302,7 +315,7 @@ if (account) {
       inputSchema: { sourceDomain: z.number().int(), destinationId: z.string(), amountUsdc: usdcAmount, route: z.enum(["auto", "gateway", "cctp"]).default("auto"), beneficiary: address.optional(), waitSeconds: z.number().int().min(0).max(600).default(120) },
     },
     async ({ sourceDomain, destinationId, amountUsdc, route, beneficiary, waitSeconds }, extra) => {
-      const source = findSourceSpec(sourceDomain);
+      const source = findSourceSpec(sourceDomain, network);
       if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
       if (source.kind !== "evm") return text(`${source.name} is not an EVM chain, so the configured wallet cannot deposit from it yet`);
       if (route === "gateway" && !hasGateway(source)) return text(`${source.name} has no Circle Gateway, so this deposit has to use the cctp route`);
@@ -329,9 +342,9 @@ if (account) {
           sourceDomain,
           destinationDomain: hubDomain,
           sourceWallet: source.gatewayWallet,
-          destinationMinter: testnetChains.arcTestnet.gatewayMinter as Address,
+          destinationMinter: arc.gatewayMinter,
           sourceToken: source.usdc,
-          destinationToken: testnetChains.arcTestnet.usdc as Address,
+          destinationToken: arc.usdc,
           depositor: account.address,
           recipient: record.depositAddress,
           value: sendAmount,
@@ -367,7 +380,7 @@ if (account) {
         await report(`USDC burned on ${chainName(sourceDomain)}, ${short(burn)}`);
       }
 
-      const destination = testnetDestinations.find((entry) => entry.id === destinationId);
+      const destination = destinations.find((entry) => entry.id === destinationId);
       const reported = new Set<string>();
       const follow = async (current: IntentRecord) => {
         const stage = intentStage[current.state] ?? 0;
@@ -402,7 +415,7 @@ if (account) {
       inputSchema: { sourceDomain: z.number().int(), amountUsdc: usdcAmount },
     },
     async ({ sourceDomain, amountUsdc }) => {
-      const source = findSourceSpec(sourceDomain);
+      const source = findSourceSpec(sourceDomain, network);
       if (!source) return text(`unknown source domain ${sourceDomain}; call list_sources`);
       if (source.kind !== "evm") return text(`${source.name} is not an EVM chain, so the configured wallet cannot fund a Gateway balance there yet`);
       if (!hasGateway(source)) return text(`${source.name} has no Circle Gateway, so there is no balance to fund`);

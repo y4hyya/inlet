@@ -1,6 +1,15 @@
-import { exitableDestinations, testnetDestinations } from "@inletkit/sdk";
+import { exitableOf, networks, parseNetwork, type Network } from "@inletkit/sdk";
 
-export const chainNames: Record<number, string> = { 0: "Ethereum Sepolia", 3: "Arbitrum Sepolia", 6: "Base Sepolia", 10: "Unichain Sepolia", 15: "Monad Testnet", 26: "Arc Testnet" };
+/// One server speaks for one network, testnet unless INLET_NETWORK says mainnet.
+export const network: Network = parseNetwork(process.env.INLET_NETWORK);
+const spec = networks[network];
+
+export const destinations = spec.destinations;
+export const exitableDestinations = exitableOf(destinations);
+
+export const chainNames: Record<number, string> = { 26: network === "mainnet" ? "Arc" : "Arc Testnet" };
+for (const source of spec.sources) chainNames[source.domain] = source.name;
+for (const destination of destinations) chainNames[destination.destinationDomain] ??= destination.chain;
 
 export interface TimelinePlan {
   title: string;
@@ -37,7 +46,7 @@ export function withdrawPlan(input: { destinationId?: string; amountUsdc?: strin
 }
 
 export function depositPlan(input: { sourceDomain?: number; destinationId?: string; amountUsdc?: string }): TimelinePlan | undefined {
-  const spec = testnetDestinations.find((entry) => entry.id === input.destinationId);
+  const spec = destinations.find((entry) => entry.id === input.destinationId);
   if (!spec || typeof input.sourceDomain !== "number") return undefined;
   return {
     title: `deposit  ${input.amountUsdc} USDC from ${chainName(input.sourceDomain)} into ${spec.name}`,
