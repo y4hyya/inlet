@@ -31,6 +31,10 @@ Live since 2026-10-12. The hub sits on Arc mainnet and Arbitrum One is the first
 | USDC | Arbitrum One | `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` |
 | USDC, the ERC 20 view of the gas token | Arc mainnet | `0x3600000000000000000000000000000000000000` |
 
+| Service | URL |
+| --- | --- |
+| Hosted mainnet relayer | `https://inlet-relayer-mainnet.bluesea-82b0421a.westeurope.azurecontainerapps.io` |
+
 Circle's mainnet contracts are the same on Arc and on Arbitrum One: TokenMessengerV2 `0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d` and MessageTransmitterV2 `0x81D40F21F12A8F0E3252Bccb954D722d4c464B64`. Gateway is live on Arc mainnet (GatewayWallet `0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE`, GatewayMinter `0x2222222d7164433c4C09B0b0D809a9b52C04C205`) but Inlet runs CCTP only there, so the mainnet config carries the zero address for both.
 
 ## Testnet
@@ -126,5 +130,5 @@ Solana Devnet is a source chain. Deposits from it burn through Circle's Solana p
 
 | Service | URL |
 | --- | --- |
-| Hosted relayer | `https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io` |
+| Hosted testnet relayer | `https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io` |
 | Repository | [github.com/y4hyya/inlet](https://github.com/y4hyya/inlet) |

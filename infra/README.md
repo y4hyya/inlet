@@ -10,4 +10,4 @@ azd env set RELAYER_PRIVATE_KEY <key>
 azd up
 ```
 
-The site in `UI` is deployed on Vercel, not here. Live relayer: https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io. `CORS_ORIGIN` on the container app lists the site origins allowed to call it.
+The site in `UI` is deployed on Vercel, not here. Live relayers: testnet https://inlet-relayer.wonderfulforest-6c3e22a4.westeurope.azurecontainerapps.io from the azd environment `inlet`, mainnet https://inlet-relayer-mainnet.bluesea-82b0421a.westeurope.azurecontainerapps.io from the azd environment `inlet-mainnet` in resource group `inlet-mainnet`. `CORS_ORIGIN` on the container app lists the site origins allowed to call it.
