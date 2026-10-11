@@ -1,9 +1,10 @@
 import { zeroAddress, type Address, type Hex } from "viem";
 import { aaveV3ExitData, compoundV3ExitData, erc4626ExitData } from "./exit.js";
-import { testnetChains } from "./generated/chains.js";
-import { testnetDeployments } from "./generated/deployments.js";
-import { testnetProtocols } from "./generated/protocols.js";
+import { mainnetChains, testnetChains } from "./generated/chains.js";
+import { mainnetDeployments, testnetDeployments } from "./generated/deployments.js";
+import { mainnetProtocols, testnetProtocols } from "./generated/protocols.js";
 import { aaveV3AdapterData, adapterId, compoundV3AdapterData, erc4626AdapterData, uniswapV4LpAdapterData, type PoolKey } from "./intent.js";
+import type { Deployments, Network } from "./networks.js";
 import type { PermitKind } from "./types.js";
 
 export const explorers: Record<number, string> = {
@@ -15,6 +16,14 @@ export const explorers: Record<number, string> = {
   15: "https://testnet.monadexplorer.com/tx/",
   26: "https://testnet.arcscan.app/tx/",
   27: "https://stellar.expert/explorer/testnet/tx/",
+};
+
+export const mainnetExplorers: Record<number, string> = {
+  0: "https://etherscan.io/tx/",
+  3: "https://arbiscan.io/tx/",
+  6: "https://basescan.org/tx/",
+  10: "https://uniscan.xyz/tx/",
+  26: "https://explorer.arc.io/tx/",
 };
 
 export const exitAdapterNames = ["erc4626-exit:v1", "aave-v3-exit:v1", "compound-v3-exit:v1"] as const;
@@ -51,11 +60,15 @@ export interface DestinationSpec {
   exit?: DestinationExit;
 }
 
-const deployed = testnetDeployments as unknown as Record<string, Record<string, string | undefined>>;
+const deployed = testnetDeployments as unknown as Deployments;
+
+function exitFrom(deployments: Deployments, chain: string, spec: Omit<DestinationExit, "exitContract" | "adapterId">): DestinationExit | undefined {
+  const exitContract = deployments[chain]?.inletExit as Address | undefined;
+  return exitContract ? { ...spec, adapterId: exitAdapterIds[spec.adapterName], exitContract } : undefined;
+}
 
 function exitOn(chain: string, spec: Omit<DestinationExit, "exitContract" | "adapterId">): DestinationExit | undefined {
-  const exitContract = deployed[chain]?.inletExit as Address | undefined;
-  return exitContract ? { ...spec, adapterId: exitAdapterIds[spec.adapterName], exitContract } : undefined;
+  return exitFrom(deployed, chain, spec);
 }
 
 export interface EvmSource {
@@ -227,8 +240,51 @@ export const testnetDestinations: DestinationSpec[] = [
   },
 ];
 
-function source(key: "baseSepolia" | "arbitrumSepolia" | "unichainSepolia" | "ethereumSepolia" | "monadTestnet", name: string): EvmSource {
-  const chain = testnetChains[key];
+/// The mainnet catalog reads the deployment file, so a chain joins it the moment its receiver is
+/// recorded and never before, and the exit entry appears with the InletExit on that chain.
+export function mainnetCatalog(deployments: Deployments): DestinationSpec[] {
+  const arbitrum = deployments.arbitrum ?? {};
+  const entries: (DestinationSpec | undefined)[] = [
+    arbitrum.inletReceiver
+      ? {
+          id: "aave-v3-arbitrum",
+          name: "Aave V3 on Arbitrum One",
+          description: "Supplies USDC to Aave's Arbitrum One market. The depositor receives aArbUSDCn.",
+          protocol: "Aave V3",
+          chain: "Arbitrum One",
+          chainId: mainnetChains.arbitrum.chainId,
+          destinationDomain: 3,
+          receiver: arbitrum.inletReceiver as Address,
+          adapterName: "aave-v3:v1",
+          adapterId: adapterId("aave-v3:v1"),
+          adapterData: aaveV3AdapterData(mainnetProtocols.arbitrum.aaveV3Pool as Address, 0n),
+          positionLabel: "aArbUSDCn",
+          positionToken: mainnetProtocols.arbitrum.aaveV3AUsdc as Address,
+          explorer: mainnetExplorers[3],
+          exit: exitFrom(deployments, "arbitrum", {
+            adapterName: "aave-v3-exit:v1",
+            adapterData: aaveV3ExitData(mainnetProtocols.arbitrum.aaveV3Pool as Address),
+            positionToken: mainnetProtocols.arbitrum.aaveV3AUsdc as Address,
+            positionDecimals: 6,
+            permit: "eip2612",
+          }),
+        }
+      : undefined,
+  ];
+  return entries.filter((entry): entry is DestinationSpec => Boolean(entry));
+}
+
+export const mainnetDestinations: DestinationSpec[] = mainnetCatalog(mainnetDeployments as unknown as Deployments);
+
+interface EvmChainEntry {
+  cctpDomain: number;
+  chainId: number;
+  usdc: string;
+  tokenMessengerV2: string;
+  gatewayWallet: string;
+}
+
+function evmSource(chain: EvmChainEntry, name: string, explorerMap: Record<number, string>): EvmSource {
   return {
     kind: "evm",
     domain: chain.cctpDomain,
@@ -237,8 +293,12 @@ function source(key: "baseSepolia" | "arbitrumSepolia" | "unichainSepolia" | "et
     usdc: chain.usdc as Address,
     tokenMessenger: chain.tokenMessengerV2 as Address,
     gatewayWallet: chain.gatewayWallet as Address,
-    explorer: explorers[chain.cctpDomain] ?? "",
+    explorer: explorerMap[chain.cctpDomain] ?? "",
   };
+}
+
+function source(key: "baseSepolia" | "arbitrumSepolia" | "unichainSepolia" | "ethereumSepolia" | "monadTestnet", name: string): EvmSource {
+  return evmSource(testnetChains[key], name, explorers);
 }
 
 const solana = testnetChains.solanaDevnet;
@@ -262,10 +322,13 @@ export const testnetSources: SourceSpec[] = [
   },
 ];
 
+/// Arbitrum One is the only mainnet source for now, and it runs CCTP only because the Gateway route is switched off there.
+export const mainnetSources: SourceSpec[] = [evmSource(mainnetChains.arbitrum, "Arbitrum One", mainnetExplorers)];
+
 /// Solana explorer links need the cluster, every other explorer takes the hash alone.
-export function explorerLink(domain: number, hash: string): string {
-  const link = (explorers[domain] ?? "") + hash;
-  return domain === 5 ? `${link}?cluster=devnet` : link;
+export function explorerLink(domain: number, hash: string, network: Network = "testnet"): string {
+  const link = ((network === "mainnet" ? mainnetExplorers : explorers)[domain] ?? "") + hash;
+  return domain === 5 && network === "testnet" ? `${link}?cluster=devnet` : link;
 }
 
 /// Circle Gateway is not on every chain. The zero address in config means the chain has no GatewayWallet.
@@ -275,14 +338,17 @@ export function hasGateway(source: SourceSpec): boolean {
 
 export type ExitableDestinationSpec = DestinationSpec & { exit: DestinationExit };
 
-export const exitableDestinations: ExitableDestinationSpec[] = testnetDestinations.filter(
-  (entry): entry is ExitableDestinationSpec => Boolean(entry.exit),
-);
-
-export function findDestinationSpec(id: string): DestinationSpec | undefined {
-  return testnetDestinations.find((entry) => entry.id === id);
+export function exitableOf(destinations: DestinationSpec[]): ExitableDestinationSpec[] {
+  return destinations.filter((entry): entry is ExitableDestinationSpec => Boolean(entry.exit));
 }
 
-export function findSourceSpec(domain: number): SourceSpec | undefined {
-  return testnetSources.find((entry) => entry.domain === domain);
+export const exitableDestinations: ExitableDestinationSpec[] = exitableOf(testnetDestinations);
+export const mainnetExitableDestinations: ExitableDestinationSpec[] = exitableOf(mainnetDestinations);
+
+export function findDestinationSpec(id: string, network: Network = "testnet"): DestinationSpec | undefined {
+  return (network === "mainnet" ? mainnetDestinations : testnetDestinations).find((entry) => entry.id === id);
+}
+
+export function findSourceSpec(domain: number, network: Network = "testnet"): SourceSpec | undefined {
+  return (network === "mainnet" ? mainnetSources : testnetSources).find((entry) => entry.domain === domain);
 }
